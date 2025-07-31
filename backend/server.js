@@ -99,7 +99,7 @@ app.post("/register-owner", async (req, res) => {
 //   .then(() => console.log("MongoDB Atlas Connected"))
 //   .catch((err) => console.error("MongoDB connection error:", err));
 // })
-mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
