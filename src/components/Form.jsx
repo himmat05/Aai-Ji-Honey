@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 
 const Form = ({ product, onClose }) => {
-  
+
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
@@ -30,7 +30,12 @@ const Form = ({ product, onClose }) => {
 
     try {
       // Step 1: Create Razorpay order on backend
-      const orderRes = await fetch('http://localhost:5000/create-order', {
+      // const orderRes = await fetch('http://localhost:5000/create-order', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ amount })
+      // });
+      const orderRes = await fetch(`${import.meta.env.VITE_API_URL}/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount })
@@ -63,10 +68,15 @@ const Form = ({ product, onClose }) => {
             paymentId: response.razorpay_payment_id,
           };
 
-          const saveRes = await fetch('http://localhost:5000/orders', {
+          // const saveRes = await fetch('http://localhost:5000/orders', {
+          //   method: 'POST',
+          //   headers: { 'Content-Type': 'application/json' },
+          //   body: JSON.stringify(finalOrder), // ⬅️ also fix: should send finalOrder not orderData
+          // });
+          const saveRes = await fetch(`${import.meta.env.VITE_API_URL}/orders`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(finalOrder), // ⬅️ also fix: should send finalOrder not orderData
+            body: JSON.stringify(finalOrder)
           });
 
           if (saveRes.ok) {

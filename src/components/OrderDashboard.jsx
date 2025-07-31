@@ -11,7 +11,9 @@ const OrderDashboard = () => {
 
     const fetchOrders = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/orders');
+            // const res = await axios.get('http://localhost:5000/orders');
+            // setOrders(res.data);
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/orders`);
             setOrders(res.data);
         } catch (err) {
             console.error('Error fetching orders', err);
@@ -26,7 +28,11 @@ const OrderDashboard = () => {
 
     const markCompleted = async (id) => {
         try {
-            await axios.patch(`http://localhost:5000/orders/${id}`, {
+            // await axios.patch(`http://localhost:5000/orders/${id}`, {
+            //     status: 'Completed',
+
+            // });
+            await axios.patch(`${import.meta.env.VITE_API_URL}/orders/${id}`, {
                 status: 'Completed',
             });
             fetchOrders(); // refresh the order list

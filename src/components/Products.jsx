@@ -8,7 +8,8 @@ const Product = () => {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const res = await fetch('http://localhost:5000/products');
+      // const res = await fetch('http://localhost:5000/products');
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/products`);
       const data = await res.json();
       setProducts(data);
     };
@@ -33,7 +34,8 @@ const Product = () => {
             >
               <div className="h-[70%] flex items-center justify-center bg-white rounded-xl border border-amber-100 p-2">
                 <img
-                  src={`http://localhost:5000${product.image}`}
+                  // src={`http://localhost:5000${product.image}`}
+                  src={`${import.meta.env.VITE_API_URL}${product.image}`}
                   alt={product.name}
                   className="h-full object-contain"
                 />
