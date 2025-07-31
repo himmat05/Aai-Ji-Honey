@@ -4,8 +4,10 @@ import Navbar from "./Navbar";
 import { useEffect } from "react";
 import { toast } from 'react-toastify';
 import HoneyBeeBackground from "./HoneyBeeBackground";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -45,7 +47,7 @@ const Login = () => {
       if (res.status === 200 && res.data.token) {
         toast.success('✅ Login successful!');
         localStorage.setItem('token', res.data.token);
-        window.location.href = "/add-product";
+        navigate("/add-product");
       }
 
     } catch (error) {
