@@ -29,12 +29,6 @@ const Form = ({ product, onClose }) => {
     const amount = Math.round((basePrice + surcharge + deliverycharges) * 100); // paise
 
     try {
-      // Step 1: Create Razorpay order on backend
-      // const orderRes = await fetch('http://localhost:5000/create-order', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ amount })
-      // });
       const orderRes = await fetch(`${import.meta.env.VITE_API_URL}/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
