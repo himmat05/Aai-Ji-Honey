@@ -18,7 +18,7 @@ const ImageGallery = () => {
   ]
 
   return (
-    <div className="mt-12 px-4 md:px-8 md:max-w-6xl mx-auto w-107">
+    <div className="mt-12 px-4 md:px-8 md:max-w-6xl mx-auto w-100">
       <h2 className="text-2xl md:text-3xl font-semibold mb-6 text-center text-amber-700">
         Our Beekeeping Journey
       </h2>
