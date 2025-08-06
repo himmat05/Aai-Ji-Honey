@@ -193,9 +193,6 @@ const OrderDashboard = () => {
   };
 };
 
-
-
-
     // Separate orders into pending and completed
     const pendingOrders = orders.filter(order => order.status !== 'Completed');
     const completedOrders = orders.filter(order => order.status === 'Completed');
@@ -232,114 +229,6 @@ const OrderDashboard = () => {
                     Print Bill
                 </button>
             </div>
-
-            {/* Printable Hidden Section */}
-            {/* <div id={`print-section-${order._id}`} className="hidden printable bg-white p-6">
-
-                {/* bill format */}
-                <div>
-                    <div className='bg-green-300 border-2 border-black'>
-                        <div className='mx-auto text-center mt-2'>
-                            <h1>Jai Shri Aai Mata Namo Namah</h1>
-                            <h1 className='underline'>Tax Invoice</h1>
-                        </div>
-                        <div className='flex items-center justify-around gap-10 mt-2'>
-                            <div className='ml-5'>
-                                <h1>GSTIN:08HIAPS1709H1Z5</h1>
-                                <h1>Email: aaijihoney24@gmail.com</h1>
-                            </div>
-                            <div>
-                                <h1>Contact : +91 9610047740</h1>
-                                <h1 className='ml-17'>+91 9887918251</h1>
-                            </div>
-                        </div>
-                        <div className='flex items-center gap-2 mt-0.5 mb-0.5 w-full justify-center'>
-                            <img src='Aai ji honey.jpg' className='w-18 rounded-full' />
-                            <h1 className='font-light-bold text-5xl'>Aai Ji Honey</h1>
-                        </div>
-                        <div>
-                            <div className=''><h1 className='font-bold pl-1'>Head office</h1><h1 className='ml-5'>426,Aai mata colony, Megakheda,Post-Pipli Ahiran,Teh-Kunwariya,Dist-Rajsamand,Rajasthan, PIN-313327,India.</h1></div>
-                            <h1 className='flex items-center justify-center font-bold'>(Raw honey ,Processed Honey , Multi-floral Honey,Herbal Honey,Edible Honey)</h1>
-                        </div>
-                    </div>
-                    <div className='mt-2 flex border-2 border-black bg-amber-200'>
-                        <div className='w-3/5 border-r-2 border-black pr-2'>
-                            <h1 className='font-bold'>Customer Details :</h1>
-                            <div className='flex'><h1 className='font-bold'>GSTIN: </h1><h1> 08AHFPC5892E1ZC</h1></div>
-                            <div className='flex'><h1 className='font-bold'>Name : </h1><h1> {order.name}</h1></div>
-                            <div className='flex'><h1 className='font-bold'>Mobile: </h1><h1> {order.mobile}</h1></div>
-                            <div className='flex'><h1 className='font-bold'>Email: </h1><h1> {order.email}</h1></div>
-                            <div className='flex'><h1 className='font-bold'>Address : </h1><h1> {order.address}</h1></div>
-                            <div className='flex'><h1 className='font-bold'>Order id : </h1><h1> {order._id}</h1></div>
-                        </div>
-                        <div className='w-2/5 pl-2'>
-                            <div className='flex'><h1 className='font-bold'>Date:</h1><h1> {new Date(order.createdAt).toLocaleString()}</h1></div>
-                            <div className='flex'><h1 className='font-bold'>Invoice No.:</h1><h1>{order.invoiceNumber}</h1></div>
-                            <div className='flex'><h1 className='font-bold'>Supply state :</h1><h1> Rajasthan</h1></div>
-                            <div className='flex'><h1 className='font-bold'>Supply mode : </h1><h1> Delivery</h1></div>
-                            <div className='flex'><h1 className='font-bold'>Ordered by :</h1><h1> MR. Bhanwar lal</h1></div>
-                        </div>
-                    </div>
-                    <div className='mt-3'>
-                        <table className='w-full'>
-                            <thead>
-                                <tr className=' border-black'>
-                                    <th className='border-2 border-black'>S.No</th>
-                                    <th className='border-2 border-black'>Description of Items</th>
-                                    <th className='border-2 border-black'>HSN code</th>
-                                    <th className='border-2 border-black'>Quantity</th>
-                                    <th className='border-2 border-black'>Price ₹</th>
-                                    <th className='border-2 border-black'>Total Price ₹</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr className='row-span-2'>
-                                    <td className='font-bold border-2 border-black row-span-2 pl-3'>1</td>
-                                    <td className='border-2 border-black pl-1 row-span-2'>{order.product?.name || 'N/A'}</td>
-                                    <td className='font-bold border-2 border-black row-span-2 pl-3'>0409</td>
-                                    <td className='border-2 border-black pl-1 row-span-2'>{order.quantity}</td>
-                                    <td className='border-2 border-black pl-1 row-span-2'>{order.product?.price || 'N/A'}</td>
-                                    <td className='border-2 border-black pl-1 row-span-2'>{order.product?.price * order.quantity}</td>
-                                </tr>
-                                <tr className='mt-1'>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td className='font-bold border-2 border-black pl-1'>Pt fee ₹</td>
-                                    <td className='border-2 border-black pl-1'>{(order.product?.price * order.quantity * 0.0236).toFixed(2)}</td>
-                                    <td className='border-2 border-black pl-1'>{(order.product?.price * order.quantity * 0.0236) + (order.product?.price * order.quantity)}</td>
-                                </tr>
-                                <tr>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td className='font-bold border-2 border-black pl-1'>Delivery ₹</td>
-                                    <td className=' border-2 border-black pl-1'>{order.product?.price * order.quantity < 990 ? 100 : 0}</td>
-                                    <td className=' border-2 border-black pl-1'>{((order.product?.price * order.quantity < 990 ? 100 : 0) + ((order.product?.price * order.quantity * 0.0236) + (order.product?.price * order.quantity))).toFixed(2)}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div className='flex'>
-                        <div>
-                            <h1 className='font-bold'>Terms & Condition :</h1>
-                            <ul>
-                                <li>E & O.E</li>
-                                <li>All disputes subjects to "UDAIPUR" Jurisdictions only.</li>
-                            </ul>
-                        </div>
-                        <div className='flex mt-3 ml-6 float-right'>
-                            <div>
-                                <img src='Signature.png' className='w-20 ml-8' />
-                            </div>
-                            <div className='mt-5  text-right'>
-                                <h1 className='font-bold'>For - Aai Ji Honey</h1>
-                                <h4>Authorized signature</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            {/* </div> */}
         </div>
     );
 
