@@ -42,121 +42,16 @@ const OrderDashboard = () => {
     };
 
 
-    // const handlePrint = (orderId) => {
-    //     const content = document.getElementById(`print-section-${orderId}`).innerHTML;
-    //     const original = document.body.innerHTML;
-
-    //     document.body.innerHTML = content;
-    //     window.print();
-    //     document.body.innerHTML = original;
-    //     window.location.reload(); // To restore the React view after print
-    //     countref.current += 1;
-    // };
-
     const handlePrint = (orderId) => {
-        const content = document.getElementById(`print-section-${orderId}`);
-        if (!content) return;
+        const content = document.getElementById(`print-section-${orderId}`).innerHTML;
+        const original = document.body.innerHTML;
 
-        const printWindow = window.open('', '', 'width=800,height=600');
-
-        const handlePrint = (order) => {
-            const printWindow = window.open('', '', 'height=800,width=1000');
-
-            printWindow.document.write(`
-  <html>
-    <head>
-      <title>Invoice</title>
-      <style>
-        * {
-          box-sizing: border-box;
-        }
-        .page {
-          font-family: Arial, sans-serif;
-          padding: 20px;
-        }
-        .center {
-          text-align: center;
-        }
-        .mt-2 {
-          margin-top: 10px;
-        }
-        .w-full {
-          width: 100%;
-        }
-        table, th, td {
-          border: 1px solid black;
-          border-collapse: collapse;
-        }
-        th, td {
-          padding: 8px;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="page">
-        <div class="center">
-          <h1>जय श्री आई माता नमो नमः</h1>
-          <h2>Tax Invoice</h2>
-          <h3>Aai Ji Honey</h3>
-        </div>
-
-        <div class="mt-2">
-          <p><strong>Name:</strong> ${order.name}</p>
-          <p><strong>Mobile:</strong> ${order.mobile}</p>
-          <p><strong>Email:</strong> ${order.email}</p>
-          <p><strong>Address:</strong> ${order.address}</p>
-          <p><strong>Order ID:</strong> ${order._id}</p>
-          <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
-          <p><strong>Invoice No:</strong> ${order.invoiceNumber}</p>
-        </div>
-
-        <div class="mt-2">
-          <table class="w-full">
-            <thead>
-              <tr>
-                <th>S.No</th>
-                <th>Item</th>
-                <th>HSN</th>
-                <th>Qty</th>
-                <th>Price ₹</th>
-                <th>Total ₹</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>1</td>
-                <td>${order.product?.name || ''}</td>
-                <td>0409</td>
-                <td>${order.quantity}</td>
-                <td>${order.product?.price || 0}</td>
-                <td>${order.product?.price * order.quantity}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="mt-2 center">
-          <p>Thanks for shopping with Aai Ji Honey 🍯</p>
-          <p>426, Aai Mata Colony, Rajasthan, India</p>
-        </div>
-      </div>
-    </body>
-  </html>
-  `);
-
-            printWindow.document.close();
-            printWindow.focus();
-            printWindow.print();
-            printWindow.close();
-        };
-
-
-        printWindow.document.close();
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
+        document.body.innerHTML = content;
+        window.print();
+        document.body.innerHTML = original;
+        window.location.reload(); // To restore the React view after print
+        countref.current += 1;
     };
-
 
 
     // Separate orders into pending and completed
@@ -197,11 +92,10 @@ const OrderDashboard = () => {
             </div>
 
             {/* Printable Hidden Section */}
-            {/* <div id={`print-section-${order._id}`} className="hidden printable bg-white p-6"> */}
+            <div id={`print-section-${order._id}`} className="hidden printable bg-white p-6">
 
-
-            {/* bill format */}
-            {/* <div>
+                {/* bill format */}
+                <div>
                     <div className='bg-green-300 border-2 border-black'>
                         <div className='mx-auto text-center mt-2'>
                             <h1>Jai Shri Aai Mata Namo Namah</h1>
@@ -302,56 +196,56 @@ const OrderDashboard = () => {
                             </div>
                         </div>
                     </div>
-                </div> */}
+                </div>
+            </div>
         </div>
-        </div >
     );
 
 
-return (
-    <div className="m-2.5 p-4 max-w-full mx-auto w-full mt-[-15px] mb-[-6px] bg-gradient-to-br from-yellow-100 to-yellow-300 shadow-lg">
-        <h2 className="text-3xl font-bold mb-6 mt-5 text-center">Order Dashboard</h2>
+    return (
+        <div className="m-2.5 p-4 max-w-full mx-auto w-full mt-[-15px] mb-[-6px] bg-gradient-to-br from-yellow-100 to-yellow-300 shadow-lg">
+            <h2 className="text-3xl font-bold mb-6 mt-5 text-center">Order Dashboard</h2>
 
-        <div className='routes  space-x-3 mb-3'>
-            <span className="bg-gradient-to-r from-amber-200 to-amber-500 hover:from-amber-400 hover:to-amber-200 text-amber-900 font-semibold px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 ease-in-out">
-                <Link to="/" className="no-underline">Home</Link>
-            </span>
+            <div className='routes  space-x-3 mb-3'>
+                <span className="bg-gradient-to-r from-amber-200 to-amber-500 hover:from-amber-400 hover:to-amber-200 text-amber-900 font-semibold px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 ease-in-out">
+                    <Link to="/" className="no-underline">Home</Link>
+                </span>
 
-            <span className="bg-gradient-to-r from-amber-200 to-amber-500 hover:from-amber-400 hover:to-amber-200 text-amber-900 font-semibold px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 ease-in-out">
-                <Link to="/add-product" className="no-underline">Dashboard</Link>
-            </span>
+                <span className="bg-gradient-to-r from-amber-200 to-amber-500 hover:from-amber-400 hover:to-amber-200 text-amber-900 font-semibold px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 ease-in-out">
+                    <Link to="/add-product" className="no-underline">Dashboard</Link>
+                </span>
 
+            </div>
+
+            {loading ? (
+                <p>Loading orders...</p>
+            ) : (
+                <>
+                    <div className="mb-8">
+                        <h3 className="text-2xl font-semibold mb-4 hover:shadow-2xl">🕒 Pending Orders</h3>
+                        {pendingOrders.length === 0 ? (
+                            <p>No pending orders.</p>
+                        ) : (
+                            <div className="space-y-4">
+                                {pendingOrders.map(order => renderOrderCard(order, true))}
+                            </div>
+                        )}
+                    </div>
+
+                    <div>
+                        <h3 className="text-2xl font-semibold mb-4 hover:shadow-2xl">✅ Completed Orders</h3>
+                        {completedOrders.length === 0 ? (
+                            <p>No completed orders yet.</p>
+                        ) : (
+                            <div className="space-y-4">
+                                {completedOrders.map(order => renderOrderCard(order))}
+                            </div>
+                        )}
+                    </div>
+                </>
+            )}
         </div>
-
-        {loading ? (
-            <p>Loading orders...</p>
-        ) : (
-            <>
-                <div className="mb-8">
-                    <h3 className="text-2xl font-semibold mb-4 hover:shadow-2xl">🕒 Pending Orders</h3>
-                    {pendingOrders.length === 0 ? (
-                        <p>No pending orders.</p>
-                    ) : (
-                        <div className="space-y-4">
-                            {pendingOrders.map(order => renderOrderCard(order, true))}
-                        </div>
-                    )}
-                </div>
-
-                <div>
-                    <h3 className="text-2xl font-semibold mb-4 hover:shadow-2xl">✅ Completed Orders</h3>
-                    {completedOrders.length === 0 ? (
-                        <p>No completed orders yet.</p>
-                    ) : (
-                        <div className="space-y-4">
-                            {completedOrders.map(order => renderOrderCard(order))}
-                        </div>
-                    )}
-                </div>
-            </>
-        )}
-    </div>
-);
+    );
 };
 
 export default OrderDashboard;
