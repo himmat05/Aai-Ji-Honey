@@ -42,16 +42,60 @@ const OrderDashboard = () => {
     };
 
 
-    const handlePrint = (orderId) => {
-        const content = document.getElementById(`print-section-${orderId}`).innerHTML;
-        const original = document.body.innerHTML;
+    // const handlePrint = (orderId) => {
+    //     const content = document.getElementById(`print-section-${orderId}`).innerHTML;
+    //     const original = document.body.innerHTML;
 
-        document.body.innerHTML = content;
-        window.print();
-        document.body.innerHTML = original;
-        window.location.reload(); // To restore the React view after print
-        countref.current += 1;
-    };
+    //     document.body.innerHTML = content;
+    //     window.print();
+    //     document.body.innerHTML = original;
+    //     window.location.reload(); // To restore the React view after print
+    //     countref.current += 1;
+    // };
+
+    const handlePrint = (orderId) => {
+  const content = document.getElementById(`print-section-${orderId}`);
+  if (!content) return;
+
+  const printWindow = window.open('', '', 'width=800,height=600');
+
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Invoice</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+          }
+          h2 {
+            margin-bottom: 10px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+          table, th, td {
+            border: 1px solid black;
+          }
+          th, td {
+            padding: 8px;
+            text-align: left;
+          }
+        </style>
+      </head>
+      <body>
+        ${content.innerHTML}
+      </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+  printWindow.close();
+};
+
 
 
     // Separate orders into pending and completed
@@ -91,11 +135,11 @@ const OrderDashboard = () => {
                 </button>
             </div>
 
-            {/* Printable Hidden Section */}
+            Printable Hidden Section
             <div id={`print-section-${order._id}`} className="hidden printable bg-white p-6">
 
                 {/* bill format */}
-                <div>
+                {/* <div>
                     <div className='bg-green-300 border-2 border-black'>
                         <div className='mx-auto text-center mt-2'>
                             <h1>Jai Shri Aai Mata Namo Namah</h1>
@@ -190,13 +234,13 @@ const OrderDashboard = () => {
                             <div>
                                 <img src='Signature.png' className='w-20 ml-8' />
                             </div>
-                            <div className='mt-3  text-right'>
+                            <div className='mt-5  text-right'>
                                 <h1 className='font-bold'>For - Aai Ji Honey</h1>
                                 <h4>Authorized signature</h4>
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> */}
             </div>
         </div>
     );
