@@ -54,22 +54,22 @@ const OrderDashboard = () => {
     // };
 
     const handlePrint = (orderId) => {
-  const order = orders.find((o) => o._id === orderId);
-  if (!order) {
-    alert('Order not found!');
-    return;
-  }
+        const order = orders.find((o) => o._id === orderId);
+        if (!order) {
+            alert('Order not found!');
+            return;
+        }
 
-  const deliveryFee = order.product?.price * order.quantity < 990 ? 100 : 0;
-  const ptFee = (order.product?.price * order.quantity * 0.0236).toFixed(2);
-  const total = (
-    parseFloat(ptFee) +
-    deliveryFee +
-    order.product?.price * order.quantity
-  ).toFixed(2);
+        const deliveryFee = order.product?.price * order.quantity < 990 ? 100 : 0;
+        const ptFee = (order.product?.price * order.quantity * 0.0236).toFixed(2);
+        const total = (
+            parseFloat(ptFee) +
+            deliveryFee +
+            order.product?.price * order.quantity
+        ).toFixed(2);
 
-  const printWindow = window.open('', '', 'width=900,height=700');
-  printWindow.document.write(`
+        const printWindow = window.open('', '', 'width=900,height=700');
+        printWindow.document.write(`
     <html>
       <head>
         <title>Print Invoice</title>
@@ -97,10 +97,10 @@ const OrderDashboard = () => {
                 <p>+91 9887918251</p>
               </div>
             </div>
-            <div class="center flex" style="margin: 10px 0;">
-              <img src="Aai ji honey.jpg" alt="Logo" />
-              <h1 style="font-size: 2.5rem;">Aai Ji Honey</h1>
-            </div>
+             <div class="center" style="margin: 10px 0; display: flex; align-items: center; justify-content: center; gap: 10px;">
+               <img src="Aai ji honey.jpg" alt="Logo" style="max-width: 80px; height: auto;" />
+               <h1 style="font-size: 2.5rem; margin: 0;">Aai Ji Honey</h1>
+             </div>
             <div>
               <strong>Head office:</strong> 426, Aai mata colony, Megakheda, Post-Pipli Ahiran, Teh-Kunwariya, Dist-Rajsamand, Rajasthan, PIN-313327, India.
               <div class="center"><strong>(Raw Honey, Processed Honey, Herbal Honey, Edible Honey)</strong></div>
@@ -185,13 +185,13 @@ const OrderDashboard = () => {
     </html>
   `);
 
-  printWindow.document.close();
-  printWindow.onload = () => {
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
-  };
-};
+        printWindow.document.close();
+        printWindow.onload = () => {
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        };
+    };
 
     // Separate orders into pending and completed
     const pendingOrders = orders.filter(order => order.status !== 'Completed');
