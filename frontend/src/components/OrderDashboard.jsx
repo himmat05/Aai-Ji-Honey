@@ -97,7 +97,7 @@ const OrderDashboard = () => {
                 <p>+91 9887918251</p>
               </div>
             </div>
-            <div class="center" style="margin: 10px 0;">
+            <div class="center flex" style="margin: 10px 0;">
               <img src="Aai ji honey.jpg" alt="Logo" />
               <h1 style="font-size: 2.5rem;">Aai Ji Honey</h1>
             </div>
