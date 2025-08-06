@@ -82,7 +82,7 @@ const OrderDashboard = () => {
       </head>
       <body>
         <div>
-          <div style="background-color:#86efac; border:2px solid black; padding: 10px;">
+          <div style="background-color:#86efac; border:2px solid black; padding:2px;">
             <div class="center">
               <h1>Jai Shri Aai Mata Namo Namah</h1>
               <h1 style="text-decoration:underline;">Tax Invoice</h1>
