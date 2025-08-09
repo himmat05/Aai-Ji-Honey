@@ -316,19 +316,54 @@ app.post('/products', authenticateToken, upload.single('image'), async (req, res
 // });
 
 
+// app.put('/products/:id', authenticateToken, upload.single('image'), async (req, res) => {
+//   try {
+//     const { name, price } = req.body;
+//     const product = await Product.findById(req.params.id);
+//     if (!product) return res.status(404).send('Product not found');
+
+//     product.name = name;
+//     product.price = price;
+
+//     if (req.file) {
+//       const imageBase64 = fs.readFileSync(req.file.path, { encoding: 'base64' });
+//       fs.unlinkSync(req.file.path);
+//       product.image = imageBase64;
+//     }
+
+//     await product.save();
+//     res.json(product);
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+
+if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).json({ error: 'Invalid product ID' });
+}
+
+
 app.put('/products/:id', authenticateToken, upload.single('image'), async (req, res) => {
   try {
-    const { name, price } = req.body;
+    // Validate ID format
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid product ID' });
+    }
+
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).send('Product not found');
 
-    product.name = name;
-    product.price = price;
+    const { name, price } = req.body;
+    if (name) product.name = name;
+    if (price) product.price = parseFloat(price);
 
     if (req.file) {
-      const imageBase64 = fs.readFileSync(req.file.path, { encoding: 'base64' });
-      fs.unlinkSync(req.file.path);
-      product.image = imageBase64;
+      try {
+        const imageBase64 = fs.readFileSync(req.file.path, { encoding: 'base64' });
+        product.image = imageBase64;
+      } finally {
+        fs.unlinkSync(req.file.path);
+      }
     }
 
     await product.save();
@@ -337,6 +372,7 @@ app.put('/products/:id', authenticateToken, upload.single('image'), async (req, 
     res.status(500).json({ error: err.message });
   }
 });
+
 
 
 
