@@ -173,12 +173,17 @@ const AddProduct = () => {
               key={product._id}
               className="border p-4 rounded shadow flex flex-col items-center bg-white hover:shadow-lg transition-shadow duration-300"
             >
-              <img
-                // src={`http://localhost:5000${product.image}`}
+              {/* <img
                 img src={`${import.meta.env.VITE_API_URL}${product.image}`} 
                 alt={product.name}
                 className="w-full h-80 object-contain rounded "
+              /> */}
+              <img
+                src={`data:image/jpeg;base64,${product.image}`}
+                alt={product.name}
+                className="w-full h-80 object-contain rounded"
               />
+
               <h3 className="font-semibold">{product.name}</h3>
               <p className="text-sm">₹{product.price}</p>
               <div className="mt-2 flex gap-2">
