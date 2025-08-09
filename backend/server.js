@@ -340,7 +340,6 @@ app.post('/products', authenticateToken, upload.single('image'), async (req, res
 
 app.put('/products/:id', authenticateToken, upload.single('image'), async (req, res) => {
   try {
-    // ✅ Move this check INSIDE the route
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: 'Invalid product ID' });
     }
@@ -353,20 +352,19 @@ app.put('/products/:id', authenticateToken, upload.single('image'), async (req, 
     if (price) product.price = parseFloat(price);
 
     if (req.file) {
-      try {
-        const imageBase64 = fs.readFileSync(req.file.path, { encoding: 'base64' });
-        product.image = imageBase64;
-      } finally {
-        fs.unlinkSync(req.file.path);
-      }
+      const imageBase64 = fs.readFileSync(req.file.path, { encoding: 'base64' });
+      product.image = imageBase64;
+      fs.unlinkSync(req.file.path);
     }
 
     await product.save();
     res.json(product);
   } catch (err) {
+    console.error("Error updating product:", err);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 
 
