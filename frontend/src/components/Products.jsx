@@ -40,10 +40,17 @@ const Product = () => {
                   className="h-full object-contain"
                 /> */}
                 <img
-                  src={`data:image/jpeg;base64,${product.image}`}
+                  src={
+                    product.image
+                      ? product.image.startsWith('/uploads')
+                        ? `${import.meta.env.VITE_API_URL}${product.image}`
+                        : `data:image/jpeg;base64,${product.image}`
+                      : '/placeholder.jpg' // fallback image
+                  }
                   alt={product.name}
-                  className="h-full object-contain"
+                  className="w-full h-80 object-contain rounded"
                 />
+
               </div>
 
               {/* 📦 Product Info Section */}

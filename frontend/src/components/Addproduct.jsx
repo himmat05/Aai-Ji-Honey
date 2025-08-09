@@ -179,10 +179,17 @@ const AddProduct = () => {
                 className="w-full h-80 object-contain rounded "
               /> */}
               <img
-                src={`data:image/jpeg;base64,${product.image}`}
+                src={
+                  product.image
+                    ? product.image.startsWith('/uploads')
+                      ? `${import.meta.env.VITE_API_URL}${product.image}`
+                      : `data:image/jpeg;base64,${product.image}`
+                    : '/placeholder.jpg' // fallback image
+                }
                 alt={product.name}
                 className="w-full h-80 object-contain rounded"
               />
+
 
               <h3 className="font-semibold">{product.name}</h3>
               <p className="text-sm">₹{product.price}</p>
