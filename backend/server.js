@@ -268,30 +268,77 @@ app.get('/products', async (req, res) => {
   res.json(products);
 });
 
-// Add product (protected)
-app.post('/products', authenticateToken, upload.single('image'), async (req, res) => {
-  const { name, price } = req.body;
-  const image = req.file ? `/uploads/${req.file.filename}` : '';
+// // Add product (protected)
+// app.post('/products', authenticateToken, upload.single('image'), async (req, res) => {
+//   const { name, price } = req.body;
+//   const image = req.file ? `/uploads/${req.file.filename}` : '';
 
-  const newProduct = new Product({ name, price, image });
-  await newProduct.save();
-  res.status(201).json(newProduct);
+//   const newProduct = new Product({ name, price, image });
+//   await newProduct.save();
+//   res.status(201).json(newProduct);
+// });
+
+app.post('/products', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    const { name, price } = req.body;
+
+    // Convert image file to Base64 if uploaded
+    let imageBase64 = '';
+    if (req.file) {
+      imageBase64 = fs.readFileSync(req.file.path, { encoding: 'base64' });
+      fs.unlinkSync(req.file.path); // remove temp file
+    }
+
+    const newProduct = new Product({ name, price, image: imageBase64 });
+    await newProduct.save();
+
+    res.status(201).json(newProduct);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
+
+
 
 // Update product (protected)
-app.put('/products/:id', authenticateToken, upload.single('image'), async (req, res) => {
-  const { name, price } = req.body;
-  const product = await Product.findById(req.params.id);
-  if (!product) return res.status(404).send('Product not found');
+// app.put('/products/:id', authenticateToken, upload.single('image'), async (req, res) => {
+//   const { name, price } = req.body;
+//   const product = await Product.findById(req.params.id);
+//   if (!product) return res.status(404).send('Product not found');
 
-  product.name = name;
-  product.price = price;
-  if (req.file) {
-    product.image = `/uploads/${req.file.filename}` || "Aai-ji-honey-Box_page.JPG";
+//   product.name = name;
+//   product.price = price;
+//   if (req.file) {
+//     product.image = `/uploads/${req.file.filename}` || "Aai-ji-honey-Box_page.JPG";
+//   }
+//   await product.save();
+//   res.json(product);
+// });
+
+
+app.put('/products/:id', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    const { name, price } = req.body;
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).send('Product not found');
+
+    product.name = name;
+    product.price = price;
+
+    if (req.file) {
+      const imageBase64 = fs.readFileSync(req.file.path, { encoding: 'base64' });
+      fs.unlinkSync(req.file.path);
+      product.image = imageBase64;
+    }
+
+    await product.save();
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  await product.save();
-  res.json(product);
 });
+
+
 
 // Delete product (protected)
 app.delete('/products/:id', authenticateToken, async (req, res) => {
