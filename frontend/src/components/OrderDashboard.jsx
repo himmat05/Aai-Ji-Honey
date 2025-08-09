@@ -11,8 +11,6 @@ const OrderDashboard = () => {
 
     const fetchOrders = async () => {
         try {
-            // const res = await axios.get('http://localhost:5000/orders');
-            // setOrders(res.data);
             const res = await axios.get(`${import.meta.env.VITE_API_URL}/orders`);
             setOrders(res.data);
         } catch (err) {
@@ -28,10 +26,6 @@ const OrderDashboard = () => {
 
     const markCompleted = async (id) => {
         try {
-            // await axios.patch(`http://localhost:5000/orders/${id}`, {
-            //     status: 'Completed',
-
-            // });
             await axios.patch(`${import.meta.env.VITE_API_URL}/orders/${id}`, {
                 status: 'Completed',
             });
@@ -41,17 +35,6 @@ const OrderDashboard = () => {
         }
     };
 
-
-    // const handlePrint = (orderId) => {
-    //     const content = document.getElementById(`print-section-${orderId}`).innerHTML;
-    //     const original = document.body.innerHTML;
-
-    //     document.body.innerHTML = content;
-    //     window.print();
-    //     document.body.innerHTML = original;
-    //     window.location.reload(); // To restore the React view after print
-    //     countref.current += 1;
-    // };
 
     const handlePrint = (orderId) => {
         const order = orders.find((o) => o._id === orderId);
