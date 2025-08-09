@@ -219,7 +219,7 @@ app.post('/orders', async (req, res) => {
     const next = count + 1;
 
     const year = new Date().getFullYear() + 1;
-    const invoiceNumber = `AJh/${year},${String(next).padStart(3, '0')}`;
+    const invoiceNumber = `AJh/${year},${String(next).padStart(4, '0')}`;
 
     const order = new Order({
       ...req.body,
