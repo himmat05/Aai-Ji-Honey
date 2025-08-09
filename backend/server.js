@@ -338,14 +338,9 @@ app.post('/products', authenticateToken, upload.single('image'), async (req, res
 //   }
 // });
 
-if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    return res.status(400).json({ error: 'Invalid product ID' });
-}
-
-
 app.put('/products/:id', authenticateToken, upload.single('image'), async (req, res) => {
   try {
-    // Validate ID format
+    // ✅ Move this check INSIDE the route
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: 'Invalid product ID' });
     }
