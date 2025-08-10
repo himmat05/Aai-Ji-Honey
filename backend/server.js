@@ -98,18 +98,6 @@ mongoose.connect(process.env.MONGO_URI)
   .catch((err) => console.error('MongoDB connection error:', err));
 
 
-// Multer setup
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
-const upload = multer({ storage: storage });
-
-
 // Auth Middleware
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -268,76 +256,92 @@ app.get('/products', async (req, res) => {
   res.json(products);
 });
 
-// // Add product (protected)
-// app.post('/products', authenticateToken, upload.single('image'), async (req, res) => {
-//   const { name, price } = req.body;
-//   const image = req.file ? `/uploads/${req.file.filename}` : '';
 
-//   const newProduct = new Product({ name, price, image });
-//   await newProduct.save();
-//   res.status(201).json(newProduct);
+// app.post('/products', authenticateToken, upload.single('image'), async (req, res) => {
+//   try {
+//     const { name, price } = req.body;
+
+//     // Convert image file to Base64 if uploaded
+//     let imageBase64 = '';
+//     if (req.file) {
+//       imageBase64 = fs.readFileSync(req.file.path, { encoding: 'base64' });
+//       fs.unlinkSync(req.file.path); // remove temp file
+//     }
+
+//     const newProduct = new Product({ name, price, image: imageBase64 });
+//     await newProduct.save();
+
+//     res.status(201).json(newProduct);
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
 // });
 
+
+// app.put('/products/:id', authenticateToken, upload.single('image'), async (req, res) => {
+//   try {
+//     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+//       return res.status(400).json({ error: 'Invalid product ID' });
+//     }
+
+//     const product = await Product.findById(req.params.id);
+//     if (!product) return res.status(404).send('Product not found');
+
+//     const { name, price } = req.body;
+//     if (name) product.name = name;
+//     if (price) product.price = parseFloat(price);
+
+//     if (req.file) {
+//       const imageBase64 = fs.readFileSync(req.file.path, { encoding: 'base64' });
+//       product.image = imageBase64;
+//       fs.unlinkSync(req.file.path);
+//     }
+
+//     await product.save();
+//     res.json(product);
+//   } catch (err) {
+//     console.error("Error updating product:", err);
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+const upload = multer({ storage: storage });
+
+// Add Product
 app.post('/products', authenticateToken, upload.single('image'), async (req, res) => {
   try {
     const { name, price } = req.body;
-
-    // Convert image file to Base64 if uploaded
     let imageBase64 = '';
+    let mimeType = '';
+
     if (req.file) {
+      mimeType = req.file.mimetype;
       imageBase64 = fs.readFileSync(req.file.path, { encoding: 'base64' });
-      fs.unlinkSync(req.file.path); // remove temp file
+      fs.unlinkSync(req.file.path);
     }
 
-    const newProduct = new Product({ name, price, image: imageBase64 });
+    const newProduct = new Product({
+      name,
+      price,
+      image: `data:${mimeType};base64,${imageBase64}` // store full data URL
+    });
     await newProduct.save();
-
     res.status(201).json(newProduct);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-
-
-// Update product (protected)
-// app.put('/products/:id', authenticateToken, upload.single('image'), async (req, res) => {
-//   const { name, price } = req.body;
-//   const product = await Product.findById(req.params.id);
-//   if (!product) return res.status(404).send('Product not found');
-
-//   product.name = name;
-//   product.price = price;
-//   if (req.file) {
-//     product.image = `/uploads/${req.file.filename}` || "Aai-ji-honey-Box_page.JPG";
-//   }
-//   await product.save();
-//   res.json(product);
-// });
-
-
-// app.put('/products/:id', authenticateToken, upload.single('image'), async (req, res) => {
-//   try {
-//     const { name, price } = req.body;
-//     const product = await Product.findById(req.params.id);
-//     if (!product) return res.status(404).send('Product not found');
-
-//     product.name = name;
-//     product.price = price;
-
-//     if (req.file) {
-//       const imageBase64 = fs.readFileSync(req.file.path, { encoding: 'base64' });
-//       fs.unlinkSync(req.file.path);
-//       product.image = imageBase64;
-//     }
-
-//     await product.save();
-//     res.json(product);
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// });
-
+// Update Product
 app.put('/products/:id', authenticateToken, upload.single('image'), async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -352,9 +356,10 @@ app.put('/products/:id', authenticateToken, upload.single('image'), async (req, 
     if (price) product.price = parseFloat(price);
 
     if (req.file) {
+      const mimeType = req.file.mimetype;
       const imageBase64 = fs.readFileSync(req.file.path, { encoding: 'base64' });
-      product.image = imageBase64;
       fs.unlinkSync(req.file.path);
+      product.image = `data:${mimeType};base64,${imageBase64}`;
     }
 
     await product.save();
