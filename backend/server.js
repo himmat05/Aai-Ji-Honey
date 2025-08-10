@@ -14,6 +14,7 @@ const Product = require('./models/Product');
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const axios = require("axios");
+const fs = require("fs");
 
 const app = express();
 const PORT = 5000;
@@ -257,53 +258,6 @@ app.get('/products', async (req, res) => {
 });
 
 
-// app.post('/products', authenticateToken, upload.single('image'), async (req, res) => {
-//   try {
-//     const { name, price } = req.body;
-
-//     // Convert image file to Base64 if uploaded
-//     let imageBase64 = '';
-//     if (req.file) {
-//       imageBase64 = fs.readFileSync(req.file.path, { encoding: 'base64' });
-//       fs.unlinkSync(req.file.path); // remove temp file
-//     }
-
-//     const newProduct = new Product({ name, price, image: imageBase64 });
-//     await newProduct.save();
-
-//     res.status(201).json(newProduct);
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// });
-
-
-// app.put('/products/:id', authenticateToken, upload.single('image'), async (req, res) => {
-//   try {
-//     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-//       return res.status(400).json({ error: 'Invalid product ID' });
-//     }
-
-//     const product = await Product.findById(req.params.id);
-//     if (!product) return res.status(404).send('Product not found');
-
-//     const { name, price } = req.body;
-//     if (name) product.name = name;
-//     if (price) product.price = parseFloat(price);
-
-//     if (req.file) {
-//       const imageBase64 = fs.readFileSync(req.file.path, { encoding: 'base64' });
-//       product.image = imageBase64;
-//       fs.unlinkSync(req.file.path);
-//     }
-
-//     await product.save();
-//     res.json(product);
-//   } catch (err) {
-//     console.error("Error updating product:", err);
-//     res.status(500).json({ error: err.message });
-//   }
-// });
 
 
 const storage = multer.diskStorage({
