@@ -278,10 +278,12 @@ app.post('/products', authenticateToken, upload.single('image'), async (req, res
     let mimeType = '';
 
     if (req.file) {
-      mimeType = req.file.mimetype;
-      imageBase64 = fs.readFileSync(req.file.path, { encoding: 'base64' });
-      fs.unlinkSync(req.file.path);
+      const mimeType = req.file.mimetype || "image/jpeg"; // fallback if missing
+      const imageBase64 = fs.readFileSync(req.file.path, { encoding: 'base64' });
+      fs.unlinkSync(req.file.path); // delete temp file
+      imageData = `data:${mimeType};base64,${imageBase64}`;
     }
+
 
     const newProduct = new Product({
       name,
