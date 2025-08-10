@@ -11,11 +11,15 @@ const AddProduct = () => {
   const [products, setProducts] = useState([]);
   const [editId, setEditId] = useState(null);
   const navigate = useNavigate();
+  // const [imageFile, setImageFile] = useState(null); // actual file
+  // const [imagePreview, setImagePreview] = useState(""); // preview URL
+
+  const [imagePreview, setImagePreview] = useState(""); // store preview URL
 
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImage(URL.createObjectURL(file)); // for preview
+    if (e.target.files[0]) {
+      setImage(e.target.files[0]); // store the File for backend upload
+      setImagePreview(URL.createObjectURL(e.target.files[0])); // store preview URL
     }
   };
 
@@ -31,13 +35,15 @@ const AddProduct = () => {
       const formData = new FormData();
       formData.append("name", name);
       formData.append("price", price);
-      formData.append("image", image); // actual File object
+      if (image) {
+        formData.append("image", image); // send the File, not preview string
+      }
 
       if (editId) {
         await axios.put(`${import.meta.env.VITE_API_URL}/products/${editId}`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
+            "Content-Type": "multipart/form-data"
           },
         });
         setEditId(null);
@@ -45,20 +51,20 @@ const AddProduct = () => {
         await axios.post(`${import.meta.env.VITE_API_URL}/products`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
+            "Content-Type": "multipart/form-data"
           },
         });
       }
 
       setName("");
       setPrice("");
-      setImage("");
+      setImage(null);
+      setImagePreview("");
       fetchProducts();
     } catch (err) {
       console.error("Error saving product:", err);
     }
   };
-
 
 
   const fetchProducts = async () => {
@@ -120,7 +126,7 @@ const AddProduct = () => {
             required
             className="block w-full border p-2 rounded"
           />
-          <input
+          {/* <input
             type="file"
             accept="image/*"
             onChange={handleImageUpload}
@@ -128,7 +134,18 @@ const AddProduct = () => {
           />
           {image && (
             <img src={image} alt="Preview" className="w-32 h-32 object-contain rounded border" />
+          )} */}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="block w-full border p-2 rounded"
+          />
+
+          {imagePreview && (
+            <img src={imagePreview} alt="Preview" className="w-32 h-32 object-contain rounded border" />
           )}
+
           <button
             type="submit"
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 cursor-pointer"
@@ -154,17 +171,11 @@ const AddProduct = () => {
               key={product._id}
               className="border p-4 rounded shadow flex flex-col items-center bg-white hover:shadow-lg transition-shadow duration-300"
             >
-              {/* <img
-                img src={`${import.meta.env.VITE_API_URL}${product.image}`} 
-                alt={product.name}
-                className="w-full h-80 object-contain rounded "
-              /> */}
               <img
                 src={product.image}
                 alt={product.name}
                 className="w-full h-80 object-contain rounded"
               />
-
 
               <h3 className="font-semibold">{product.name}</h3>
               <p className="text-sm">₹{product.price}</p>
