@@ -33,21 +33,11 @@ const Product = () => {
               className="bg-gradient-to-br from-yellow-50 to-amber-100 rounded-3xl shadow-md p-4 border border-amber-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-[480px] max-w-sm"
             >
               <div className="h-[70%] flex items-center justify-center bg-white rounded-xl border border-amber-100 p-2">
-                {/* <img
-                  // src={`http://localhost:5000${product.image}`}
-                  src={`${import.meta.env.VITE_API_URL}${product.image}`}
-                  alt={product.name}
-                  className="h-full object-contain"
-                /> */}
                 <img
-                  src={product.image.startsWith("data:")
-                    ? product.image
-                    : `data:image/jpeg;base64,${product.image}`}
+                  src={product.image}
                   alt={product.name}
                   className="w-full h-80 object-contain rounded"
                 />
-
-
               </div>
 
               {/* 📦 Product Info Section */}

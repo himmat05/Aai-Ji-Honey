@@ -12,13 +12,13 @@ const AddProduct = () => {
   const [editId, setEditId] = useState(null);
   const navigate = useNavigate();
 
-
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImage(file); // ← store actual file, not base64
+      setImage(URL.createObjectURL(file)); // for preview
     }
   };
+
 
 
   const handleSubmit = async (e) => {
@@ -34,13 +34,6 @@ const AddProduct = () => {
       formData.append("image", image); // actual File object
 
       if (editId) {
-        // For PUT, you may need to use multipart override
-        // await axios.put(`http://localhost:5000/products/${editId}`, formData, {
-        //   headers: {
-        //     Authorization: `Bearer ${token}`,
-        //     'Content-Type': 'multipart/form-data'
-        //   },
-        // });
         await axios.put(`${import.meta.env.VITE_API_URL}/products/${editId}`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -49,13 +42,6 @@ const AddProduct = () => {
         });
         setEditId(null);
       } else {
-        // Add new
-        // await axios.post("http://localhost:5000/products", formData, {
-        //   headers: {
-        //     Authorization: `Bearer ${token}`,
-        //     'Content-Type': 'multipart/form-data'
-        //   },
-        // });
         await axios.post(`${import.meta.env.VITE_API_URL}/products`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -77,8 +63,6 @@ const AddProduct = () => {
 
   const fetchProducts = async () => {
     try {
-      // const res = await axios.get("http://localhost:5000/products");
-      // setProducts(res.data);
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/products`);
       setProducts(res.data);
 
@@ -92,9 +76,6 @@ const AddProduct = () => {
     const Conf = confirm("⚠️ Do you really want to delete these item !")
     if (Conf) {
       try {
-        // await axios.delete(`http://localhost:5000/products/${id}`, {
-        //   headers: { Authorization: `Bearer ${token}` },
-        // });
         await axios.delete(`${import.meta.env.VITE_API_URL}/products/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -179,12 +160,11 @@ const AddProduct = () => {
                 className="w-full h-80 object-contain rounded "
               /> */}
               <img
-                src={product.image.startsWith("data:")
-                  ? product.image
-                  : `data:image/jpeg;base64,${product.image}`}
+                src={product.image}
                 alt={product.name}
                 className="w-full h-80 object-contain rounded"
               />
+
 
               <h3 className="font-semibold">{product.name}</h3>
               <p className="text-sm">₹{product.price}</p>
