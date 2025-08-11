@@ -1,6 +1,6 @@
 import {createBrowserRouter ,Form,RouterProvider} from 'react-router-dom'
 import Navbar from './components/Navbar'
-import Home from './components/Home'
+import Home from './components/HOme'
 import About from './components/About'
 import Products from './components/Products'
 import Contact from './components/Contact'
