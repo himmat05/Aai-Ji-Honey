@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const fs = require("fs");
+const fs = require("fs/promises");
 const multer = require('multer');
 const path = require('path');
 const bcrypt = require('bcrypt');
@@ -279,12 +280,18 @@ app.post('/products', authenticateToken, upload.single('image'), async (req, res
     let imageData = "";
 
     // only process if multer saved a file (req.file exists)
+    // if (req.file) {
+    //   const mimeType = req.file.mimetype || "image/jpeg";
+    //   const base64 = fs.readFileSync(req.file.path, { encoding: "base64" });
+    //   // cleanup temp file
+    //   fs.unlinkSync(req.file.path);
+    //   imageData = `data:${mimeType};base64,${base64}`;
+    // }
     if (req.file) {
-      const mimeType = req.file.mimetype || "image/jpeg";
-      const base64 = fs.readFileSync(req.file.path, { encoding: "base64" });
-      // cleanup temp file
-      fs.unlinkSync(req.file.path);
-      imageData = `data:${mimeType};base64,${base64}`;
+      const mimeType = req.file.mimetype || "image/jpeg";            // get mime type or default
+      const base64 = await fs.readFile(req.file.path, { encoding: "base64" }); // async read file as base64 string
+      await fs.unlink(req.file.path);                                // async delete the temp file
+      imageData = `data:${mimeType};base64,${base64}`;              // create data URL string
     }
 
     const newProduct = new Product({
@@ -316,12 +323,19 @@ app.put('/products/:id', authenticateToken, upload.single('image'), async (req, 
     if (name) product.name = name;
     if (price !== undefined) product.price = parseFloat(price);
 
+    // if (req.file) {
+    //   const mimeType = req.file.mimetype || "image/jpeg";
+    //   const base64 = fs.readFileSync(req.file.path, { encoding: "base64" });
+    //   fs.unlinkSync(req.file.path);
+    //   product.image = `data:${mimeType};base64,${base64}`;
+    // }
     if (req.file) {
-      const mimeType = req.file.mimetype || "image/jpeg";
-      const base64 = fs.readFileSync(req.file.path, { encoding: "base64" });
-      fs.unlinkSync(req.file.path);
-      product.image = `data:${mimeType};base64,${base64}`;
+      const mimeType = req.file.mimetype || "image/jpeg";            // get mime type or default
+      const base64 = await fs.readFile(req.file.path, { encoding: "base64" }); // async read file as base64 string
+      await fs.unlink(req.file.path);                                // async delete the temp file
+      imageData = `data:${mimeType};base64,${base64}`;              // create data URL string
     }
+
     // if no req.file, leave product.image unchanged
 
     await product.save();
