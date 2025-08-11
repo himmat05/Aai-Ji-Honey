@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import HoneyBeeBackground from "./HoneyBeeBackground";
-import { toast } from "react-toastify";
 
 const AddProduct = () => {
   const [name, setName] = useState("");
@@ -14,61 +13,12 @@ const AddProduct = () => {
   const navigate = useNavigate();
 
 
-  // const handleImageUpload = (e) => {
-  //   if (e.target.files[0]) {
-  //     setImage(e.target.files[0]); // store the File for backend upload
-  //     setImagePreview(URL.createObjectURL(e.target.files[0])); // store preview URL
-  //   }
-  // };
-
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setImage(file); // store File for upload
     setImagePreview(URL.createObjectURL(file)); // for preview only
   };
-
-
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   const token = localStorage.getItem("token");
-
-  //   if (!token) return alert("Unauthorized access!");
-
-  //   try {
-  //     const formData = new FormData();
-  //     formData.append("name", name);
-  //     formData.append("price", price);
-  //     if (image) {
-  //       formData.append("image", image); // send the File, not preview string
-  //     }
-
-  //     if (editId) {
-  //       await axios.put(`${import.meta.env.VITE_API_URL}/products/${editId}`, formData, {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           "Content-Type": "multipart/form-data"
-  //         },
-  //       });
-  //       setEditId(null);
-  //     } else {
-  //       await axios.post(`${import.meta.env.VITE_API_URL}/products`, formData, {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           "Content-Type": "multipart/form-data"
-  //         },
-  //       });
-  //     }
-
-  //     setName("");
-  //     setPrice("");
-  //     setImage(null);
-  //     setImagePreview("");
-  //     fetchProducts();
-  //   } catch (err) {
-  //     console.error("Error saving product:", err);
-  //   }
-  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -170,15 +120,6 @@ const AddProduct = () => {
             required
             className="block w-full border p-2 rounded"
           />
-          {/* <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="block w-full border p-2 rounded"
-          />
-          {imagePreview && (
-            <img src={imagePreview} alt="Preview" className="w-32 h-32 object-contain rounded border" />
-          )} */}
           <input
             type="file"
             accept="image/*"

@@ -62,11 +62,6 @@ const Form = ({ product, onClose }) => {
             paymentId: response.razorpay_payment_id,
           };
 
-          // const saveRes = await fetch('http://localhost:5000/orders', {
-          //   method: 'POST',
-          //   headers: { 'Content-Type': 'application/json' },
-          //   body: JSON.stringify(finalOrder), // ⬅️ also fix: should send finalOrder not orderData
-          // });
           const saveRes = await fetch(`${import.meta.env.VITE_API_URL}/orders`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
