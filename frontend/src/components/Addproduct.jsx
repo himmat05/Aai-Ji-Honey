@@ -12,7 +12,6 @@ const AddProduct = () => {
   const [editId, setEditId] = useState(null);
   const navigate = useNavigate();
 
-
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;

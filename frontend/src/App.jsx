@@ -61,7 +61,6 @@ const App = () => {
       path: '/products/:id/update',
       element: <AddProduct />
     }
-
   ])
 
   return (
