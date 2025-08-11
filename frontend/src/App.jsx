@@ -23,7 +23,7 @@ const App = () => {
       path: '/About',
       element: <><Navbar /><About/></>,
     },{
-      path: '/Products',
+      path: '/products',
       element: <><Navbar /><Products/></>,
     },{
       path: '/Contact',
@@ -40,7 +40,11 @@ const App = () => {
     },{
       path:'orderDashboard',
       element: <OrderDashboard />
+    },{
+      path: 'orders',
+      element: <OrderDashboard />
     }
+
   ])
 
   return (
