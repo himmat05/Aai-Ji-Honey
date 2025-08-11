@@ -18,8 +18,7 @@ const App = () => {
     {
       path: '/',
       element: <><Navbar /><Home/></>,
-    },
-    {
+    },{
       path: '/About',
       element: <><Navbar /><About/></>,
     },{
