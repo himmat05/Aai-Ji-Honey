@@ -8,54 +8,98 @@ const AddProduct = () => {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [image, setImage] = useState("");
+  const [imagePreview, setImagePreview] = useState("");
   const [products, setProducts] = useState([]);
   const [editId, setEditId] = useState(null);
   const navigate = useNavigate();
-  // const [imageFile, setImageFile] = useState(null); // actual file
-  // const [imagePreview, setImagePreview] = useState(""); // preview URL
 
-  const [imagePreview, setImagePreview] = useState(""); // store preview URL
+
+  // const handleImageUpload = (e) => {
+  //   if (e.target.files[0]) {
+  //     setImage(e.target.files[0]); // store the File for backend upload
+  //     setImagePreview(URL.createObjectURL(e.target.files[0])); // store preview URL
+  //   }
+  // };
 
   const handleImageUpload = (e) => {
-    if (e.target.files[0]) {
-      setImage(e.target.files[0]); // store the File for backend upload
-      setImagePreview(URL.createObjectURL(e.target.files[0])); // store preview URL
-    }
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImage(file); // store File for upload
+    setImagePreview(URL.createObjectURL(file)); // for preview only
   };
 
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   const token = localStorage.getItem("token");
+
+  //   if (!token) return alert("Unauthorized access!");
+
+  //   try {
+  //     const formData = new FormData();
+  //     formData.append("name", name);
+  //     formData.append("price", price);
+  //     if (image) {
+  //       formData.append("image", image); // send the File, not preview string
+  //     }
+
+  //     if (editId) {
+  //       await axios.put(`${import.meta.env.VITE_API_URL}/products/${editId}`, formData, {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           "Content-Type": "multipart/form-data"
+  //         },
+  //       });
+  //       setEditId(null);
+  //     } else {
+  //       await axios.post(`${import.meta.env.VITE_API_URL}/products`, formData, {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           "Content-Type": "multipart/form-data"
+  //         },
+  //       });
+  //     }
+
+  //     setName("");
+  //     setPrice("");
+  //     setImage(null);
+  //     setImagePreview("");
+  //     fetchProducts();
+  //   } catch (err) {
+  //     console.error("Error saving product:", err);
+  //   }
+  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
-
     if (!token) return alert("Unauthorized access!");
 
     try {
       const formData = new FormData();
       formData.append("name", name);
       formData.append("price", price);
-      if (image) {
-        formData.append("image", image); // send the File, not preview string
+
+      // append only a real File object
+      if (image && image instanceof File) {
+        formData.append("image", image);
       }
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      };
 
       if (editId) {
-        await axios.put(`${import.meta.env.VITE_API_URL}/products/${editId}`, formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data"
-          },
-        });
+        await axios.put(`${import.meta.env.VITE_API_URL}/products/${editId}`, formData, config);
         setEditId(null);
       } else {
-        await axios.post(`${import.meta.env.VITE_API_URL}/products`, formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data"
-          },
-        });
+        await axios.post(`${import.meta.env.VITE_API_URL}/products`, formData, config);
       }
 
+      // reset states (keep variable names)
       setName("");
       setPrice("");
       setImage(null);
@@ -132,8 +176,8 @@ const AddProduct = () => {
             onChange={handleImageUpload}
             className="block w-full border p-2 rounded"
           />
-          {image && (
-            <img src={image} alt="Preview" className="w-32 h-32 object-contain rounded border" />
+          {imagePreview && (
+            <img src={imagePreview} alt="Preview" className="w-32 h-32 object-contain rounded border" />
           )} */}
           <input
             type="file"
@@ -141,10 +185,10 @@ const AddProduct = () => {
             onChange={handleImageUpload}
             className="block w-full border p-2 rounded"
           />
-
           {imagePreview && (
             <img src={imagePreview} alt="Preview" className="w-32 h-32 object-contain rounded border" />
           )}
+
 
           <button
             type="submit"

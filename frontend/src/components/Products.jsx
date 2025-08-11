@@ -33,11 +33,17 @@ const Product = () => {
               className="bg-gradient-to-br from-yellow-50 to-amber-100 rounded-3xl shadow-md p-4 border border-amber-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-[480px] max-w-sm"
             >
               <div className="h-[70%] flex items-center justify-center bg-white rounded-xl border border-amber-100 p-2">
-                <img
+                {/* <img
                   src={product.image}
                   alt={product.name}
                   className="w-full h-80 object-contain rounded"
+                /> */}
+                <img
+                  src={product.image || '/placeholder.jpg'}
+                  alt={product.name}
+                  className="w-full h-80 object-contain rounded"
                 />
+
               </div>
 
               {/* 📦 Product Info Section */}
