@@ -271,32 +271,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Add Product
-// app.post('/products', authenticateToken, upload.single('image'), async (req, res) => {
-//   try {
-//     const { name, price } = req.body;
-//     let imageBase64 = '';
-//     let mimeType = '';
-
-//     if (req.file) {
-//       const mimeType = req.file.mimetype || "image/jpeg"; // fallback if missing
-//       const imageBase64 = fs.readFileSync(req.file.path, { encoding: 'base64' });
-//       fs.unlinkSync(req.file.path); // delete temp file
-//       imageData = `data:${mimeType};base64,${imageBase64}`;
-//     }
-
-
-//     const newProduct = new Product({
-//       name,
-//       price,
-//       image: `data:${mimeType};base64,${imageBase64}` // store full data URL
-//     });
-//     await newProduct.save();
-//     res.status(201).json(newProduct);
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// });
-
 app.post('/products', authenticateToken, upload.single('image'), async (req, res) => {
   try {
     const { name, price } = req.body;
@@ -328,35 +302,7 @@ app.post('/products', authenticateToken, upload.single('image'), async (req, res
 });
 
 
-// // Update Product
-// app.put('/products/:id', authenticateToken, upload.single('image'), async (req, res) => {
-//   try {
-//     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-//       return res.status(400).json({ error: 'Invalid product ID' });
-//     }
-
-//     const product = await Product.findById(req.params.id);
-//     if (!product) return res.status(404).send('Product not found');
-
-//     const { name, price } = req.body;
-//     if (name) product.name = name;
-//     if (price) product.price = parseFloat(price);
-
-//     if (req.file) {
-//       const mimeType = req.file.mimetype;
-//       const imageBase64 = fs.readFileSync(req.file.path, { encoding: 'base64' });
-//       fs.unlinkSync(req.file.path);
-//       product.image = `data:${mimeType};base64,${imageBase64}`;
-//     }
-
-//     await product.save();
-//     res.json(product);
-//   } catch (err) {
-//     console.error("Error updating product:", err);
-//     res.status(500).json({ error: err.message });
-//   }
-// });
-
+// Update product (protected)
 app.put('/products/:id', authenticateToken, upload.single('image'), async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
