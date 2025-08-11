@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const fs = require("fs");
-const fs = require("fs/promises");
+const fspromise = require("fs/promises");
 const multer = require('multer');
 const path = require('path');
 const bcrypt = require('bcrypt');
@@ -289,8 +289,8 @@ app.post('/products', authenticateToken, upload.single('image'), async (req, res
     // }
     if (req.file) {
       const mimeType = req.file.mimetype || "image/jpeg";            // get mime type or default
-      const base64 = await fs.readFile(req.file.path, { encoding: "base64" }); // async read file as base64 string
-      await fs.unlink(req.file.path);                                // async delete the temp file
+      const base64 = await fspromise.readFile(req.file.path, { encoding: "base64" }); // async read file as base64 string
+      await fspromise.unlink(req.file.path);                                // async delete the temp file
       imageData = `data:${mimeType};base64,${base64}`;              // create data URL string
     }
 
@@ -331,8 +331,8 @@ app.put('/products/:id', authenticateToken, upload.single('image'), async (req, 
     // }
     if (req.file) {
       const mimeType = req.file.mimetype || "image/jpeg";            // get mime type or default
-      const base64 = await fs.readFile(req.file.path, { encoding: "base64" }); // async read file as base64 string
-      await fs.unlink(req.file.path);                                // async delete the temp file
+      const base64 = await fspromise.readFile(req.file.path, { encoding: "base64" }); // async read file as base64 string
+      await fspromise.unlink(req.file.path);                                // async delete the temp file
       imageData = `data:${mimeType};base64,${base64}`;              // create data URL string
     }
 
