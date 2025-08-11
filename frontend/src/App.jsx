@@ -1,6 +1,6 @@
 import {createBrowserRouter ,Form,RouterProvider} from 'react-router-dom'
 import Navbar from './components/Navbar'
-import Home from './components/Home'
+import Home from './components/HOme'
 import About from './components/About'
 import Products from './components/Products'
 import Contact from './components/Contact'
@@ -49,7 +49,20 @@ const App = () => {
     },{
       path: '/products/:id',
       element: <Products />
+    },{
+      path: '/products/:id/edit',
+      element: <AddProduct />
+    },{
+      path: '/products/:id/delete',
+      element: <AddProduct />
+    },{
+      path: '/products/:id/add',
+      element: <AddProduct />
+    },{
+      path: '/products/:id/update',
+      element: <AddProduct />
     }
+
   ])
 
   return (
