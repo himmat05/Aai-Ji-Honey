@@ -38,13 +38,18 @@ const App = () => {
       path: '/form',
       element: <Form />
     },{
-      path:'orderDashboard',
+      path:'/orderDashboard',
       element: <OrderDashboard />
     },{
-      path: 'orders',
+      path: '/orders',
       element: <OrderDashboard />
+    },{
+      path: '/orders/:id',
+      element: <OrderDashboard />
+    },{
+      path: '/products/:id',
+      element: <Products />
     }
-
   ])
 
   return (
