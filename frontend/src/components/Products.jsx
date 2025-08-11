@@ -35,7 +35,7 @@ const Product = () => {
                 <img
                   src={product.image || '/placeholder.jpg'}
                   alt={product.name}
-                  className="w-full h-80 object-contain rounded"
+                  className="w-full h-80 object-cover rounded"
                 />
 
               </div>
