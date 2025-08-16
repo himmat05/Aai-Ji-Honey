@@ -72,7 +72,7 @@ const AddProduct = () => {
 
     // ✅ handle new image file
     if (imageFile) {
-      formData.append("image", imageFile);
+      formData.append("image", image);
     }
 
     const config = {
