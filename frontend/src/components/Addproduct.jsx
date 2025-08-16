@@ -19,96 +19,45 @@ const AddProduct = () => {
     setImagePreview(URL.createObjectURL(file)); // for preview only
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   const token = localStorage.getItem("token");
-  //   if (!token) return alert("Unauthorized access!");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (!token) return alert("Unauthorized access!");
 
-  //   try {
-  //     const formData = new FormData();
-  //     formData.append("name", name);
-  //     formData.append("price", price);
-  //     formData.append("image", imageFile);
+    try {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("price", price);
 
+      // append only a real File object
+      if (image && image instanceof File) {
+        formData.append("image", image);
+      }
 
-  //     const config = {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //         "Content-Type": "multipart/form-data",
-  //       },
-  //     };
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      };
 
-  //     if (editId) {
-  //     // if editing, append image only if it's a File
-  //     if (image && image instanceof File) {
-  //       formData.append("image", image);
-  //     }
-  //       await axios.put(`${import.meta.env.VITE_API_URL}/products/${editId}`, formData, config);
-  //       setEditId(null);
-  //     } else {
-  //       await axios.post(`${import.meta.env.VITE_API_URL}/products`, formData, config);
-  //     }
+      if (editId) {
+        await axios.put(`${import.meta.env.VITE_API_URL}/products/${editId}`, formData, config);
+        setEditId(null);
+      } else {
+        await axios.post(`${import.meta.env.VITE_API_URL}/products`, formData, config);
+      }
 
-  //     // reset states (keep variable names)
-  //     setName("");
-  //     setPrice("");
-  //     setImage(null);
-  //     setImagePreview("");
-  //     fetchProducts();
-  //   } catch (err) {
-  //     console.error("Error saving product:", err);
-  //   }
-  // };
-   const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  const token = localStorage.getItem("token");
-  if (!token) return alert("Unauthorized access!");
-
-  try {
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("price", price);
-
-    // ✅ handle new image file
-    if (image) {
-      formData.append("image", image);
+      // reset states (keep variable names)
+      setName("");
+      setPrice("");
+      setImage(null);
+      setImagePreview("");
+      fetchProducts();
+    } catch (err) {
+      console.error("Error saving product:", err);
     }
-
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data",
-      },
-    };
-
-    if (editId) {
-      // ✅ Edit product
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/products/${editId}`,
-        formData,
-        config
-      );
-      setEditId(null);
-    } else {
-      // ✅ Add new product
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/products`,
-        formData,
-        config
-      );
-    }
-
-    // ✅ Reset states
-    setName("");
-    setPrice("");
-    setImage(null);
-    setImagePreview("");
-    fetchProducts();
-  } catch (err) {
-    console.error("❌ Error saving product:", err);
-  }
-};
+  };
 
 
   const fetchProducts = async () => {
@@ -141,7 +90,6 @@ const AddProduct = () => {
     setName(product.name);
     setPrice(product.price);
     setImage(product.image);
-    setImage(null);
   };
 
   useEffect(() => {
