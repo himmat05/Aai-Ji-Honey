@@ -22,7 +22,7 @@ const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 const app = express();
 const PORT = 5000;
-const JWT_SECRET = 'KOe5FSJKJcq7NX3ejOOOiJisiAD98iTO'; // Use a secure secret in production
+const JWT_SECRET = process.env.JWT_SECRET; // Use a secure secret in production
 
 
 app.use('/uploads', express.static('uploads'));
@@ -261,13 +261,13 @@ app.patch('/orders/:id', async (req, res) => {
 });
 
 
- 
 // Configure Cloudinary for image uploads
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUD_API_KEY,
   api_secret: process.env.CLOUD_API_SECRET,
 });
+
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
