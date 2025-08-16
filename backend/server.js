@@ -23,7 +23,7 @@ const JWT_SECRET = 'KOe5FSJKJcq7NX3ejOOOiJisiAD98iTO'; // Use a secure secret in
 
 
 app.use('/uploads', express.static('uploads'));
-app.options("*", cors());
+app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
