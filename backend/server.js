@@ -296,7 +296,8 @@ app.post("/products", authenticateToken, upload.single("image"), async (req, res
     const newProduct = new Product({
       name,
       price,
-      imageUrl: req.file ? req.file.path : "", // ✅ prevents crash if no file
+      imageUrl: req.file.path,   // Cloudinary URL
+      publicId: req.file.filename // Cloudinary public ID
     });
 
     await newProduct.save();
@@ -330,32 +331,32 @@ app.put("/products/:id", authenticateToken, upload.single("image"), async (req, 
   }
 });
 
-app.delete("/products/:id", authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
+// app.delete("/products/:id", authenticateToken, async (req, res) => {
+//   try {
+//     const { id } = req.params;
 
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid product ID" });
-    }
+//     // Validate ObjectId
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({ message: "Invalid product ID" });
+//     }
 
-    const product = await Product.findById(id);
-    if (!product) return res.status(404).json({ message: "Product not found" });
+//     const product = await Product.findById(id);
+//     if (!product) return res.status(404).json({ message: "Product not found" });
 
-    // Delete image from Cloudinary if it exists
-    if (product.imageUrl) {
-      const segments = product.imageUrl.split("/");
-      const fileName = segments[segments.length - 1].split(".")[0]; // remove extension
-      await cloudinary.uploader.destroy("aai-ji-honey-products/" + fileName);
-    }
+//     // Delete image from Cloudinary if it exists
+//     if (product.imageUrl) {
+//       const segments = product.imageUrl.split("/");
+//       const fileName = segments[segments.length - 1].split(".")[0]; // remove extension
+//       await cloudinary.uploader.destroy("aai-ji-honey-products/" + fileName);
+//     }
 
-    await product.deleteOne();
-    res.json({ message: "✅ Product deleted" });
-  } catch (error) {
-    console.error("❌ Error deleting product:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
+//     await product.deleteOne();
+//     res.json({ message: "✅ Product deleted" });
+//   } catch (error) {
+//     console.error("❌ Error deleting product:", error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
 
 
 
@@ -445,5 +446,31 @@ app.delete("/products/:id", authenticateToken, async (req, res) => {
 //   await Product.findByIdAndDelete(req.params.id);
 //   res.sendStatus(204);
 // });
+
+app.delete("/products/:id", authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid product ID" });
+    }
+
+    const product = await Product.findById(id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    // Delete image from Cloudinary using stored publicId
+    if (product.publicId) {
+      await cloudinary.uploader.destroy(product.publicId);
+    }
+
+    await product.deleteOne();
+    res.json({ message: "✅ Product deleted" });
+  } catch (error) {
+    console.error("❌ Error deleting product:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
