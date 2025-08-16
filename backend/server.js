@@ -277,6 +277,11 @@ const storage = new CloudinaryStorage({
   },
 });
 
+if (!process.env.CLOUDINARY_API_KEY) {
+    console.error("Cloudinary API key missing!");
+}
+
+
 const upload = multer({ storage });
 
 app.get('/products', async (req, res) => {
