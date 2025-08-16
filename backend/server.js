@@ -332,12 +332,22 @@ app.put("/products/:id", authenticateToken, upload.single("image"), async (req, 
 
 app.delete("/products/:id", authenticateToken, async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const { id } = req.params;
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid product ID" });
+    }
+
+    const product = await Product.findById(id);
     if (!product) return res.status(404).json({ message: "Product not found" });
 
-    // Delete image from Cloudinary
-    const publicId = product.imageUrl.split("/").pop().split(".")[0];
-    await cloudinary.uploader.destroy("aai-ji-honey-products/" + publicId);
+    // Delete image from Cloudinary if it exists
+    if (product.imageUrl) {
+      const segments = product.imageUrl.split("/");
+      const fileName = segments[segments.length - 1].split(".")[0]; // remove extension
+      await cloudinary.uploader.destroy("aai-ji-honey-products/" + fileName);
+    }
 
     await product.deleteOne();
     res.json({ message: "✅ Product deleted" });
@@ -346,6 +356,7 @@ app.delete("/products/:id", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 
 // Get all products
