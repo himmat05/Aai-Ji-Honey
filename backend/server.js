@@ -23,7 +23,11 @@ const JWT_SECRET = 'KOe5FSJKJcq7NX3ejOOOiJisiAD98iTO'; // Use a secure secret in
 
 
 app.use('/uploads', express.static('uploads'));
-app.use(cors());
+app.use(cors({
+  origin: ["https://aai-ji-honey-git-main-aai-ji-honey.vercel.app"], 
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -79,8 +83,6 @@ app.post("/verify", (req, res) => {
 });
 
 
-
-
 // register owner route
 app.post("/register-owner", async (req, res) => {
   const { email, password } = req.body;
@@ -94,6 +96,7 @@ app.post("/register-owner", async (req, res) => {
     res.status(500).send("Error registering owner.");
   }
 });
+
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
