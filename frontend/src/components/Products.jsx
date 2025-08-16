@@ -21,7 +21,7 @@ const Product = () => {
   };
 
   return (
-    <div className='w-full bg-gradient-to-br from-yellow-50/80 via-white/80 to-amber-100/80'>
+    <div className='w-full min-h-[82vh] bg-gradient-to-br from-yellow-50/80 via-white/80 to-amber-100/80'>
       <HoneyBeeBackground />
       <div className="p-6 max-w-5xl mx-auto w-full mt-[-25px] bg-gradient-to-br from-white via-yellow-50 to-yellow-100 shadow-lg">
         <h2 className="text-3xl font-bold text-amber-800 mb-3 mt-3">Our Products :-</h2>
@@ -58,7 +58,6 @@ const Product = () => {
               </div>
             </div>
           ))}
-
 
 
         </div>
