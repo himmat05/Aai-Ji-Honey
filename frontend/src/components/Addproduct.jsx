@@ -102,7 +102,7 @@ const AddProduct = () => {
     // ✅ Reset states
     setName("");
     setPrice("");
-    setImageFile(null);
+    setImage(null);
     setImagePreview("");
     fetchProducts();
   } catch (err) {
