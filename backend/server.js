@@ -147,10 +147,15 @@ app.post("/login", async (req, res) => {
       expiresIn: "1h"
     });
 
-    // ✅ Send login email with IP and location
-    await sendLoginEmail(owner.email, ip);
-
     res.json({ token });
+
+    // ✅ Send login email with IP and location
+    // await sendLoginEmail(owner.email, ip);
+    sendLoginEmail(owner.email, ip).catch(err =>
+      console.error("❌ Email send failed:", err)
+    );
+
+    // res.json({ token });
   } catch (err) {
     console.error("Server error during login:", err);
     res.status(500).json({ message: "Server error" });
@@ -279,14 +284,6 @@ app.post('/products', authenticateToken, upload.single('image'), async (req, res
     // default when no image uploaded
     let imageData = "";
 
-    // only process if multer saved a file (req.file exists)
-    // if (req.file) {
-    //   const mimeType = req.file.mimetype || "image/jpeg";
-    //   const base64 = fs.readFileSync(req.file.path, { encoding: "base64" });
-    //   // cleanup temp file
-    //   fs.unlinkSync(req.file.path);
-    //   imageData = `data:${mimeType};base64,${base64}`;
-    // }
     if (req.file) {
       const mimeType = req.file.mimetype || "image/jpeg";            // get mime type or default
       const base64 = await fspromise.readFile(req.file.path, { encoding: "base64" }); // async read file as base64 string
@@ -323,12 +320,7 @@ app.put('/products/:id', authenticateToken, upload.single('image'), async (req, 
     if (name) product.name = name;
     if (price !== undefined) product.price = parseFloat(price);
 
-    // if (req.file) {
-    //   const mimeType = req.file.mimetype || "image/jpeg";
-    //   const base64 = fs.readFileSync(req.file.path, { encoding: "base64" });
-    //   fs.unlinkSync(req.file.path);
-    //   product.image = `data:${mimeType};base64,${base64}`;
-    // }
+
     if (req.file) {
       const mimeType = req.file.mimetype || "image/jpeg";            // get mime type or default
       const base64 = await fspromise.readFile(req.file.path, { encoding: "base64" }); // async read file as base64 string
@@ -345,7 +337,6 @@ app.put('/products/:id', authenticateToken, upload.single('image'), async (req, 
     res.status(500).json({ error: err.message });
   }
 });
-
 
 
 
