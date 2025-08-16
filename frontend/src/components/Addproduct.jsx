@@ -71,7 +71,7 @@ const AddProduct = () => {
     formData.append("price", price);
 
     // ✅ handle new image file
-    if (imageFile) {
+    if (image) {
       formData.append("image", image);
     }
 
