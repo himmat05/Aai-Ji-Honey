@@ -264,7 +264,7 @@ app.patch('/orders/:id', async (req, res) => {
 // Configure Cloudinary for image uploads
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
-  api_key: process.env.CLOUD_API_KEY,
+  api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUD_API_SECRET,
 });
 
