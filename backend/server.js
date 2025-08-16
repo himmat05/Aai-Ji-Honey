@@ -296,7 +296,7 @@ app.post("/products", authenticateToken, upload.single("image"), async (req, res
     const newProduct = new Product({
       name,
       price,
-      imageUrl: req.file.path  // Cloudinary gives back a hosted URL
+      imageUrl: req.file ? req.file.path : "", // ✅ prevents crash if no file
     });
 
     await newProduct.save();
@@ -306,6 +306,7 @@ app.post("/products", authenticateToken, upload.single("image"), async (req, res
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 app.put("/products/:id", authenticateToken, upload.single("image"), async (req, res) => {
   try {
