@@ -6,17 +6,25 @@ import HoneyBeeBackground from "./HoneyBeeBackground";
 const AddProduct = () => {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [image, setImage] = useState("");
+  const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
   const [products, setProducts] = useState([]);
   const [editId, setEditId] = useState(null);
   const navigate = useNavigate();
 
-  const handleImageUpload = (e) => {
+
+
+
+  // new changes 
+
+
+
+
+    const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImage(file); // store File for upload
-    setImagePreview(URL.createObjectURL(file)); // for preview only
+    setImage(file); // keep File object for upload
+    setImagePreview(URL.createObjectURL(file)); // preview locally
   };
 
   const handleSubmit = async (e) => {
@@ -29,9 +37,8 @@ const AddProduct = () => {
       formData.append("name", name);
       formData.append("price", price);
 
-      // append only a real File object
       if (image && image instanceof File) {
-        formData.append("image", image);
+        formData.append("image", image); // ✅ send File object
       }
 
       const config = {
@@ -42,13 +49,21 @@ const AddProduct = () => {
       };
 
       if (editId) {
-        await axios.put(`${import.meta.env.VITE_API_URL}/products/${editId}`, formData, config);
+        await axios.put(
+          `${import.meta.env.VITE_API_URL}/products/${editId}`,
+          formData,
+          config
+        );
         setEditId(null);
       } else {
-        await axios.post(`${import.meta.env.VITE_API_URL}/products`, formData, config);
+        await axios.post(
+          `${import.meta.env.VITE_API_URL}/products`,
+          formData,
+          config
+        );
       }
 
-      // reset states (keep variable names)
+      // reset states
       setName("");
       setPrice("");
       setImage(null);
@@ -58,6 +73,53 @@ const AddProduct = () => {
       console.error("Error saving product:", err);
     }
   };
+
+  // const handleImageUpload = (e) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+  //   setImage(file); // store File for upload
+  //   setImagePreview(URL.createObjectURL(file)); // for preview only
+  // };
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   const token = localStorage.getItem("token");
+  //   if (!token) return alert("Unauthorized access!");
+
+  //   try {
+  //     const formData = new FormData();
+  //     formData.append("name", name);
+  //     formData.append("price", price);
+
+  //     // append only a real File object
+  //     if (image && image instanceof File) {
+  //       formData.append("image", image);
+  //     }
+
+  //     const config = {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //     };
+
+  //     if (editId) {
+  //       await axios.put(`${import.meta.env.VITE_API_URL}/products/${editId}`, formData, config);
+  //       setEditId(null);
+  //     } else {
+  //       await axios.post(`${import.meta.env.VITE_API_URL}/products`, formData, config);
+  //     }
+
+  //     // reset states (keep variable names)
+  //     setName("");
+  //     setPrice("");
+  //     setImage(null);
+  //     setImagePreview("");
+  //     fetchProducts();
+  //   } catch (err) {
+  //     console.error("Error saving product:", err);
+  //   }
+  // };
 
 
   const fetchProducts = async () => {
@@ -85,11 +147,21 @@ const AddProduct = () => {
     }
   };
 
-  const handleEdit = (product) => {
+  // const handleEdit = (product) => {
+  //   setEditId(product._id);
+  //   setName(product.name);
+  //   setPrice(product.price);
+  //   setImage(product.image);
+  // };
+
+    const handleEdit = (product) => {
     setEditId(product._id);
     setName(product.name);
     setPrice(product.price);
-    setImage(product.image);
+
+    // ⚠️ important: don't set product.image (URL string) as File
+    setImage(null);
+    setImagePreview(product.image); // show current Cloudinary image in preview
   };
 
   useEffect(() => {
