@@ -16,12 +16,14 @@ const Product = require('./models/Product');
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const axios = require("axios");
-import cloudinary from "cloudinary";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
+const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+// import cloudinary from "cloudinary";
+// import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 const app = express();
 const PORT = 5000;
-const JWT_SECRET = 'KOe5FSJKJcq7NX3ejOOOiJisiAD98iTO'; // Use a secure secret in production
+const JWT_SECRET = 'KOe5FSJKJcq7NX3ejOOOiJisiAD98iTO'; 
 
 
 app.use('/uploads', express.static('uploads'));
@@ -30,7 +32,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 
-cloudinary.v2.config({
+cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
@@ -39,7 +41,7 @@ cloudinary.v2.config({
 
 // ✅ Cloudinary storage for multer
 const storage = new CloudinaryStorage({
-  cloudinary: cloudinary.v2,
+  cloudinary: cloudinary,
   params: {
     folder: "aai-ji-honey", // Cloudinary folder
     allowed_formats: ["jpg", "png", "jpeg", "webp"]
