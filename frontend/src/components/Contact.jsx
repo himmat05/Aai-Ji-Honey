@@ -130,7 +130,7 @@ const Contact = () => {
           <h1 className='font-bold ml-3'>Head Offfice :<p className='font-light ml-6'>426,Aai mata colony, Megakheda,Post-Pipli Ahiran,Teh-Kunwariya,Dist-Rajsamand,Rajasthan, PIN-313327,India.</p></h1>
         </div>
         <div className="font-bold flex items-center justify-center gap-4 mb-6">
-          <h1 className='font-bold ml-3'>Branck Office :<p className='font-light ml-6'>Plot no 206, Indra Gandhi Nagar, L-Block, Sector 14, Hiran Magri, Gordhan Vilas Rural, udaipur, Rajasthan, PIN-313001, India</p></h1>
+          <h1 className='font-bold ml-3'>Branch Office :<p className='font-light ml-6'>Plot no 206, Indra Gandhi Nagar, L-Block, Sector 14, Hiran Magri, Gordhan Vilas Rural, udaipur, Rajasthan, PIN-313001, India</p></h1>
         </div >
         <div className="font-bold ml-3 flex items-center justify-center gap-4 mb-6">
           Contact Number : <span className='font-bold ml-3'>+91-9610047740 , +91-9887918251</span>

@@ -74,7 +74,7 @@ const OrderDashboard = () => {
                    Tax Invoice
               </h2>
             </div> 
-            <div style="display:flex; justify-content:space-around; margin-top:10px;">
+            <div style="display:flex; justify-content:space-around;">
               <div>
                 <p>GSTIN: 08HIAPS1709H1Z5</p>
                 <p>Email: aaijihoney24@gmail.com</p>
