@@ -126,7 +126,7 @@ function authenticateToken(req, res, next) {
   // if (!token) return res.sendStatus(401);
   if (!token) return res.status(401).json({ error: "Missing token" });
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
+  jwt.verify(token, JWT_SECRET_KEY, (err, user) => {
     // if (err) return res.sendStatus(403);
     if (err) return res.status(403).json({ error: "Invalid token" });
     req.user = user;
@@ -162,7 +162,7 @@ app.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    const token = jwt.sign({ id: owner._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: owner._id }, process.env.JWT_SECRET_KEY, {
       expiresIn: "1h"
     });
 
