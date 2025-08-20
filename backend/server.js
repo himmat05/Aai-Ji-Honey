@@ -256,13 +256,13 @@ app.get('/orders', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;   // default page = 1
     const limit = parseInt(req.query.limit) || 10;
-    
+
     // const orders = await Order.find().sort({ createdAt: -1 });
     const orders = await Order.find()
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
-        .select("name email mobile address product invoiceNumber paymentId status createdAt")
+        .select("name email mobile address product quantity totalprice invoiceNumber paymentId status createdAt")
         .lean();
     res.json(orders);
   } catch (err) {
