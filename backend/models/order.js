@@ -9,8 +9,7 @@ const orderSchema = new mongoose.Schema({
   product: {
     name: String,
     price: Number,
-    totalprice: Number,
-    image: String
+    totalprice: Number
   },
   invoiceNumber: {
     type: String,
@@ -19,6 +18,7 @@ const orderSchema = new mongoose.Schema({
   paymentId: String,
   status: {
     type: String,
+    enum: ["Pending", "Completed", "Cancelled"],
     default: "Pending"
   },
   createdAt: {
