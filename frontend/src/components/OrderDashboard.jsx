@@ -84,7 +84,7 @@ const OrderDashboard = () => {
                 <p>+91 9887918251</p>
               </div>
             </div>
-             <div class="center" style="margin: 10px 0; display: flex; align-items: center; justify-content: center; gap: 10px;">
+             <div class="center" style=" display: flex; align-items: center; justify-content: center; gap: 10px;">
                <img src="Aai ji honey.jpg" alt="Logo" style="max-width: 80px; height: auto;" />
                <h1 style="font-size: 2.5rem; margin: 0;">Aai Ji Honey</h1>
              </div>
@@ -153,7 +153,7 @@ const OrderDashboard = () => {
             </table>
           </div>
 
-          <div style="margin-top:15px; display:flex; justify-content:space-between;">
+          <div style="margin-top:5px; display:flex; justify-content:space-between;">
             <div>
               <strong>Terms & Conditions:</strong>
               <ul>

@@ -43,7 +43,7 @@ const Form = ({ product, onClose }) => {
       }
 
       const options = {
-        key: 'rzp_test_vVLbAN1ObrVAwT', // Replace with your live key
+        key:process.env.REACT_APP_RAZORPAY_KEY_ID, // Replace with your live key
         amount,
         currency: 'INR',
         name: 'Aai-Ji Honey',
