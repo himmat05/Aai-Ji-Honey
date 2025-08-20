@@ -18,12 +18,10 @@ const nodemailer = require("nodemailer");
 const axios = require("axios");
 const cloudinary = require("cloudinary").v2;
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
-// import cloudinary from "cloudinary";
-// import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 const app = express();
 const PORT = 5000;
-const JWT_SECRET = 'KOe5FSJKJcq7NX3ejOOOiJisiAD98iTO'; 
+const JWT_SECRET = process.env.JWT_SECRET_KEY; 
 
 
 app.use('/uploads', express.static('uploads'));
@@ -280,10 +278,7 @@ app.patch('/orders/:id', async (req, res) => {
 
 
 
-
 //  new changes 
-
-
 
 
 // Get all products
@@ -337,81 +332,6 @@ app.put("/products/:id", authenticateToken, upload.single("image"), async (req, 
     res.status(500).json({ error: err.message });
   }
 });
-
-
-// const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     cb(null, 'uploads/');
-//   },
-//   filename: function (req, file, cb) {
-//     cb(null, Date.now() + path.extname(file.originalname));
-//   },
-// });
-// const upload = multer({ storage: storage });
-
-// Add Product
-// app.post('/products', authenticateToken, upload.single('image'), async (req, res) => {
-//   try {
-//     const { name, price } = req.body;
-
-//     // default when no image uploaded
-//     let imageData = "";
-
-//     if (req.file) {
-//       const mimeType = req.file.mimetype || "image/jpeg";            // get mime type or default
-//       const base64 = await fspromise.readFile(req.file.path, { encoding: "base64" }); // async read file as base64 string
-//       await fspromise.unlink(req.file.path);                                // async delete the temp file
-//       imageData = `data:${mimeType};base64,${base64}`;              // create data URL string
-//     }
-
-//     const newProduct = new Product({
-//       name,
-//       price,
-//       image: imageData // store full data URL or "" if no image
-//     });
-
-//     await newProduct.save();
-//     res.status(201).json(newProduct);
-//   } catch (err) {
-//     console.error("Error in POST /products:", err);
-//     res.status(500).json({ error: err.message });
-//   }
-// });
-
-
-// Update product (protected)
-// app.put('/products/:id', authenticateToken, upload.single('image'), async (req, res) => {
-//   try {
-//     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-//       return res.status(400).json({ error: 'Invalid product ID' });
-//     }
-
-//     const product = await Product.findById(req.params.id);
-//     if (!product) return res.status(404).json({ error: 'Product not found' });
-
-//     const { name, price } = req.body;
-//     if (name) product.name = name;
-//     if (price !== undefined) product.price = parseFloat(price);
-
-
-//     if (req.file) {
-//       const mimeType = req.file.mimetype || "image/jpeg";            // get mime type or default
-//       const base64 = await fspromise.readFile(req.file.path, { encoding: "base64" }); // async read file as base64 string
-//       await fspromise.unlink(req.file.path);                                // async delete the temp file
-//       imageData = `data:${mimeType};base64,${base64}`;              // create data URL string
-//     }
-
-//     // if no req.file, leave product.image unchanged
-
-//     await product.save();
-//     res.json(product);
-//   } catch (err) {
-//     console.error("Error updating product:", err);
-//     res.status(500).json({ error: err.message });
-//   }
-// });
-
-
 
 // Delete product (protected)
 
