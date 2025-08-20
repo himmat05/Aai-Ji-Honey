@@ -95,14 +95,13 @@ const OrderDashboard = () => {
           </div>
 
           <div style="margin-top: 10px; border:2px solid black; background-color:#fde68a; display:flex;">
-            <div style="width:60%; border-right:2px solid black; padding-right:10px;">
+            <div style="width:60%; border-right:2px solid black; padding-left:10px; padding-right:10px;">
               <p><strong>Customer Details:</strong></p>
               <p><strong>GSTIN:</strong> 08AHFPC5892E1ZC</p>
               <p><strong>Name:</strong> ${order.name}</p>
               <p><strong>Mobile:</strong> ${order.mobile}</p>
               <p><strong>Email:</strong> ${order.email}</p>
               <p><strong>Address:</strong> ${order.address}</p>
-              <p><strong>Order ID:</strong> ${order._id}</p>
             </div>
             <div style="width:40%; padding-left:10px;">
               <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
