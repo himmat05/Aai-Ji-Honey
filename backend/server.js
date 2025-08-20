@@ -254,6 +254,9 @@ app.post('/orders', async (req, res) => {
 // ✅ Get all orders for owner dashboard
 app.get('/orders', async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;   // default page = 1
+    const limit = parseInt(req.query.limit) || 10;
+    
     // const orders = await Order.find().sort({ createdAt: -1 });
     const orders = await Order.find()
         .sort({ createdAt: -1 })
@@ -283,7 +286,6 @@ app.patch('/orders/:id', async (req, res) => {
 
 
 //  new changes 
-
 
 // Get all products
 app.get('/products', async (req, res) => {
