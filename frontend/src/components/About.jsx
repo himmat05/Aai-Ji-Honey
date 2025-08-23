@@ -1,48 +1,54 @@
 import ImageGallery from './ImageGallery'
 import HoneyBeeBackground from './HoneyBeeBackground'
+import { Link } from 'react-router-dom'
 
 const About = () => {
   return (
-    <section className="flex px-6 py-10 mt-[-30px] bg-gradient-to-br from-yellow-100 via-white/80 to-orange-200 text-amber-900 items-center justify-center">
-      <HoneyBeeBackground/>
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-4xl font-bold mb-6 text-center">
-          About <span className="text-amber-600">Us</span>
-        </h1>
+    <main className="min-h-screen bg-gradient-to-br from-yellow-100 via-white/80 to-orange-200 px-6 py-12 mt-[-30px] lg:py-20">
+      <HoneyBeeBackground />
+      <p className="mx-auto max-w-2xl text-center p-4 rounded-2xl shadow-md">
+        The name <strong className="text-amber-700">Aai Ji Honey</strong> is a tribute
+        to family — the warmth and care of a grandmother who nurtures the home and
+        preserves recipes and traditions. Combining that cultural warmth with modern
+        scientific practice, Dr. Seervi set out to create a brand that stands for
+        purity, farmer empowerment, and sustainability.
+      </p>
 
-        <div className="flex gap-4 items-center justify-center">
 
-          <div className="md:w-3/4 ml-2">
-            <p className="mb-4 text-lg">
-              <strong>Aai ji Honey</strong> was founded by <strong>Dr. S.R. Seervi</strong>, a Ph.D. graduate in
-              <span className="text-amber-700 font-medium"> Entomology (Apiculture specialized)</span>. With deep scientific knowledge
-              of bee behavior and sustainable honey production, Dr.S.R Seervi turned his passion
-              into a mission — to bring <strong>pure, natural honey</strong> to every home.
-            </p>
-            <p className="mb-4 text-lg">
-              Backed by years of research and hands-on field experience, our honey is harvested
-              using ethical beekeeping practices that protect pollinators and preserve nature's balance.
-              We never compromise on quality — no additives, no artificial processing.
-            </p>
-            <p className="text-lg">
-              Each drop of our honey is a reflection of scientific precision, purity, and care.
-              Discover the perfect harmony between science and nature — all in a jar of honey.
-            </p>
-          </div>
+      <p className="mx-auto max-w-2xl text-center p-4 rounded-2xl shadow-md">
+        Today, Aai Ji Honey is more than a product. It’s a movement: a
+        promise to deliver chemical-free honey, a platform to train and
+        support local farmers in beekeeping, and a commitment to protect
+        pollinators and biodiversity. Each jar carries a story — of the
+        land, the bees, and the hands that carefully tended them.
+      </p>
+
+      <p className="mx-auto max-w-2xl text-center p-4 rounded-2xl shadow-md">
+        Dr. Sitaram Seervi vision continues to inspire the team: to expand
+        farmer-friendly beekeeping practices, raise awareness about the
+        role of bees in food security, and ensure every household has
+        access to natural, wholesome honey. From humble beginnings to a
+        trusted name, Aai Ji Honey remains rooted in tradition while
+        guided by science — keeping the future sweet for generations to
+        come.
+      </p>
+
+      {/* Closing CTA */}
+      <section className="mt-12 bg-amber-600 text-white rounded-2xl p-6 lg:p-8 flex flex-col lg:flex-row items-center justify-between gap-4">
+        <div className='items-center'>
+          <h4 className="text-lg font-semibold">Taste the tradition</h4>
+          <p className="mt-1 text-sm opacity-90">Order a jar of Aai Ji Honey today.</p>
         </div>
-        <ImageGallery />
-        <div className="mt-10 text-center ml-2">
-          <h2 className="text-2xl font-semibold mb-2">Why Choose Us?</h2>
-          <ul className="text-lg space-y-2 text-left md:text-center">
-            <li>🌿 100% Pure & Natural Honey</li>
-            <li>🧪 Scientifically-Backed Beekeeping</li>
-            <li>🐝 Ethical & Sustainable Practices</li>
-            <li>🍯 Rich in Taste & Nutritional Value</li>
-            <li>📍 Based in Megakheda, Rajsamand</li>
-          </ul>
+        <div>
+          <Link to="/products" 
+            className="inline-block px-5 py-3 bg-white text-orange-700 rounded-full font-semibold shadow-sm hover:bg-orange-50"
+          >
+            Shop Honey
+          </Link>
         </div>
-      </div>
-    </section>
+      </section>
+      <ImageGallery />
+    </main>
   )
 }
 

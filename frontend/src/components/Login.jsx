@@ -75,24 +75,34 @@ const Login = () => {
 
   return (
     <div><Navbar />
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-yellow-100 via-white/80 to-amber-100 mt-[-25px]">
-        <HoneyBeeBackground/>
+      <div className="flex items-center justify-center min-h-[82vh] bg-gradient-to-br from-yellow-100 via-white/80 to-amber-100 -mt-6">
+        <HoneyBeeBackground />
+
         <form
           onSubmit={handleSubmit}
-          className="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.1)] border border-amber-200 w-full max-w-sm transition-all duration-300 hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)]"
-
+          className="bg-white/40 backdrop-blur-xl p-8 rounded-2xl 
+               shadow-[0_8px_30px_rgba(0,0,0,0.1)] border border-amber-200 
+               w-full max-w-sm transition-all duration-300 
+               hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)]"
         >
-          <h2 className="text-3xl font-bold text-center text-yellow-700 mb-6">Owner Login</h2>
-          <div className="mb-4">
+          <h2 className="text-3xl font-extrabold text-center text-amber-700 drop-shadow-sm mb-8">
+            🐝 Owner Login
+          </h2>
+
+          <div className="mb-5">
             <input
               type="email"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              className="w-full px-4 py-3 border border-amber-200 rounded-lg 
+                   bg-white/70 shadow-sm
+                   focus:outline-none focus:ring-2 focus:ring-amber-400 
+                   focus:border-amber-400 transition"
             />
           </div>
+
           <div className="mb-6">
             <input
               type="password"
@@ -100,19 +110,33 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              className="w-full px-4 py-3 border border-amber-200 rounded-lg 
+                   bg-white/70 shadow-sm
+                   focus:outline-none focus:ring-2 focus:ring-amber-400 
+                   focus:border-amber-400 transition"
             />
           </div>
+
           <button
             type="submit"
             onClick={handleerror}
-            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 hover:cursor-pointer"
+            className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 
+                 hover:from-yellow-500 hover:to-amber-600 
+                 text-white font-semibold py-3 px-4 rounded-lg 
+                 shadow-md transition-all duration-300 
+                 hover:scale-105 hover:shadow-lg"
           >
             Login
           </button>
-          {isLocked ? `Locked for (${lockTime}s)` : ''}
+
+          {isLocked ? (
+            <p className="text-center text-red-500 mt-4 font-medium">
+              ⏳ Locked for {lockTime}s
+            </p>
+          ) : ''}
         </form>
       </div>
+
     </div>
   );
 };

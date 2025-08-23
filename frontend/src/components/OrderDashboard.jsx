@@ -29,7 +29,7 @@ const OrderDashboard = () => {
       await axios.patch(`${import.meta.env.VITE_API_URL}/orders/${id}`, {
         status: 'Completed',
       });
-      fetchOrders(); // refresh the order list
+      fetchOrders();
     } catch (err) {
       console.error('Error updating order status', err);
     }
@@ -179,6 +179,19 @@ const OrderDashboard = () => {
     };
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this order?")) return;
+
+    try {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/orders/${id}`);
+      setOrders(orders.filter(order => order._id !== id)); // update UI instantly
+    } catch (err) {
+      console.error("Delete failed", err);
+      alert("Failed to delete order");
+      console.log("Deleting order:", id);
+    }
+  };
+
   // Separate orders into pending and completed
   const pendingOrders = orders.filter(order => order.status !== 'Completed');
   const completedOrders = orders.filter(order => order.status === 'Completed');
@@ -209,10 +222,19 @@ const OrderDashboard = () => {
             Mark as Completed
           </button>
         )}
+
+
         <button
           onClick={() => handlePrint(order._id)}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer" >
           Print Bill
+        </button>
+        {/* delete button */}
+        <button
+          onClick={() => handleDelete(order._id)}
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-sm transition"
+        >
+          Delete
         </button>
       </div>
     </div>
@@ -257,6 +279,7 @@ const OrderDashboard = () => {
               <div className="space-y-4">
                 {completedOrders.map(order => renderOrderCard(order))}
               </div>
+
             )}
           </div>
         </>

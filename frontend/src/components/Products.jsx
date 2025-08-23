@@ -24,18 +24,18 @@ const Product = () => {
     <div className='w-full min-h-[82vh] bg-gradient-to-br from-yellow-50/80 via-white/80 to-amber-100/80'>
       <HoneyBeeBackground />
       <div className="p-6 max-w-5xl mx-auto w-full mt-[-25px] bg-gradient-to-br from-white via-yellow-50 to-yellow-100 shadow-lg">
-        <h2 className="text-3xl font-bold text-amber-800 mb-3 mt-3">Our Products :-</h2>
+        <h2 className="text-3xl font-bold text-amber-800 mb-3 mt-3">Our Products -</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 p-4 gap-6 rounded-lg shadow-lg bg-gradient-to-br from-white via-yellow-100 to-yellow-200">
           {products.map((product) => (
             <div
               key={product._id}
               className="bg-gradient-to-br from-yellow-50 to-amber-100 rounded-3xl shadow-md p-4 border border-amber-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-[480px] max-w-sm"
             >
-              <div className="h-[70%] flex items-center justify-center bg-white rounded-xl border border-amber-100 p-2">
+              <div className="h-[71%] flex items-center justify-center bg-white rounded-xl border border-amber-100">
                 <img
                   src={product.image || '/placeholder.jpg'}
                   alt={product.name}
-                  className="w-full h-80 object-cover rounded"
+                  className="w-full h-78 rounded-xl"
                 />
 
               </div>
@@ -58,8 +58,7 @@ const Product = () => {
               </div>
             </div>
           ))}
-
-
+          
         </div>
         {selectedProduct && (
           <Form
