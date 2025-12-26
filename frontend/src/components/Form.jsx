@@ -178,7 +178,7 @@ const Form = ({ product, onClose }) => {
       }
 
       const options = {
-        key: 'rzp_test_vVLbAN1ObrVAwT',
+        key: 'rzp_live_RwJfWahqgcNYJS',
         amount,
         currency: 'INR',
         name: 'Aai-Ji Honey',
