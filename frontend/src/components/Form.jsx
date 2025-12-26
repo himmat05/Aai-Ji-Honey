@@ -346,7 +346,7 @@ const Form = ({ product, onClose }) => {
           {/* Info Notes */}
           <div className="space-y-2 text-xs text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
             <p>⚠️ Please enter detailed address (Include PIN Code)</p>
-            <p>⚠️ ₹100 delivery charges if Actual price less than 990</p>
+            <p>⚠️ ₹100 delivery charges upto 1kG buy</p>
           </div>
         </form>
 
