@@ -284,7 +284,7 @@ app.patch('/orders/:id', async (req, res) => {
   }
 });
 
-console.log("Delete route loaded: /orders/:id");
+// console.log("Delete route loaded: /orders/:id");
 // order deletion
 app.delete('/orders/:id', async (req, res) => {
   try {
