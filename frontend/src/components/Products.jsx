@@ -204,7 +204,7 @@ const Product = () => {
                       {/* Buy Button */}
                       <button
                         onClick={() => setSelectedProduct(product)}
-                        className="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 hover:from-orange-500 hover:via-red-500 hover:to-amber-600 text-white font-bold py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
+                        className="hover:cursor-pointer w-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 hover:from-orange-500 hover:via-red-500 hover:to-amber-600 text-white font-bold py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
                       >
                         🛒 Buy Now
                       </button>

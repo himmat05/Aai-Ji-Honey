@@ -147,7 +147,7 @@ const Navbar = () => {
               setIsMenuOpen(false);
               handleLoginClick();
             }}
-            className="w-full px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
+            className="w-full px-4 py-2 hover:cursor-pointer bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
           >
             🔐 Login
           </button>

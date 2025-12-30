@@ -55,7 +55,7 @@ const Footer = () => {
                             <img 
                                 src='vecteezy_facebook-logo-png-facebook-icon-transparent-white-background_41643208.png' 
                                 alt='Facebook'
-                                className='w-12 filter brightness-0 invert'
+                                className='w-12'
                             />
                         </a>
                         <a 
@@ -66,8 +66,8 @@ const Footer = () => {
                             title='Follow us on Instagram'
                         >
                             <img 
-                                className='w-10 filter brightness-0 invert' 
-                                src='Instagram_icon.png' 
+                                className='w-10' 
+                                src='/Instagram_icon.png' 
                                 alt='Instagram' 
                             />
                         </a>
@@ -79,9 +79,9 @@ const Footer = () => {
                             title='Watch us on YouTube'
                         >
                             <img 
-                                src='vecteezy_youtube-logo-png-youtube-logo-transparent-png-youtube-icon_23986480.png'
+                                src='/vecteezy_youtube-logo-png-youtube-logo-transparent-png-youtube-icon_23986480.png'
                                 alt='YouTube'
-                                className='w-12 filter brightness-0 invert'
+                                className='w-12'
                             />
                         </a>
                     </div>
