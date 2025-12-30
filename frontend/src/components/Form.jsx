@@ -411,7 +411,7 @@ const Form = ({ product, onClose }) => {
     const razorpayFee = basePrice * 0.0199;
     const gstOnFee = razorpayFee * 0.18;
     const surcharge = razorpayFee + gstOnFee;
-    const deliverycharges = basePrice < 990 ? 100 : 0;
+    const deliverycharges = basePrice < 990 ? 50 : 0;
     const amount = Math.round((basePrice + surcharge + deliverycharges) * 100); // paise
 
     try {
@@ -488,7 +488,7 @@ const Form = ({ product, onClose }) => {
   const razorpayFee = basePrice * 0.0199;
   const gstOnFee = razorpayFee * 0.18;
   const surcharge = razorpayFee + gstOnFee;
-  const deliverycharges = basePrice < 990 ? 100 : 0;
+  const deliverycharges = basePrice < 990 ? 50 : 0;
   const amount = Math.round((basePrice + surcharge + deliverycharges)); // RS
 
   return (
@@ -621,7 +621,7 @@ const Form = ({ product, onClose }) => {
           {/* Info Notes */}
           <div className="space-y-2 text-xs text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
             <p>⚠️ Please enter detailed address (Include PIN Code)</p>
-            <p>⚠️ ₹100 delivery charges upto 1kG buy</p>
+            <p>⚠️ ₹50 delivery charges upto 2kG buy</p>
           </div>
         </form>
 
