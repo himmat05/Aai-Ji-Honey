@@ -58,7 +58,7 @@
 //               </div>
 //             </div>
 //           ))}
-          
+
 //         </div>
 //         {selectedProduct && (
 //           <Form
@@ -106,7 +106,7 @@ const Product = () => {
   return (
     <div className='w-full min-h-screen bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50'>
       <HoneyBeeBackground />
-      
+
       <div className="pt-8 pb-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header Section */}
@@ -128,66 +128,90 @@ const Product = () => {
               <p className="text-2xl text-amber-800 font-semibold">No products available yet</p>
             </div>
           ) : (
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {products.map((product) => (
-                <div
-                  key={product._id}
-                  className="bg-white rounded-3xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-amber-100 group"
-                >
-                  {/* Image Container */}
-                  <div className="relative h-72 bg-gradient-to-br from-amber-50 to-yellow-50 overflow-hidden">
-                    <img
-                      src={product.image || '/placeholder.jpg'}
-                      alt={product.name}
-                      className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-300"
-                    />
-                    {/* Badge */}
-                    <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-1 rounded-full text-sm font-bold shadow-lg">
-                      🔥 Premium
+              {products.map((product) => {
+                // Customizable discount percentage (change this value as needed)
+                const discountPercentage = 20; // Change to 10, 15, 25, 30, etc.
+
+                // Calculate discounted price
+                const originalPrice = product.price;
+                const discountedPrice = (originalPrice * (1 - discountPercentage / 100)).toFixed(0);
+
+                return (
+                  <div
+                    key={product._id}
+                    className="bg-white rounded-3xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-amber-100 group"
+                  >
+                    {/* Image Container */}
+                    <div className="relative h-72 bg-gradient-to-br from-amber-50 to-yellow-50 overflow-hidden">
+                      <img
+                        src={product.image || '/placeholder.jpg'}
+                        alt={product.name}
+                        className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-300"
+                      />
+                      {/* Discount Badge - Top Left */}
+                      {discountPercentage > 0 && (
+                        <div className="absolute top-4 left-4 bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+                          🎉 {discountPercentage}% OFF
+                        </div>
+                      )}
+                      {/* Premium Badge - Top Right */}
+                      <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-1 rounded-full text-sm font-bold shadow-lg">
+                        🔥 Premium
+                      </div>
+                    </div>
+                    {/* Content Container */}
+                    <div className="p-6">
+                      <h3 className="text-2xl font-bold text-amber-900 mb-2 break-words">
+                        {product.name}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-4">Pure & Natural Honey</p>
+                      {/* Price Section */}
+                      <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg p-4 mb-6 border-2 border-amber-200">
+                        <p className="text-gray-600 text-sm mb-1">Price</p>
+                        <div className="flex items-center gap-3">
+                          <p className="text-3xl font-bold text-amber-900">
+                            ₹{discountedPrice}
+                          </p>
+                          {discountPercentage > 0 && (
+                            <p className="text-lg text-gray-500 line-through">
+                              ₹{originalPrice}
+                            </p>
+                          )}
+                        </div>
+                        {discountPercentage > 0 && (
+                          <p className="text-green-600 text-sm font-semibold mt-1">
+                            You save ₹{(originalPrice - discountedPrice).toFixed(0)}!
+                          </p>
+                        )}
+                      </div>
+                      {/* Features */}
+                      <div className="space-y-2 mb-6 text-sm text-gray-700">
+                        <div className="flex items-center gap-2">
+                          <span>✓</span>
+                          <span>100% Organic & Pure</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span>✓</span>
+                          <span>Hand-Harvested</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span>✓</span>
+                          <span>No Added Preservatives</span>
+                        </div>
+                      </div>
+                      {/* Buy Button */}
+                      <button
+                        onClick={() => setSelectedProduct(product)}
+                        className="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 hover:from-orange-500 hover:via-red-500 hover:to-amber-600 text-white font-bold py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
+                      >
+                        🛒 Buy Now
+                      </button>
                     </div>
                   </div>
-
-                  {/* Content Container */}
-                  <div className="p-6">
-                    <h3 className="text-2xl font-bold text-amber-900 mb-2 truncate">
-                      {product.name}
-                    </h3>
-                    <p className="text-gray-600 text-sm mb-4">Pure & Natural Honey</p>
-
-                    {/* Price Section */}
-                    <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg p-4 mb-6 border-2 border-amber-200">
-                      <p className="text-gray-600 text-sm mb-1">Price</p>
-                      <p className="text-3xl font-bold text-amber-900">
-                        ₹{product.price}
-                      </p>
-                    </div>
-
-                    {/* Features */}
-                    <div className="space-y-2 mb-6 text-sm text-gray-700">
-                      <div className="flex items-center gap-2">
-                        <span>✓</span>
-                        <span>100% Organic & Pure</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span>✓</span>
-                        <span>Hand-Harvested</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span>✓</span>
-                        <span>No Added Preservatives</span>
-                      </div>
-                    </div>
-
-                    {/* Buy Button */}
-                    <button
-                      onClick={() => setSelectedProduct(product)}
-                      className="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 hover:from-orange-500 hover:via-red-500 hover:to-amber-600 text-white font-bold py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
-                    >
-                      🛒 Buy Now
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
