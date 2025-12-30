@@ -411,7 +411,7 @@ const Form = ({ product, onClose }) => {
     const razorpayFee = basePrice * 0.0199;
     const gstOnFee = razorpayFee * 0.18;
     const surcharge = razorpayFee + gstOnFee;
-    const deliverycharges = basePrice < 990 ? 50 : 0;
+    const deliverycharges = basePrice < 990 ? 0 : 0;
     const amount = Math.round((basePrice + surcharge + deliverycharges) * 100); // paise
 
     try {
@@ -488,7 +488,7 @@ const Form = ({ product, onClose }) => {
   const razorpayFee = basePrice * 0.0199;
   const gstOnFee = razorpayFee * 0.18;
   const surcharge = razorpayFee + gstOnFee;
-  const deliverycharges = basePrice < 990 ? 50 : 0;
+  const deliverycharges = basePrice < 990 ? 0 : 0;
   const amount = Math.round((basePrice + surcharge + deliverycharges)); // RS
 
   return (
