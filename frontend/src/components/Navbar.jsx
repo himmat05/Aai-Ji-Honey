@@ -54,7 +54,7 @@ const Navbar = () => {
         <div className='flex items-center gap-3'>
           <img 
             className='w-16 h-16 p-2 rounded-full shadow-lg border-2 border-amber-300 hover:scale-110 transition-transform duration-300' 
-            src='favicon.png'
+            src='favicon.ico'
             alt='Aai Ji Honey Logo'
           />
           <div className='hidden sm:block'>
