@@ -787,11 +787,11 @@ const Home = () => {
         <div className="max-w-6xl mx-auto">
           <div className={`grid grid-cols-2 md:grid-cols-3 gap-8 text-center observe-stagger ${visibleSections['stats-section'] ? 'visible' : ''}`}>
             <div className="group card-hover">
-              <h3 className="text-4xl md:text-5xl font-black gradient-text mb-3 group-hover:scale-110 transition-transform">10K+</h3>
+              <h3 className="text-4xl md:text-5xl font-black gradient-text mb-3 group-hover:scale-110 transition-transform">5K+</h3>
               <p className="text-amber-900 font-bold text-lg">Happy Customers</p>
             </div>
             <div className="group card-hover">
-              <h3 className="text-4xl md:text-5xl font-black gradient-text mb-3 group-hover:scale-110 transition-transform">25+</h3>
+              <h3 className="text-4xl md:text-5xl font-black gradient-text mb-3 group-hover:scale-110 transition-transform">5+</h3>
               <p className="text-amber-900 font-bold text-lg">Years Tradition</p>
             </div>
             <div className="group card-hover">
