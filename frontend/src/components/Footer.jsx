@@ -33,7 +33,7 @@ const Footer = () => {
                     {/* Left Section - Branding */}
                     <div className='flex items-center gap-4'>
                         <img 
-                            src='Aai ji honey.jpg' 
+                            src='favicon.ico' 
                             alt='Aai Ji Honey Logo'
                             className='w-16 h-16 p-2 rounded-full bg-white shadow-lg'
                         />
