@@ -384,7 +384,7 @@ import { toast } from 'react-toastify';
 const Form = ({ product, onClose }) => {
 
   // Customizable discount percentage
-  const DISCOUNT_PERCENTAGE = 20; // Change this value to adjust discount
+  const DISCOUNT_PERCENTAGE = 0; // Change this value to adjust discount
 
   const [formData, setFormData] = useState({
     name: '',
