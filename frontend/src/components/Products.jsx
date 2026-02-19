@@ -246,7 +246,7 @@ const Product = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {products.map((product, idx) => {
-                  const discountPercentage = 20;
+                  const discountPercentage = 0;
                   const originalPrice = product.price;
                   const discountedPrice = (originalPrice * (1 - discountPercentage / 100)).toFixed(0);
                   const isHovered = hoveredCard === product._id;
