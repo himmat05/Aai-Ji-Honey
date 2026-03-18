@@ -115,6 +115,11 @@ const ImageGallery = () => {
   const [hoveredSlide, setHoveredSlide] = useState(false);
 
   const images = [
+    'honey_founder_on work.jpeg',
+    'honey_box_board.jpeg',
+    'honey_box.jpeg',
+    'honey_box2.jpeg',
+    'honey_box3.jpeg',
     'Aai-ji-Honey-BeeKeeping.jpg',
     'Aai-ji-Honey-BeeKeeping2.jpg',
     'Aai-ji-Honey-Beefarm.jpg',
