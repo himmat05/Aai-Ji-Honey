@@ -354,6 +354,18 @@ app.put("/products/:id", authenticateToken, upload.single("image"), async (req, 
   }
 });
 
+// Set Global Offer
+app.put('/products/offer/all', authenticateToken, async (req, res) => {
+  try {
+    const { offerPercentage } = req.body;
+    await Product.updateMany({}, { $set: { offer: offerPercentage } });
+    res.json({ message: "Global offer updated successfully!" });
+  } catch (err) {
+    console.error("Error setting global offer:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Delete product (protected)
 
 app.delete('/products/:id', authenticateToken, async (req, res) => {

@@ -246,7 +246,7 @@ const Product = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {products.map((product, idx) => {
-                  const discountPercentage = 0;
+                  const discountPercentage = product.offer || product.discountPercentage || product.discount || 0;
                   const originalPrice = product.price;
                   const discountedPrice = (originalPrice * (1 - discountPercentage / 100)).toFixed(0);
                   const isHovered = hoveredCard === product._id;
@@ -288,16 +288,18 @@ const Product = () => {
                         />
 
                         {/* Discount Badge */}
-                        <div className={`
-                          absolute top-4 left-4 bg-gradient-to-r from-red-500 to-pink-500
-                          text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg
-                          transition-all duration-500
-                          ${isHovered ? 'scale-110 shadow-2xl' : 'scale-100'}
-                          transform
-                        `}>
-                          <span className="inline-block animate-bounce" style={{ animationDelay: '0s' }}>🎉</span>
-                          <span className="ml-2">{discountPercentage}% OFF</span>
-                        </div>
+                        {discountPercentage > 0 && (
+                          <div className={`
+                            absolute top-4 left-4 bg-gradient-to-r from-red-500 to-pink-500
+                            text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg
+                            transition-all duration-500
+                            ${isHovered ? 'scale-110 shadow-2xl' : 'scale-100'}
+                            transform
+                          `}>
+                            <span className="inline-block animate-bounce" style={{ animationDelay: '0s' }}>🎉</span>
+                            <span className="ml-2">{discountPercentage}% OFF</span>
+                          </div>
+                        )}
 
                         {/* Premium Badge */}
                         <div className={`

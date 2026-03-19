@@ -216,7 +216,35 @@ const AddProduct = () => {
   const [imagePreview, setImagePreview] = useState("");
   const [products, setProducts] = useState([]);
   const [editId, setEditId] = useState(null);
+  const [globalOffer, setGlobalOffer] = useState("");
   const navigate = useNavigate();
+
+  const handleGlobalOfferSubmit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (!token) return alert("Unauthorized access!");
+
+    try {
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      };
+
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/products/offer/all`,
+        { offerPercentage: Number(globalOffer) },
+        config
+      );
+      toast.success(`✅ Global offer of ${globalOffer}% applied to all products!`);
+      setGlobalOffer("");
+      fetchProducts(); // Refresh list to get new prices
+    } catch (err) {
+      console.error("Error setting global offer:", err);
+      toast.error("❌ Error applying global offer");
+    }
+  };
 
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
@@ -324,6 +352,38 @@ const AddProduct = () => {
             {editId ? "✏️ Edit Product" : "➕ Add New Product"}
           </h1>
           <p className="text-amber-700">Manage your honey collection</p>
+        </div>
+
+        {/* Global Settings Section */}
+        <div className="bg-gradient-to-r from-amber-100 to-orange-100 rounded-3xl shadow-lg p-8 mb-12 border-2 border-amber-300">
+          <h2 className="text-2xl font-bold text-amber-900 mb-4">🌍 Global Settings</h2>
+          <form onSubmit={handleGlobalOfferSubmit} className="flex flex-col md:flex-row gap-4 items-end">
+            <div className="flex-1 w-full">
+              <label className="block text-sm font-semibold text-amber-900 mb-2">Apply Sitewide Discount (%)</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  placeholder="e.g., 15"
+                  min="0"
+                  max="100"
+                  value={globalOffer}
+                  onChange={(e) => setGlobalOffer(e.target.value)}
+                  required
+                  className="w-full border-2 border-amber-300 p-3 pr-10 rounded-lg focus:outline-none focus:border-orange-500 transition-colors bg-white/80 backdrop-blur-sm"
+                />
+                <span className="absolute right-4 top-3.5 text-amber-700 font-bold">%</span>
+              </div>
+            </div>
+            <button
+              type="submit"
+              className="w-full md:w-auto px-8 py-3.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold rounded-lg shadow-md hover:shadow-xl transition-all duration-300 whitespace-nowrap cursor-pointer"
+            >
+              🎉 Apply to All
+            </button>
+          </form>
+          <p className="text-sm text-amber-700 mt-3 font-medium">
+            Note: This will instantly override the offer percentage on every product in the store. Set to 0 to remove all discounts.
+          </p>
         </div>
 
         {/* Form Section */}

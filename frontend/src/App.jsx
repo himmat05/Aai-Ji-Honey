@@ -75,7 +75,7 @@
 // export default App
 
 
-import {createBrowserRouter ,Form,RouterProvider} from 'react-router-dom'
+import {createBrowserRouter ,Form,RouterProvider, Navigate} from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Home from './components/Home'
 import About from './components/About'
@@ -88,6 +88,14 @@ import AddProduct from './components/Addproduct'
 import Login from './components/Login'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  if (!token || token === 'undefined' || token === 'null') {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
 
 const App = () => {
 
@@ -106,7 +114,7 @@ const App = () => {
       element: <><Navbar /><Contact/></>,
     },{
       path: '/add-product',
-      element: <><Navbar /><AddProduct/></>,
+      element: <ProtectedRoute><><Navbar /><AddProduct/></></ProtectedRoute>,
     },{
       path: '/login',
       element: <Login />
@@ -115,28 +123,28 @@ const App = () => {
       element: <Form />
     },{
       path:'/orderDashboard',
-      element: <OrderDashboard />
+      element: <ProtectedRoute><OrderDashboard /></ProtectedRoute>
     },{
       path: '/orders',
-      element: <OrderDashboard />
+      element: <ProtectedRoute><OrderDashboard /></ProtectedRoute>
     },{
       path: '/orders/:id',
-      element: <OrderDashboard />
+      element: <ProtectedRoute><OrderDashboard /></ProtectedRoute>
     },{
       path: '/products/:id',
       element: <Products />
     },{
       path: '/products/:id/edit',
-      element: <AddProduct />
+      element: <ProtectedRoute><AddProduct /></ProtectedRoute>
     },{
       path: '/products/:id/delete',
-      element: <AddProduct />
+      element: <ProtectedRoute><AddProduct /></ProtectedRoute>
     },{
       path: '/products/:id/add',
-      element: <AddProduct />
+      element: <ProtectedRoute><AddProduct /></ProtectedRoute>
     },{
       path: '/products/:id/update',
-      element: <AddProduct />
+      element: <ProtectedRoute><AddProduct /></ProtectedRoute>
     }
   ])
 
