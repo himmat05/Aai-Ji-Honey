@@ -67,7 +67,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
 
 // General Rate Limiting (Exclude health check pings)
 app.use((req, res, next) => {
