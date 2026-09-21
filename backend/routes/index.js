@@ -5,6 +5,7 @@ const authRoutes = require('./authRoutes');
 const orderRoutes = require('./orderRoutes');
 const paymentRoutes = require('./paymentRoutes');
 const productRoutes = require('./productRoutes');
+const messageRoutes = require('./messageRoutes');
 
 const db = require('../config/db');
 
@@ -50,11 +51,13 @@ router.use('/', authRoutes);
 router.use('/', paymentRoutes);
 router.use('/orders', orderRoutes);
 router.use('/products', productRoutes);
+router.use('/messages', messageRoutes);
 
 // Mount modules with /api prefix for dual-compatibility
 router.use('/api', authRoutes);
 router.use('/api', paymentRoutes);
 router.use('/api/orders', orderRoutes);
 router.use('/api/products', productRoutes);
+router.use('/api/messages', messageRoutes);
 
 module.exports = router;

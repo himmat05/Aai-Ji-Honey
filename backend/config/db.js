@@ -92,12 +92,32 @@ const connectDB = async () => {
         UNIQUE (product_id, user_id)
       );
 
+      CREATE TABLE IF NOT EXISTS messages (
+        id VARCHAR(50) PRIMARY KEY,
+        user_id VARCHAR(50),
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        mobile VARCHAR(50),
+        subject VARCHAR(255),
+        message TEXT NOT NULL,
+        admin_reply TEXT,
+        status VARCHAR(50) DEFAULT 'unread',
+        is_read_by_admin BOOLEAN DEFAULT FALSE,
+        is_read_by_user BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        replied_at TIMESTAMP WITH TIME ZONE
+      );
+
       -- High-Performance Database Indexes (Accelerates WHERE, JOIN, and ORDER BY queries)
       CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
       CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
       CREATE INDEX IF NOT EXISTS idx_ratings_product_id ON product_ratings(product_id);
       CREATE INDEX IF NOT EXISTS idx_products_created_at ON products(created_at DESC);
       CREATE INDEX IF NOT EXISTS idx_otps_email_purpose ON otps(email, purpose);
+      CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id);
+      CREATE INDEX IF NOT EXISTS idx_messages_email ON messages(email);
+      CREATE INDEX IF NOT EXISTS idx_messages_status ON messages(status);
+      CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at DESC);
     `);
 
     client.release();

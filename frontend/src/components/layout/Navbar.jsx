@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import AuthModal from '../common/AuthModal';
+import { messageApi } from '../../api/messageApi';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -9,8 +10,31 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState({ adminUnread: 0, userUnread: 0 });
   const { isAuthenticated, isOwner, isAdmin, isCustomer, user, logout } = useAuth();
   const isUserAdmin = isOwner || isAdmin || user?.role === 'admin' || user?.role === 'owner';
+
+  // Fetch live unread message counts for badges
+  const fetchUnreadCounts = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      const data = await messageApi.getUnreadCounts();
+      if (data) {
+        setUnreadCounts(data);
+      }
+    } catch (e) {}
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    fetchUnreadCounts();
+    const interval = setInterval(fetchUnreadCounts, 20000);
+    const handleCustomUpdate = () => fetchUnreadCounts();
+    window.addEventListener('unreadCountsUpdated', handleCustomUpdate);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('unreadCountsUpdated', handleCustomUpdate);
+    };
+  }, [fetchUnreadCounts, location.pathname]);
 
   // Handle subtle shadow & blur change on scroll
   useEffect(() => {
@@ -108,16 +132,22 @@ const Navbar = () => {
                 {isUserAdmin ? (
                   <Link
                     to="/orderDashboard"
-                    className="px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-bold rounded-full shadow-md hover:shadow-lg transition-all duration-300 text-xs tracking-wide flex items-center gap-1.5 uppercase no-underline"
+                    className="relative px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-bold rounded-full shadow-md hover:shadow-lg transition-all duration-300 text-xs tracking-wide flex items-center gap-1.5 uppercase no-underline"
                   >
                     <span>📊</span>
                     <span>Admin Dashboard</span>
+                    {unreadCounts.adminUnread > 0 && (
+                      <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full shadow-sm animate-pulse flex items-center gap-0.5">
+                        <span>💬</span>
+                        <span>{unreadCounts.adminUnread}</span>
+                      </span>
+                    )}
                   </Link>
                 ) : (
                   <Link
                     to="/profile"
-                    title="View My Profile & Order Tracking"
-                    className="flex items-center gap-2 bg-white/90 hover:bg-amber-50 border border-amber-300/80 px-3.5 py-1.5 rounded-full shadow-sm transition-all group no-underline"
+                    title="View My Profile & Inquiries"
+                    className="relative flex items-center gap-2 bg-white/90 hover:bg-amber-50 border border-amber-300/80 px-3.5 py-1.5 rounded-full shadow-sm transition-all group no-underline"
                   >
                     <span className="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center text-xs font-black shadow group-hover:scale-105 transition-transform">
                       {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
@@ -125,7 +155,14 @@ const Navbar = () => {
                     <span className="text-xs font-bold text-amber-950 max-w-[120px] truncate">
                       {user?.name || 'My Account'}
                     </span>
-                    <span className="text-[11px] text-amber-600 font-medium">📦 Orders</span>
+                    {unreadCounts.userUnread > 0 ? (
+                      <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full shadow-sm animate-pulse flex items-center gap-0.5">
+                        <span>💬</span>
+                        <span>{unreadCounts.userUnread}</span>
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-amber-600 font-medium">📦 Orders</span>
+                    )}
                   </Link>
                 )}
 
@@ -201,16 +238,26 @@ const Navbar = () => {
               {isUserAdmin ? (
                 <Link
                   to="/orderDashboard"
-                  className="block px-4 py-2.5 bg-amber-600 text-white font-bold rounded-xl text-center text-sm no-underline shadow"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 text-white font-bold rounded-xl text-center text-sm no-underline shadow"
                 >
-                  📊 Admin Dashboard
+                  <span>📊 Admin Dashboard</span>
+                  {unreadCounts.adminUnread > 0 && (
+                    <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">
+                      💬 {unreadCounts.adminUnread}
+                    </span>
+                  )}
                 </Link>
               ) : (
                 <Link
                   to="/profile"
-                  className="block px-4 py-2.5 bg-amber-100 text-amber-950 font-bold rounded-xl text-center text-sm no-underline border border-amber-300 shadow-sm"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-100 text-amber-950 font-bold rounded-xl text-center text-sm no-underline border border-amber-300 shadow-sm"
                 >
-                  👤 My Profile & Orders ({user?.name || 'Customer'})
+                  <span>👤 My Profile & Orders</span>
+                  {unreadCounts.userUnread > 0 && (
+                    <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">
+                      💬 {unreadCounts.userUnread}
+                    </span>
+                  )}
                 </Link>
               )}
               <button

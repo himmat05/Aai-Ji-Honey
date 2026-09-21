@@ -1,16 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import useAuth from '../../hooks/useAuth';
+import { messageApi } from '../../api/messageApi';
 
 const ContactPage = () => {
+  const { user } = useAuth();
   const [hoveredCard, setHoveredCard] = useState(null);
   const [form, setForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.mobile || '',
     subject: 'Raw Honey Inquiry',
     message: '',
   });
   const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setForm((prev) => ({
+        ...prev,
+        name: prev.name || user.name || '',
+        email: prev.email || user.email || '',
+        phone: prev.phone || user.mobile || '',
+      }));
+    }
+  }, [user]);
 
   const teamMembers = [
     {
@@ -65,24 +79,37 @@ const ContactPage = () => {
     },
   ];
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
       toast.error('Please complete your name, email, and inquiry message.');
       return;
     }
-    setSending(true);
-    setTimeout(() => {
-      setSending(false);
-      toast.success('🎉 Thank you! Your message has been sent to our Apiary Team.');
+
+    try {
+      setSending(true);
+      const res = await messageApi.sendMessage({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        mobile: form.phone.trim(),
+        subject: form.subject || 'Raw Honey Inquiry',
+        message: form.message.trim(),
+      });
+
+      toast.success(res.message || '🎉 Thank you! Your message has been sent to our Apiary Team.');
       setForm({
-        name: '',
-        email: '',
-        phone: '',
+        name: user?.name || '',
+        email: user?.email || '',
+        phone: user?.mobile || '',
         subject: 'Raw Honey Inquiry',
         message: '',
       });
-    }, 800);
+    } catch (err) {
+      console.error('Contact form submission error:', err);
+      toast.error(err.response?.data?.error || 'Failed to send message. Please try again later.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
