@@ -1,16 +1,24 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import RootLayout from '../components/layout/RootLayout';
 import ProtectedRoute from '../components/layout/ProtectedRoute';
+import PageLoader from '../components/common/PageLoader';
 
-import HomePage from '../pages/Home/HomePage';
-import AboutPage from '../pages/About/AboutPage';
-import ContactPage from '../pages/Contact/ContactPage';
-import ProductsPage from '../pages/Products/ProductsPage';
-import LoginPage from '../pages/Auth/LoginPage';
-import OrderDashboardPage from '../pages/Admin/OrderDashboardPage';
-import ProductManagementPage from '../pages/Admin/ProductManagementPage';
-import UserProfilePage from '../pages/Profile/UserProfilePage';
+// Dynamic Code-Splitting: Routes are fetched on demand
+const HomePage = lazy(() => import('../pages/Home/HomePage'));
+const AboutPage = lazy(() => import('../pages/About/AboutPage'));
+const ContactPage = lazy(() => import('../pages/Contact/ContactPage'));
+const ProductsPage = lazy(() => import('../pages/Products/ProductsPage'));
+const LoginPage = lazy(() => import('../pages/Auth/LoginPage'));
+const OrderDashboardPage = lazy(() => import('../pages/Admin/OrderDashboardPage'));
+const ProductManagementPage = lazy(() => import('../pages/Admin/ProductManagementPage'));
+const UserProfilePage = lazy(() => import('../pages/Profile/UserProfilePage'));
+
+const withSuspense = (Component) => (
+  <Suspense fallback={<PageLoader />}>
+    <Component />
+  </Suspense>
+);
 
 export const router = createBrowserRouter([
   {
@@ -19,11 +27,11 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <HomePage />,
+        element: withSuspense(HomePage),
       },
       {
         path: 'about',
-        element: <AboutPage />,
+        element: withSuspense(AboutPage),
       },
       {
         path: 'About',
@@ -31,7 +39,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'products',
-        element: <ProductsPage />,
+        element: withSuspense(ProductsPage),
       },
       {
         path: 'store',
@@ -39,7 +47,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'contact',
-        element: <ContactPage />,
+        element: withSuspense(ContactPage),
       },
       {
         path: 'Contact',
@@ -47,13 +55,13 @@ export const router = createBrowserRouter([
       },
       {
         path: 'login',
-        element: <LoginPage />,
+        element: withSuspense(LoginPage),
       },
       {
         path: 'profile',
         element: (
           <ProtectedRoute>
-            <UserProfilePage />
+            {withSuspense(UserProfilePage)}
           </ProtectedRoute>
         ),
       },
@@ -61,7 +69,7 @@ export const router = createBrowserRouter([
         path: 'orderDashboard',
         element: (
           <ProtectedRoute>
-            <OrderDashboardPage />
+            {withSuspense(OrderDashboardPage)}
           </ProtectedRoute>
         ),
       },
@@ -69,7 +77,7 @@ export const router = createBrowserRouter([
         path: 'orders',
         element: (
           <ProtectedRoute>
-            <OrderDashboardPage />
+            {withSuspense(OrderDashboardPage)}
           </ProtectedRoute>
         ),
       },
@@ -77,7 +85,7 @@ export const router = createBrowserRouter([
         path: 'orders/:id',
         element: (
           <ProtectedRoute>
-            <OrderDashboardPage />
+            {withSuspense(OrderDashboardPage)}
           </ProtectedRoute>
         ),
       },
@@ -85,7 +93,7 @@ export const router = createBrowserRouter([
         path: 'add-product',
         element: (
           <ProtectedRoute>
-            <ProductManagementPage />
+            {withSuspense(ProductManagementPage)}
           </ProtectedRoute>
         ),
       },
@@ -93,7 +101,7 @@ export const router = createBrowserRouter([
         path: 'products/:id/edit',
         element: (
           <ProtectedRoute>
-            <ProductManagementPage />
+            {withSuspense(ProductManagementPage)}
           </ProtectedRoute>
         ),
       },
@@ -101,7 +109,7 @@ export const router = createBrowserRouter([
         path: 'products/:id/delete',
         element: (
           <ProtectedRoute>
-            <ProductManagementPage />
+            {withSuspense(ProductManagementPage)}
           </ProtectedRoute>
         ),
       },
@@ -109,7 +117,7 @@ export const router = createBrowserRouter([
         path: 'products/:id/add',
         element: (
           <ProtectedRoute>
-            <ProductManagementPage />
+            {withSuspense(ProductManagementPage)}
           </ProtectedRoute>
         ),
       },
@@ -117,7 +125,7 @@ export const router = createBrowserRouter([
         path: 'products/:id/update',
         element: (
           <ProtectedRoute>
-            <ProductManagementPage />
+            {withSuspense(ProductManagementPage)}
           </ProtectedRoute>
         ),
       },
@@ -128,3 +136,5 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
+export default router;

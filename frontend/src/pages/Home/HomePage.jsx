@@ -10,12 +10,16 @@ const AnimatedBeesAroundJar = () => {
         <div className="w-72 h-72 sm:w-96 sm:h-96 bg-gradient-to-tr from-amber-400/30 via-orange-400/25 to-yellow-300/35 rounded-full blur-3xl animate-nectar-glow"></div>
       </div>
 
-      {/* Floating Honey Jar */}
+      {/* Floating Honey Jar (LCP Element: Optimized with high fetchpriority and explicit aspect ratio) */}
       <div className="relative z-10 animate-honey-float">
         <img
-          className="w-64 sm:w-80 md:w-96 drop-shadow-[0_25px_35px_rgba(180,83,9,0.3)] hover:scale-105 transition-transform duration-500 cursor-pointer object-contain"
+          className="w-64 sm:w-80 md:w-96 drop-shadow-[0_25px_35px_rgba(180,83,9,0.3)] hover:scale-105 transition-transform duration-500 cursor-pointer object-contain aspect-square"
           src="/vecteezy_honey-jar-with-bees-and-golden-drips_56472491.png"
           alt="Aai Ji Artisanal Raw Honey Jar"
+          width="384"
+          height="384"
+          fetchpriority="high"
+          decoding="async"
         />
       </div>
 
@@ -32,6 +36,10 @@ const AnimatedBeesAroundJar = () => {
           src="/vecteezy_bee-side-view-with_24589176.png"
           alt="Worker Bee"
           className="w-10 h-10 drop-shadow-md opacity-90"
+          width="40"
+          height="40"
+          loading="lazy"
+          decoding="async"
         />
       </div>
 
@@ -48,6 +56,10 @@ const AnimatedBeesAroundJar = () => {
           src="/vecteezy_bee-side-view-with_24589176.png"
           alt="Worker Bee"
           className="w-11 h-11 drop-shadow-md opacity-90 scale-x-[-1]"
+          width="44"
+          height="44"
+          loading="lazy"
+          decoding="async"
         />
       </div>
 
@@ -63,7 +75,11 @@ const AnimatedBeesAroundJar = () => {
         <img
           src="/vecteezy_bee-side-view-with_24589176.png"
           alt="Worker Bee"
-          className="w-9 h-9 drop-shadow-md opacity-85"
+          className="w-10 h-10 drop-shadow-md opacity-90"
+          width="40"
+          height="40"
+          loading="lazy"
+          decoding="async"
         />
       </div>
     </div>

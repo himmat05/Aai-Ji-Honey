@@ -31,6 +31,9 @@ const getAllProducts = async (req, res, next) => {
       avgRating: parseFloat(p.avgRating) || 0,
       ratingCount: parseInt(p.ratingCount, 10) || 0,
     }));
+
+    // HTTP Caching: 60s fresh, 120s stale-while-revalidate for instant repeat loads
+    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=120');
     res.json(products);
   } catch (err) {
     console.error('Error fetching products:', err);

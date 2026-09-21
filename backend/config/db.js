@@ -91,6 +91,13 @@ const connectDB = async () => {
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         UNIQUE (product_id, user_id)
       );
+
+      -- High-Performance Database Indexes (Accelerates WHERE, JOIN, and ORDER BY queries)
+      CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
+      CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_ratings_product_id ON product_ratings(product_id);
+      CREATE INDEX IF NOT EXISTS idx_products_created_at ON products(created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_otps_email_purpose ON otps(email, purpose);
     `);
 
     client.release();
