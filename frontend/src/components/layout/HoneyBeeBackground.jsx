@@ -23,7 +23,6 @@ const HoneyBeeBackground = () => {
             gyroControls: false,
             minHeight: 200.0,
             minWidth: 200.0,
-            vertexColors: false,
             scale: 1.0,
             scaleMobile: 1.0,
             color: 0xf59e0b, // warm honey amber
