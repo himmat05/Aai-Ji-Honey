@@ -62,6 +62,7 @@ const LoginPage = () => {
   const [forgotTimer, setForgotTimer] = useState(0);
 
   const googleBtnRef = useRef(null);
+  const googleInitializedRef = useRef(false);
 
   // If already logged in, redirect appropriately
   useEffect(() => {
@@ -115,16 +116,19 @@ const LoginPage = () => {
     const initializeGoogle = () => {
       if (window.google?.accounts?.id && googleBtnRef.current) {
         try {
-          window.google.accounts.id.initialize({
-            client_id: googleClientId,
-            callback: handleGoogleResponse,
-            auto_select: false,
-          });
+          if (!googleInitializedRef.current) {
+            window.google.accounts.id.initialize({
+              client_id: googleClientId,
+              callback: handleGoogleResponse,
+              auto_select: false,
+            });
+            googleInitializedRef.current = true;
+          }
 
           window.google.accounts.id.renderButton(googleBtnRef.current, {
             theme: 'outline',
             size: 'large',
-            width: '100%',
+            width: 320,
             text: 'continue_with',
             shape: 'pill',
           });

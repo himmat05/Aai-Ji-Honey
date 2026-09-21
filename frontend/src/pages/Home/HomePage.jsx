@@ -18,7 +18,7 @@ const AnimatedBeesAroundJar = () => {
           alt="Aai Ji Artisanal Raw Honey Jar"
           width="384"
           height="384"
-          fetchpriority="high"
+          fetchPriority="high"
           decoding="async"
         />
       </div>

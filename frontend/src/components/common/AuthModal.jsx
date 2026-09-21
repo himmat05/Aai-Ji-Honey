@@ -56,6 +56,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = MODES.LOGIN, subt
   const [forgotTimer, setForgotTimer] = useState(0);
 
   const googleBtnRef = useRef(null);
+  const googleInitializedRef = useRef(false);
 
   // Sync mode if initialMode prop changes
   useEffect(() => {
@@ -110,17 +111,20 @@ const AuthModal = ({ isOpen, onClose, onSuccess, initialMode = MODES.LOGIN, subt
     const initializeGoogle = () => {
       if (window.google?.accounts?.id) {
         try {
-          window.google.accounts.id.initialize({
-            client_id: googleClientId,
-            callback: handleGoogleResponse,
-            auto_select: false,
-          });
+          if (!googleInitializedRef.current) {
+            window.google.accounts.id.initialize({
+              client_id: googleClientId,
+              callback: handleGoogleResponse,
+              auto_select: false,
+            });
+            googleInitializedRef.current = true;
+          }
 
           if (googleBtnRef.current) {
             window.google.accounts.id.renderButton(googleBtnRef.current, {
               theme: 'outline',
               size: 'large',
-              width: '100%',
+              width: 320,
               text: 'continue_with',
               shape: 'pill',
             });

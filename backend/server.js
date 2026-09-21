@@ -20,6 +20,7 @@ app.use(
   helmet({
     contentSecurityPolicy: false, // Prevents breaking inline scripts/CDNs while protecting X-Frame-Options, HSTS, X-Content-Type-Options
     crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
   })
 );
 
