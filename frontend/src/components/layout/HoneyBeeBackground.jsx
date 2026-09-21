@@ -46,28 +46,12 @@ const HoneyBeeBackground = () => {
     };
   }, []);
 
-  const bees = Array.from({ length: 5 });
-
   return (
     <div
       ref={vantaRef}
       className="fixed inset-0 w-full h-full z-[-1]"
       style={{ pointerEvents: 'none' }}
-    >
-      {bees.map((_, i) => (
-        <img
-          key={i}
-          src="/vecteezy_bee-side-view-with_24589176.png"
-          alt="Honey Bee"
-          className={`absolute w-12 h-12 opacity-80 animate-fly-bee delay-${i * 200}`}
-          style={{
-            top: `${15 + i * 15}%`,
-            left: `${14 + i * 15}%`,
-            pointerEvents: 'none',
-          }}
-        />
-      ))}
-    </div>
+    />
   );
 };
 
