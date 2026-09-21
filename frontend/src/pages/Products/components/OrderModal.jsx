@@ -81,52 +81,66 @@ const OrderModal = ({ product, onClose }) => {
         return;
       }
 
-      // Step 1: Create Razorpay Order on server
-      const orderData = await paymentApi.createOrder(priceDetails.amountInPaise);
+      // Step 1: Create Razorpay Order on server with server-enforced amount
+      const orderData = await paymentApi.createOrder({
+        productId: product._id || product.id,
+        quantity: parseInt(formData.quantity, 10) || 1,
+      });
 
-      if (!orderData || !orderData.order || !orderData.order.id) {
+      if (!orderData || !orderData.order || !orderData.order.id || !orderData.keyId) {
         toast.error('Payment gateway initialization failed.');
         setIsSubmitting(false);
         return;
       }
 
-      const razorpayKey =
-        import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_RwJfWahqgcNYJS';
+      // Key ID delivered dynamically at runtime by the backend API
+      const razorpayKey = orderData.keyId;
 
       const options = {
         key: razorpayKey,
-        amount: priceDetails.amountInPaise,
-        currency: 'INR',
+        amount: orderData.order.amount,
+        currency: orderData.order.currency || 'INR',
         name: 'Aai-Ji Honey',
         description: `Purchase of ${product.name}`,
         order_id: orderData.order.id,
         handler: async (response) => {
           try {
-            // Step 2: Submit and persist completed order in database
-            const finalOrder = {
-              name: formData.name,
-              mobile: formData.mobile,
-              email: formData.email,
-              address: fullAddress,
-              quantity: parseInt(formData.quantity, 10),
-              userId: user?.id || null,
-              product: {
-                id: product._id || product.id,
-                name: product.name,
-                price: product.price,
-                totalprice: priceDetails.totalInRupees,
-                image: product.image,
-                flavour: product.flavour,
+            // Step 2: Cryptographically verify HMAC-SHA256 signature server-side and persist order
+            const verificationPayload = {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              orderDetails: {
+                name: formData.name,
+                mobile: formData.mobile,
+                email: formData.email,
+                address: fullAddress,
+                quantity: parseInt(formData.quantity, 10),
+                userId: user?.id || null,
+                product: {
+                  id: product._id || product.id,
+                  name: product.name,
+                  price: product.price,
+                  totalprice: priceDetails.totalInRupees,
+                  image: product.image,
+                  flavour: product.flavour,
+                },
               },
-              paymentId: response.razorpay_payment_id,
             };
 
-            await orderApi.createOrder(finalOrder);
-            toast.success('✅ Order placed successfully!');
-            onClose();
+            const verificationResult = await paymentApi.verifyPayment(verificationPayload);
+            if (verificationResult && verificationResult.success) {
+              toast.success('✅ Payment verified & Order placed successfully!');
+              onClose();
+            } else {
+              toast.error(verificationResult?.message || 'Payment signature verification failed.');
+            }
           } catch (saveError) {
-            console.error('Error saving order after payment:', saveError);
-            toast.error('Payment received but failed to record order. Please contact support.');
+            console.error('Error verifying payment/order:', saveError);
+            toast.error(
+              saveError.response?.data?.message ||
+                `Payment received but signature verification failed. Please contact support with Payment ID: ${response.razorpay_payment_id}`
+            );
           } finally {
             setIsSubmitting(false);
           }

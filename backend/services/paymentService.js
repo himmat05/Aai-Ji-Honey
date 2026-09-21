@@ -1,22 +1,69 @@
 const crypto = require('crypto');
+const db = require('../config/db');
 const razorpay = require('../config/razorpay');
 
 /**
- * Create a new Razorpay order
- * @param {number} amount - Amount in paise
- * @returns {Promise<Object>} Razorpay order
+ * Create a new Razorpay order with server-calculated amount
+ * Strictly validates product in NeonDB to prevent amount tampering
+ * @param {string} productId - ID of product in database
+ * @param {number} quantity - Quantity of items
+ * @returns {Promise<Object>} Razorpay order details + verified product
  */
-const createRazorpayOrder = async (amount) => {
+const createRazorpayOrder = async (productId, quantity = 1) => {
+  if (!productId) {
+    throw new Error('Product ID is required');
+  }
+
+  const cleanQuantity = Math.max(1, Math.min(100, parseInt(quantity, 10) || 1));
+
+  // Query product directly from NeonDB to guarantee price integrity
+  const productResult = await db.query(
+    'SELECT id, name, price, image, flavour FROM products WHERE id = $1',
+    [productId]
+  );
+
+  if (productResult.rows.length === 0) {
+    throw new Error('Product not found');
+  }
+
+  const product = productResult.rows[0];
+  const unitPrice = parseFloat(product.price);
+  if (isNaN(unitPrice) || unitPrice <= 0) {
+    throw new Error('Invalid product price configuration in database');
+  }
+
+  // Calculate total in paise server-side (Never trust client-provided amount)
+  const totalAmountInPaise = Math.round(unitPrice * cleanQuantity * 100);
+
   const options = {
-    amount: amount, // amount in paise
+    amount: totalAmountInPaise,
     currency: 'INR',
-    receipt: 'receipt_' + Math.random().toString(36).substring(2)
+    receipt: `rcpt_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
+    notes: {
+      productId: product.id,
+      productName: product.name,
+      quantity: String(cleanQuantity),
+    },
   };
-  return await razorpay.orders.create(options);
+
+  const razorpayOrder = await razorpay.orders.create(options);
+
+  return {
+    order: razorpayOrder,
+    product: {
+      id: product.id,
+      name: product.name,
+      price: unitPrice,
+      totalPrice: unitPrice * cleanQuantity,
+      image: product.image,
+      flavour: product.flavour,
+    },
+    quantity: cleanQuantity,
+  };
 };
 
 /**
- * Verify Razorpay payment signature
+ * Verify Razorpay payment signature in constant-time (Timing-attack immune)
  * @param {string} orderId
  * @param {string} paymentId
  * @param {string} signature
@@ -29,13 +76,49 @@ const verifyPaymentSignature = (orderId, paymentId, signature) => {
   const body = `${orderId}|${paymentId}`;
   const expectedSignature = crypto
     .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-    .update(body.toString())
+    .update(body)
     .digest('hex');
 
-  return expectedSignature === signature;
+  const expectedBuf = Buffer.from(expectedSignature, 'utf8');
+  const signatureBuf = Buffer.from(signature, 'utf8');
+
+  if (expectedBuf.length !== signatureBuf.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(expectedBuf, signatureBuf);
+};
+
+/**
+ * Verify Razorpay webhook signature in constant time
+ * @param {string|Buffer|Object} rawBody
+ * @param {string} signature
+ * @returns {boolean} isValid
+ */
+const verifyWebhookSignature = (rawBody, signature) => {
+  const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  if (!webhookSecret || !rawBody || !signature) {
+    return false;
+  }
+
+  const payload = typeof rawBody === 'string' ? rawBody : JSON.stringify(rawBody);
+  const expectedSignature = crypto
+    .createHmac('sha256', webhookSecret)
+    .update(payload)
+    .digest('hex');
+
+  const expectedBuf = Buffer.from(expectedSignature, 'utf8');
+  const signatureBuf = Buffer.from(signature, 'utf8');
+
+  if (expectedBuf.length !== signatureBuf.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(expectedBuf, signatureBuf);
 };
 
 module.exports = {
   createRazorpayOrder,
-  verifyPaymentSignature
+  verifyPaymentSignature,
+  verifyWebhookSignature,
 };

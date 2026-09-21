@@ -27,7 +27,22 @@ const authLimiter = rateLimit({
   },
 });
 
+/**
+ * Payment & Checkout Limiter: 40 requests per 15 minutes per IP
+ * Protects Razorpay order creation and signature verification against card-testing bots
+ */
+const paymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 40,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    message: 'Too many payment requests from this IP. Please wait 15 minutes and try again.',
+  },
+});
+
 module.exports = {
   generalLimiter,
   authLimiter,
+  paymentLimiter,
 };
