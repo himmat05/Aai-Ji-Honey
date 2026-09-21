@@ -6,10 +6,44 @@ const orderRoutes = require('./orderRoutes');
 const paymentRoutes = require('./paymentRoutes');
 const productRoutes = require('./productRoutes');
 
-// Root health check route
+const db = require('../config/db');
+
+// Health Check Controller (keeps both Render instance and Neon DB warm)
+const healthCheck = async (req, res) => {
+  const uptimeSeconds = Math.floor(process.uptime());
+  try {
+    // Quick query to keep Neon PostgreSQL connection pool awake
+    await db.query('SELECT 1');
+    return res.status(200).json({
+      status: 'healthy',
+      database: 'connected',
+      uptime: `${uptimeSeconds}s`,
+      timestamp: new Date().toISOString(),
+      service: 'Aai Ji Honey Backend',
+    });
+  } catch (err) {
+    console.warn('⚠️ Health check DB warning:', err.message);
+    return res.status(200).json({
+      status: 'degraded',
+      database: 'reconnecting',
+      uptime: `${uptimeSeconds}s`,
+      timestamp: new Date().toISOString(),
+      service: 'Aai Ji Honey Backend',
+    });
+  }
+};
+
+// Root endpoint
 router.get('/', (req, res) => {
-  res.send('API is working!');
+  res.status(200).json({
+    status: 'online',
+    message: '🍯 Aai Ji Honey API Server is running smoothly',
+  });
 });
+
+// Dedicated Health Endpoints for UptimeRobot / Ping Monitors (GET & HEAD)
+router.all('/health', healthCheck);
+router.all('/api/health', healthCheck);
 
 // Mount modules at root level
 router.use('/', authRoutes);
