@@ -92,7 +92,7 @@ const verifySignupOtp = async (req, res) => {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
     const userId = crypto.randomBytes(12).toString('hex');
     const cleanedMobile = mobile ? mobile.trim() : null;
     const cleanedAddress = address ? address.trim() : null;
@@ -118,7 +118,7 @@ const verifySignupOtp = async (req, res) => {
     const token = jwt.sign(
       { id: user.id, email: user.email, name: user.name, role: 'user' },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '7d', algorithm: 'HS256' }
     );
 
     res.status(201).json({
@@ -179,7 +179,7 @@ const userLogin = async (req, res) => {
     const token = jwt.sign(
       { id: user.id, email: user.email, name: user.name, role: 'user' },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '7d', algorithm: 'HS256' }
     );
 
     res.json({
@@ -254,7 +254,7 @@ const googleAuth = async (req, res) => {
     const token = jwt.sign(
       { id: user.id, email: user.email, name: user.name, role: 'user' },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '7d', algorithm: 'HS256' }
     );
 
     res.json({
@@ -298,8 +298,9 @@ const sendForgotPasswordOtp = async (req, res) => {
     );
 
     if (userResult.rows.length === 0) {
-      return res.status(404).json({
-        message: 'No account found with this email address. Please check and try again.',
+      // Anti-enumeration: return identical response so attackers cannot probe for registered emails
+      return res.json({
+        message: 'If an account exists with this email, a password reset code has been sent. Please check your inbox.',
       });
     }
 
@@ -308,7 +309,7 @@ const sendForgotPasswordOtp = async (req, res) => {
     await sendOtpEmail(normalizedEmail, otp, 'forgot_password');
 
     res.json({
-      message: 'Password reset OTP has been sent to your email. Please check your inbox.',
+      message: 'If an account exists with this email, a password reset code has been sent. Please check your inbox.',
     });
   } catch (error) {
     console.error('Error in sendForgotPasswordOtp:', error);
@@ -344,7 +345,7 @@ const resetPasswordWithOtp = async (req, res) => {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
 
     const updateResult = await db.query(
       'UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE LOWER(email) = LOWER($2) RETURNING id',
@@ -377,7 +378,7 @@ const updateProfile = async (req, res) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
     const { name, mobile, address, location } = req.body;
 
     const result = await db.query(
@@ -428,7 +429,7 @@ const getMe = async (req, res) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
 
     if (decoded.role === 'admin' || decoded.role === 'owner' || !decoded.role) {
       // Check owner table

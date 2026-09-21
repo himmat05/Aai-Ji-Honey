@@ -11,35 +11,36 @@ const {
   updateProfile,
   getMe,
 } = require('../controllers/customerAuthController');
+const { authLimiter } = require('../middleware/rateLimiter');
 
 // ==========================================
-// Owner Authentication Routes (Admin)
+// Authentication Routes (Rate-limited)
 // ==========================================
 // Unified Login (Admin & Customer)
-router.post('/login', login);
-router.post('/api/login', login);
-router.post('/auth/login', login);
-router.post('/auth/user-login', login);
-router.post('/user-login', login);
-router.post('/register-owner', registerOwner);
+router.post('/login', authLimiter, login);
+router.post('/api/login', authLimiter, login);
+router.post('/auth/login', authLimiter, login);
+router.post('/auth/user-login', authLimiter, login);
+router.post('/user-login', authLimiter, login);
+router.post('/register-owner', authLimiter, registerOwner);
 
 // Customer Signup with Email OTP
-router.post('/auth/send-signup-otp', sendSignupOtp);
-router.post('/send-signup-otp', sendSignupOtp);
+router.post('/auth/send-signup-otp', authLimiter, sendSignupOtp);
+router.post('/send-signup-otp', authLimiter, sendSignupOtp);
 
-router.post('/auth/verify-signup-otp', verifySignupOtp);
-router.post('/verify-signup-otp', verifySignupOtp);
+router.post('/auth/verify-signup-otp', authLimiter, verifySignupOtp);
+router.post('/verify-signup-otp', authLimiter, verifySignupOtp);
 
 // Google OAuth Login / Signup
-router.post('/auth/google', googleAuth);
-router.post('/google', googleAuth);
+router.post('/auth/google', authLimiter, googleAuth);
+router.post('/google', authLimiter, googleAuth);
 
 // Forgot Password with Email OTP
-router.post('/auth/forgot-password/send-otp', sendForgotPasswordOtp);
-router.post('/forgot-password/send-otp', sendForgotPasswordOtp);
+router.post('/auth/forgot-password/send-otp', authLimiter, sendForgotPasswordOtp);
+router.post('/forgot-password/send-otp', authLimiter, sendForgotPasswordOtp);
 
-router.post('/auth/forgot-password/reset', resetPasswordWithOtp);
-router.post('/forgot-password/reset', resetPasswordWithOtp);
+router.post('/auth/forgot-password/reset', authLimiter, resetPasswordWithOtp);
+router.post('/forgot-password/reset', authLimiter, resetPasswordWithOtp);
 
 // Active User Profile
 router.get('/auth/me', getMe);

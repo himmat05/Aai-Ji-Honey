@@ -7,14 +7,29 @@ const orderService = require('../services/orderService');
  */
 const createOrder = async (req, res, next) => {
   try {
-    const orderData = { ...req.body };
+    const { name, email, mobile, address, quantity, product, paymentId } = req.body;
+    if (!name || !mobile || !address) {
+      return res.status(400).json({ message: 'Name, mobile, and address are required.' });
+    }
+
+    // Mass-assignment defense: pick only allowed fields and force status: 'Pending'
+    const orderData = {
+      name: String(name).trim().slice(0, 100),
+      email: email ? String(email).trim().toLowerCase().slice(0, 150) : null,
+      mobile: String(mobile).trim().slice(0, 20),
+      address: String(address).trim().slice(0, 500),
+      quantity: Math.max(1, Math.min(100, parseInt(quantity, 10) || 1)),
+      product: typeof product === 'object' && product !== null ? product : {},
+      paymentId: paymentId ? String(paymentId).trim().slice(0, 100) : null,
+      status: 'Pending',
+    };
 
     // Extract user ID from token if authenticated
     const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ') && !orderData.userId) {
+    if (authHeader && authHeader.startsWith('Bearer ')) {
       try {
         const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
         if (decoded && decoded.id) {
           orderData.userId = decoded.id;
         }
@@ -44,7 +59,7 @@ const getMyOrders = async (req, res, next) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
     const orders = await orderService.getOrdersByCustomer(decoded.id, decoded.email);
     res.json({ orders });
   } catch (err) {
@@ -74,7 +89,13 @@ const getOrders = async (req, res, next) => {
  */
 const updateOrderStatus = async (req, res, next) => {
   try {
-    const updated = await orderService.updateOrderStatus(req.params.id, req.body.status);
+    const allowedStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+    const { status } = req.body;
+    if (!status || !allowedStatuses.includes(status)) {
+      return res.status(400).json({ error: `Invalid status. Must be one of: ${allowedStatuses.join(', ')}` });
+    }
+
+    const updated = await orderService.updateOrderStatus(req.params.id, status);
     if (!updated) {
       return res.status(404).json({ error: 'Order not found' });
     }

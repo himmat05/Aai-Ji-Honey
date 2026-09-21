@@ -8,13 +8,18 @@ const {
   deleteOrder,
 } = require('../controllers/orderController');
 
-// Customer specific order routes
-router.get('/my-orders', getMyOrders);
+const { authenticateToken } = require('../middleware/authMiddleware');
+const { requireAdmin } = require('../middleware/roleMiddleware');
 
-// General order management routes
+// Customer specific order routes (requires authentication)
+router.get('/my-orders', authenticateToken, getMyOrders);
+
+// Place an order (public / authenticated checkout)
 router.post('/', createOrder);
-router.get('/', getOrders);
-router.patch('/:id', updateOrderStatus);
-router.delete('/:id', deleteOrder);
+
+// Admin order management routes (strictly require admin role)
+router.get('/', authenticateToken, requireAdmin, getOrders);
+router.patch('/:id', authenticateToken, requireAdmin, updateOrderStatus);
+router.delete('/:id', authenticateToken, requireAdmin, deleteOrder);
 
 module.exports = router;

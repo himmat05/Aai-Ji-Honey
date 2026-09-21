@@ -5,19 +5,31 @@ const db = require('../config/db');
 const { sendLoginEmail } = require('../services/emailService');
 const { getClientIp } = require('../utils/helpers');
 
-/**
- * Register owner (Admin initial setup)
- * POST /register-owner
- */
 const registerOwner = async (req, res, next) => {
-  const { email, password } = req.body;
+  const { email, password, setupKey } = req.body;
   if (!email || !password) {
-    return res.status(400).send('Email and password are required.');
+    return res.status(400).json({ error: 'Email and password are required.' });
   }
 
   try {
+    // Security check: If an owner already exists, prevent registration
+    const existingCount = await db.query('SELECT COUNT(*) AS count FROM owners');
+    const count = parseInt(existingCount.rows[0]?.count || 0, 10);
+    
+    // If owner already exists, only allow registration if an explicit valid ADMIN_SETUP_SECRET is provided
+    if (count > 0) {
+      const configuredSecret = process.env.ADMIN_SETUP_SECRET;
+      if (!configuredSecret || setupKey !== configuredSecret) {
+        console.warn(`🚨 Blocked unauthorized attempt to register new owner: ${email}`);
+        return res.status(403).json({
+          error: 'Registration closed. An administrator account is already active on this system.',
+        });
+      }
+    }
+
     const id = crypto.randomBytes(12).toString('hex');
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Bcrypt cost 12 for strong password hashing
+    const hashedPassword = await bcrypt.hash(password, 12);
     const normalizedEmail = email.toLowerCase().trim();
 
     await db.query(
@@ -27,10 +39,10 @@ const registerOwner = async (req, res, next) => {
       [id, normalizedEmail, hashedPassword]
     );
 
-    res.status(201).send('Owner registered successfully.');
+    res.status(201).json({ message: 'Owner registered successfully.' });
   } catch (err) {
     console.error('Error registering owner:', err);
-    res.status(500).send('Error registering owner.');
+    res.status(500).json({ error: 'Error registering owner.' });
   }
 };
 
@@ -74,7 +86,7 @@ const login = async (req, res, next) => {
       const token = jwt.sign(
         { id: owner.id, email: owner.email, role: 'admin', name: 'Store Owner' },
         process.env.JWT_SECRET,
-        { expiresIn: '7d' }
+        { expiresIn: '7d', algorithm: 'HS256' }
       );
 
       // Trigger login alert email asynchronously
@@ -121,7 +133,7 @@ const login = async (req, res, next) => {
       const token = jwt.sign(
         { id: user.id, email: user.email, name: user.name, role: 'user' },
         process.env.JWT_SECRET,
-        { expiresIn: '7d' }
+        { expiresIn: '7d', algorithm: 'HS256' }
       );
 
       return res.json({

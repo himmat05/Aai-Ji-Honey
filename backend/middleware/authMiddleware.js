@@ -11,9 +11,9 @@ const authenticateToken = (req, res, next) => {
     return res.status(401).json({ error: 'Missing token' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] }, (err, user) => {
     if (err) {
-      return res.status(403).json({ error: 'Invalid token' });
+      return res.status(403).json({ error: 'Invalid or expired authentication token' });
     }
     req.user = user;
     next();
