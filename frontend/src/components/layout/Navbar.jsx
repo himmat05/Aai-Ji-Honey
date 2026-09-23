@@ -131,7 +131,7 @@ const Navbar = () => {
               <div className="flex items-center gap-2.5">
                 {isUserAdmin ? (
                   <Link
-                    to="/orderDashboard"
+                    to={unreadCounts.adminUnread > 0 ? "/orderDashboard?tab=messages&filter=unread" : "/orderDashboard"}
                     className="relative px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-bold rounded-full shadow-md hover:shadow-lg transition-all duration-300 text-xs tracking-wide flex items-center gap-1.5 uppercase no-underline"
                   >
                     <span>📊</span>
@@ -145,7 +145,7 @@ const Navbar = () => {
                   </Link>
                 ) : (
                   <Link
-                    to="/profile"
+                    to={unreadCounts.userUnread > 0 ? "/profile?tab=messages&filter=unread" : "/profile"}
                     title="View My Profile & Inquiries"
                     className="relative flex items-center gap-2 bg-white/90 hover:bg-amber-50 border border-amber-300/80 px-3.5 py-1.5 rounded-full shadow-sm transition-all group no-underline"
                   >
@@ -237,7 +237,8 @@ const Navbar = () => {
             <div className="pt-3 border-t border-amber-200 space-y-2">
               {isUserAdmin ? (
                 <Link
-                  to="/orderDashboard"
+                  to={unreadCounts.adminUnread > 0 ? "/orderDashboard?tab=messages&filter=unread" : "/orderDashboard"}
+                  onClick={() => setIsMenuOpen(false)}
                   className="flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 text-white font-bold rounded-xl text-center text-sm no-underline shadow"
                 >
                   <span>📊 Admin Dashboard</span>
@@ -249,7 +250,8 @@ const Navbar = () => {
                 </Link>
               ) : (
                 <Link
-                  to="/profile"
+                  to={unreadCounts.userUnread > 0 ? "/profile?tab=messages&filter=unread" : "/profile"}
+                  onClick={() => setIsMenuOpen(false)}
                   className="flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-100 text-amber-950 font-bold rounded-xl text-center text-sm no-underline border border-amber-300 shadow-sm"
                 >
                   <span>👤 My Profile & Orders</span>

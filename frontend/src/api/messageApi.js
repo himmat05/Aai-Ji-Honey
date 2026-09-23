@@ -42,9 +42,19 @@ export const messageApi = {
   /**
    * Mark a message as read (either by Admin or Customer)
    * @param {string} id - Message ID
+   * @param {Object} [payload] - { target: 'admin' | 'user' }
    */
-  markAsRead: async (id) => {
-    const response = await apiClient.patch(`/messages/${id}/read`);
+  markAsRead: async (id, payload = {}) => {
+    const response = await apiClient.patch(`/messages/${id}/read`, payload);
+    return response.data;
+  },
+
+  /**
+   * Mark all unread messages as read
+   * @param {Object} [payload] - { target: 'admin' | 'user' }
+   */
+  markAllAsRead: async (payload = {}) => {
+    const response = await apiClient.patch('/messages/read-all', payload);
     return response.data;
   },
 
@@ -54,6 +64,15 @@ export const messageApi = {
    */
   getUnreadCounts: async () => {
     const response = await apiClient.get('/messages/unread-count');
+    return response.data;
+  },
+
+  /**
+   * Delete customer message / inquiry (Admin)
+   * @param {string} id - Message ID
+   */
+  deleteMessage: async (id) => {
+    const response = await apiClient.delete(`/messages/${id}`);
     return response.data;
   },
 };

@@ -34,4 +34,29 @@ apiClient.interceptors.request.use(
   }
 );
 
+// Response interceptor: automatically catch 401/403 token expirations and cleanly handle session
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      const currentToken = localStorage.getItem('token');
+      const errMessage = String(error.response.data?.message || error.response.data?.error || '').toLowerCase();
+      if (currentToken && (errMessage.includes('token') || errMessage.includes('expired') || errMessage.includes('invalid') || error.response.status === 401)) {
+        console.warn('🔒 Session authentication expired or revoked. Resetting stored credentials...');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('last_activity_time');
+        if (
+          window.location.pathname.includes('order') ||
+          window.location.pathname.includes('admin') ||
+          window.location.pathname.includes('add-product')
+        ) {
+          window.location.href = '/login?expired=true';
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default apiClient;

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { productApi } from '../../api/productApi';
+import { compressImage } from '../../utils/imageCompressor';
 
 const MARKET_FLAVOURS = [
   { value: 'Mustard Blossom', label: '🌼 Mustard Blossom (सरसों का शहद)' },
@@ -92,19 +93,21 @@ const ProductManagementPage = () => {
       formData.append('description', description.trim());
 
       if (image && image instanceof File) {
-        formData.append('image', image);
+        const compressed = await compressImage(image, 1400, 0.85);
+        formData.append('image', compressed);
       }
 
       if (editId) {
-        await productApi.updateProduct(editId, formData);
+        const updated = await productApi.updateProduct(editId, formData);
+        setProducts((prev) => prev.map((p) => (p._id === editId ? updated : p)));
         toast.success('✅ Product updated successfully!');
       } else {
-        await productApi.addProduct(formData);
+        const created = await productApi.addProduct(formData);
+        setProducts((prev) => [created, ...prev]);
         toast.success('✅ Product added successfully!');
       }
 
       resetForm();
-      fetchProducts();
     } catch (err) {
       console.error('Error saving product:', err);
       toast.error(err.response?.data?.message || 'Failed to save product');
@@ -165,13 +168,29 @@ const ProductManagementPage = () => {
             </p>
           </div>
 
-          <button
-            onClick={() => navigate('/orderDashboard')}
-            className="btn-honey-primary px-5 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 self-start sm:self-auto shadow-md"
-          >
-            <span>📋</span>
-            <span>View Orders Dashboard</span>
-          </button>
+          <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
+            <button
+              onClick={() => navigate('/orderDashboard?tab=gallery')}
+              className="px-4 py-2.5 rounded-2xl honey-glass border border-amber-300 text-amber-950 font-bold text-xs uppercase tracking-wider hover:bg-amber-100 transition-colors shadow-sm flex items-center gap-1.5"
+            >
+              <span>📸</span>
+              <span>Manage Gallery</span>
+            </button>
+            <button
+              onClick={() => navigate('/orderDashboard?tab=team')}
+              className="px-4 py-2.5 rounded-2xl honey-glass border border-amber-300 text-amber-950 font-bold text-xs uppercase tracking-wider hover:bg-amber-100 transition-colors shadow-sm flex items-center gap-1.5"
+            >
+              <span>👥</span>
+              <span>Manage Team</span>
+            </button>
+            <button
+              onClick={() => navigate('/orderDashboard')}
+              className="btn-honey-primary px-5 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-md"
+            >
+              <span>📋</span>
+              <span>Dashboard</span>
+            </button>
+          </div>
         </div>
 
         {/* Product Form Card */}

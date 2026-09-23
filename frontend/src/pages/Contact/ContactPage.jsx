@@ -2,10 +2,60 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import useAuth from '../../hooks/useAuth';
 import { messageApi } from '../../api/messageApi';
+import { teamApi } from '../../api/teamApi';
+
+const DEFAULT_TEAM_MEMBERS = [
+  {
+    id: 1,
+    name: 'Dr. Sitaram Seervi',
+    role: 'Founder & Head of Apiculture',
+    badge: 'ENTOMOLOGIST',
+    image: '/Aai-ji-Honey-Founder.jpg',
+    expertise: 'Ph.D. in Entomology, Apiculture & Pollination Ecology Expert',
+    email: 'aaijihoney24@gmail.com',
+  },
+  {
+    id: 2,
+    name: 'Dr. Naveen Jangir',
+    role: 'Chief Executive Officer (CEO)',
+    badge: 'APICULTURE SPECIALIST',
+    image: '/Aai-ji-Honey-CEO.jpg',
+    expertise: 'Ph.D. in Entomology, Apiculture Specialist with 6+ Years Experience',
+    email: 'jangir000naveen@gmail.com',
+  },
+  {
+    id: 3,
+    name: 'Dr. Neha Tomar',
+    role: 'Director - Human Resources & Outreach',
+    badge: 'AGRI-BUSINESS',
+    image: '/Aai-ji-Honey-HR.jpg',
+    expertise: 'Agriculture Business Management (ABM) & Tribal Community Training',
+    email: 'nehatomar5557@gmail.com',
+  },
+  {
+    id: 4,
+    name: 'Mr. Bhanwar Lal Bhayal',
+    role: 'General Manager (Operations)',
+    badge: 'SUPPLY CHAIN',
+    image: '/Aai-ji-Honey-General-manager.jpg',
+    expertise: 'M.Com, Cold Supply Chain & Hive Quality Logistics',
+    email: 'pipliahiran@gmail.com',
+  },
+  {
+    id: 5,
+    name: 'Mr. Sobha Lal',
+    role: 'Head of Accounts & Finance',
+    badge: 'FINANCE & AUDIT',
+    image: '/Aai-ji-Honey-Account.jpg',
+    expertise: 'Accounting & Tax Consultant, Financial Compliance & Sustainability',
+    email: 'truebaladvisors@gmail.com',
+  },
+];
 
 const ContactPage = () => {
   const { user } = useAuth();
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [teamMembers, setTeamMembers] = useState(DEFAULT_TEAM_MEMBERS);
   const [form, setForm] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -14,6 +64,24 @@ const ContactPage = () => {
     message: '',
   });
   const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    teamApi
+      .getTeamMembers()
+      .then((data) => {
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          setTeamMembers(data);
+        }
+      })
+      .catch((err) => {
+        console.warn('⚠️ Could not load remote team members, using defaults:', err.message);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -25,59 +93,6 @@ const ContactPage = () => {
       }));
     }
   }, [user]);
-
-  const teamMembers = [
-    {
-      id: 1,
-      name: 'Dr. Sitaram Seervi',
-      role: 'Founder & Head of Apiculture',
-      badge: 'ENTOMOLOGIST',
-      image: '/Aai-ji-Honey-Founder.jpg',
-      expertise: 'Ph.D. in Entomology, Apiculture & Pollination Ecology Expert',
-      email: 'aaijihoney24@gmail.com',
-      emoji: '👨‍🔬',
-    },
-    {
-      id: 2,
-      name: 'Dr. Naveen Jangir',
-      role: 'Chief Executive Officer (CEO)',
-      badge: 'APICULTURE SPECIALIST',
-      image: '/Aai-ji-Honey-CEO.jpg',
-      expertise: 'Ph.D. in Entomology, Apiculture Specialist with 6+ Years Experience',
-      email: 'jangir000naveen@gmail.com',
-      emoji: '🏆',
-    },
-    {
-      id: 3,
-      name: 'Dr. Neha Tomar',
-      role: 'Director - Human Resources & Outreach',
-      badge: 'AGRI-BUSINESS',
-      image: '/Aai-ji-Honey-HR.jpg',
-      expertise: 'Agriculture Business Management (ABM) & Tribal Community Training',
-      email: 'nehatomar5557@gmail.com',
-      emoji: '👥',
-    },
-    {
-      id: 4,
-      name: 'Mr. Bhanwar Lal Bhayal',
-      role: 'General Manager (Operations)',
-      badge: 'SUPPLY CHAIN',
-      image: '/Aai-ji-Honey-General-manager.jpg',
-      expertise: 'M.Com, Cold Supply Chain & Hive Quality Logistics',
-      email: 'pipliahiran@gmail.com',
-      emoji: '⚙️',
-    },
-    {
-      id: 5,
-      name: 'Mr. Sobha Lal',
-      role: 'Head of Accounts & Finance',
-      badge: 'FINANCE & AUDIT',
-      image: '/Aai-ji-Honey-Account.jpg',
-      expertise: 'Accounting & Tax Consultant, Financial Compliance & Sustainability',
-      email: 'truebaladvisors@gmail.com',
-      emoji: '💼',
-    },
-  ];
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -193,11 +208,12 @@ const ContactPage = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {teamMembers.map((member) => {
-              const isHovered = hoveredCard === member.id;
+              const memberId = member._id || member.id;
+              const isHovered = hoveredCard === memberId;
               return (
                 <div
-                  key={member.id}
-                  onMouseEnter={() => setHoveredCard(member.id)}
+                  key={memberId}
+                  onMouseEnter={() => setHoveredCard(memberId)}
                   onMouseLeave={() => setHoveredCard(null)}
                   className="honey-glass honey-glass-hover rounded-3xl p-6 border border-amber-200/80 shadow-lg flex flex-col justify-between relative overflow-hidden"
                 >

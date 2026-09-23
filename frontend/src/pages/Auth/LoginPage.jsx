@@ -29,6 +29,7 @@ const LoginPage = () => {
 
   // Sign In state
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+  const [honeypot, setHoneypot] = useState('');
 
   // Sign Up state
   const [signupForm, setSignupForm] = useState({
@@ -165,6 +166,7 @@ const LoginPage = () => {
       const data = await authApi.login({
         email: loginForm.email.trim(),
         password: loginForm.password,
+        website_url: honeypot,
       });
 
       login(data.token, data.user);
@@ -427,6 +429,19 @@ const LoginPage = () => {
                 </div>
 
                 <form onSubmit={handleLoginSubmit} className="space-y-4">
+                  {/* Invisible Honeypot Field to trap malicious bots */}
+                  <div style={{ position: 'absolute', opacity: 0, zIndex: -1, pointerEvents: 'none', height: 0, overflow: 'hidden' }} aria-hidden="true">
+                    <label htmlFor="website_url">Leave blank</label>
+                    <input
+                      type="text"
+                      id="website_url"
+                      name="website_url"
+                      tabIndex="-1"
+                      autoComplete="off"
+                      value={honeypot}
+                      onChange={(e) => setHoneypot(e.target.value)}
+                    />
+                  </div>
                   <div>
                     <label className="block text-xs font-bold text-amber-900 mb-1">
                       Email Address <span className="text-red-500">*</span>

@@ -76,7 +76,7 @@ export const printTaxInvoice = (order) => {
             </div>
             <div style="width:40%; padding: 10px;">
               <p style="margin: 2px 0;"><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
-              <p style="margin: 2px 0;"><strong>Invoice No.:</strong> ${order.invoiceNumber || 'N/A'}</p>
+              <p style="margin: 2px 0;"><strong>Invoice No.:</strong> ${(order.invoiceNumber || 'N/A').replace('AJh/2027', 'AJh/2026')}</p>
               <p style="margin: 2px 0;"><strong>Supply State:</strong> Rajasthan</p>
               <p style="margin: 2px 0;"><strong>Supply Mode:</strong> Delivery</p>
               <p style="margin: 2px 0;"><strong>Ordered by:</strong> MR. Bhanwar lal</p>

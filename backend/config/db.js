@@ -79,6 +79,7 @@ const connectDB = async () => {
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id VARCHAR(50);
       ALTER TABLE products ADD COLUMN IF NOT EXISTS description TEXT;
       ALTER TABLE products ADD COLUMN IF NOT EXISTS flavour VARCHAR(100);
+      UPDATE orders SET invoice_number = REPLACE(invoice_number, 'AJh/2027', 'AJh/2026') WHERE invoice_number LIKE '%2027%';
 
       CREATE TABLE IF NOT EXISTS product_ratings (
         id VARCHAR(50) PRIMARY KEY,
@@ -108,9 +109,35 @@ const connectDB = async () => {
         replied_at TIMESTAMP WITH TIME ZONE
       );
 
+      CREATE TABLE IF NOT EXISTS gallery_items (
+        id VARCHAR(50) PRIMARY KEY,
+        src TEXT NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        tag VARCHAR(100),
+        description TEXT,
+        order_num INT DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS team_members (
+        id VARCHAR(50) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        role VARCHAR(255) NOT NULL,
+        badge VARCHAR(100),
+        image TEXT NOT NULL,
+        expertise TEXT NOT NULL,
+        email VARCHAR(255),
+        order_num INT DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
       -- High-Performance Database Indexes (Accelerates WHERE, JOIN, and ORDER BY queries)
       CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
       CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+      CREATE INDEX IF NOT EXISTS idx_orders_invoice ON orders(invoice_number);
       CREATE INDEX IF NOT EXISTS idx_ratings_product_id ON product_ratings(product_id);
       CREATE INDEX IF NOT EXISTS idx_products_created_at ON products(created_at DESC);
       CREATE INDEX IF NOT EXISTS idx_otps_email_purpose ON otps(email, purpose);
@@ -118,7 +145,13 @@ const connectDB = async () => {
       CREATE INDEX IF NOT EXISTS idx_messages_email ON messages(email);
       CREATE INDEX IF NOT EXISTS idx_messages_status ON messages(status);
       CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_gallery_items_order ON gallery_items(order_num ASC, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_team_members_order ON team_members(order_num ASC, created_at ASC);
     `);
+
+    // Automatic idempotent initial seeding
+    const { seedInitialData } = require('../utils/seeder');
+    await seedInitialData(client);
 
     client.release();
   } catch (err) {

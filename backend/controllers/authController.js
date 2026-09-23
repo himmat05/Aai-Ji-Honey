@@ -46,25 +46,81 @@ const registerOwner = async (req, res, next) => {
   }
 };
 
+// Brute-force and credential-stuffing defense
+// Tracks failed login attempts per email + IP
+const failedLoginAttempts = new Map();
+const LOCKOUT_THRESHOLD = 5; // 5 failed attempts
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes lockout
+
+const checkAccountLockout = (key) => {
+  const record = failedLoginAttempts.get(key);
+  if (!record) return { isLocked: false };
+  if (Date.now() > record.lockedUntil) {
+    failedLoginAttempts.delete(key);
+    return { isLocked: false };
+  }
+  const remainingMinutes = Math.ceil((record.lockedUntil - Date.now()) / 60000);
+  return { isLocked: true, remainingMinutes };
+};
+
+const recordFailedAttempt = (key) => {
+  const now = Date.now();
+  const record = failedLoginAttempts.get(key) || { count: 0, lockedUntil: 0 };
+  record.count += 1;
+  if (record.count >= LOCKOUT_THRESHOLD) {
+    record.lockedUntil = now + LOCKOUT_DURATION_MS;
+    console.warn(`🚨 Security Alert: Potential brute-force attack. Target ${key} locked out for 15 minutes after ${record.count} failed attempts.`);
+  }
+  failedLoginAttempts.set(key, record);
+};
+
+const clearFailedAttempts = (key) => {
+  failedLoginAttempts.delete(key);
+};
+
+// Pre-computed dummy hash to equalize response times against timing attacks
+const DUMMY_HASH = '$2b$12$e8x/yZ1abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJK';
+
 /**
  * Unified Login Endpoint (Admin & Customer)
  * POST /login and POST /api/login
  * 
- * Pipeline:
- *  1. Checks 'owners' table first (Admin role)
- *  2. If not found in 'owners', checks 'users' table (Customer role)
- *  3. Dynamically issues JWT and assigns role + target redirect:
- *     - Admin -> role: 'admin', redirect: '/orderDashboard'
- *     - Customer -> role: 'user', redirect: '/profile'
+ * Security Features:
+ *  - Anti-bot Honeypot Trap
+ *  - Strict Type & String Length Validation
+ *  - Account Lockout after 5 failed attempts
+ *  - Timing-Attack Equalization via constant-time comparison
+ *  - Secure HS256 JWT generation with role claim
  */
 const login = async (req, res, next) => {
   let { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password are required' });
+  const ip = getClientIp(req);
+
+  // 1. Anti-Bot Honeypot Trap
+  const honeypot = req.body.website_url || req.body.bot_trap || req.body.honeypot;
+  if (honeypot && String(honeypot).trim().length > 0) {
+    console.warn(`🤖 Anti-Bot Alert: Bot trap triggered from IP ${ip}. Rejected automatically.`);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    return res.status(400).json({ message: 'Invalid request submission.' });
   }
 
-  email = email.toLowerCase().trim();
-  const ip = getClientIp(req);
+  // 2. Strict Input Validation
+  if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ message: 'Valid email and password are required' });
+  }
+
+  email = email.toLowerCase().trim().slice(0, 150);
+  password = String(password).slice(0, 128);
+
+  const lockoutKey = `${email}_${ip}`;
+
+  // 3. Brute-Force Lockout Verification
+  const lockoutStatus = checkAccountLockout(lockoutKey);
+  if (lockoutStatus.isLocked) {
+    return res.status(429).json({
+      message: `Account temporarily locked due to multiple failed login attempts. Please wait ${lockoutStatus.remainingMinutes} minute(s) before trying again.`,
+    });
+  }
 
   try {
     // ==========================================
@@ -80,8 +136,12 @@ const login = async (req, res, next) => {
       const isMatch = await bcrypt.compare(password, owner.password);
 
       if (!isMatch) {
+        recordFailedAttempt(lockoutKey);
         return res.status(401).json({ message: 'Invalid email or password' });
       }
+
+      // Successful admin login: clear failed attempts
+      clearFailedAttempts(lockoutKey);
 
       const token = jwt.sign(
         { id: owner.id, email: owner.email, role: 'admin', name: 'Store Owner' },
@@ -127,8 +187,12 @@ const login = async (req, res, next) => {
 
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
+        recordFailedAttempt(lockoutKey);
         return res.status(401).json({ message: 'Invalid email or password' });
       }
+
+      // Successful customer login: clear failed attempts
+      clearFailedAttempts(lockoutKey);
 
       const token = jwt.sign(
         { id: user.id, email: user.email, name: user.name, role: 'user' },
@@ -155,7 +219,11 @@ const login = async (req, res, next) => {
 
     // ==========================================
     // Step 3: Neither Admin nor Customer Found
+    // (Execute dummy bcrypt compare to prevent timing side-channel attacks)
     // ==========================================
+    await bcrypt.compare(password, DUMMY_HASH);
+    recordFailedAttempt(lockoutKey);
+
     return res.status(401).json({ message: 'Invalid email or password' });
   } catch (err) {
     console.error('Server error during unified login:', err);

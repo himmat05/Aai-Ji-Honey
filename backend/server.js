@@ -21,6 +21,13 @@ app.use(
     contentSecurityPolicy: false, // Prevents breaking inline scripts/CDNs while protecting X-Frame-Options, HSTS, X-Content-Type-Options
     crossOriginResourcePolicy: { policy: 'cross-origin' },
     crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+    frameguard: { action: 'deny' }, // Clickjacking protection (prevents embedding admin dashboard in iframes)
+    xPoweredBy: false, // Prevents reconnaissance of server software version
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
   })
 );
 

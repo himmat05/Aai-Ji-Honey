@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import useAuth from '../../hooks/useAuth';
 import { customerAuthApi } from '../../api/customerAuthApi';
@@ -55,9 +55,24 @@ const getStatusBadge = (status) => {
 
 const UserProfilePage = () => {
   const { user, updateUser } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Active view tab: 'orders' | 'messages'
-  const [activeTab, setActiveTab] = useState('orders');
+  const [activeTab, setActiveTab] = useState(() =>
+    searchParams.get('tab') === 'messages' ? 'messages' : 'orders'
+  );
+  const [messageFilter, setMessageFilter] = useState(() =>
+    searchParams.get('filter') || 'all'
+  );
+
+  // React to URL query parameter changes
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    const filterParam = searchParams.get('filter');
+    if (tabParam === 'messages') setActiveTab('messages');
+    else if (tabParam === 'orders') setActiveTab('orders');
+    if (filterParam) setMessageFilter(filterParam);
+  }, [searchParams]);
 
   // Profile Edit State
   const [isEditing, setIsEditing] = useState(false);
@@ -206,17 +221,42 @@ const UserProfilePage = () => {
 
   const handleMarkAsRead = async (msgId) => {
     try {
-      await messageApi.markAsRead(msgId);
+      await messageApi.markAsRead(msgId, { target: 'user' });
       setMessages((prev) =>
         prev.map((m) => (m.id === msgId ? { ...m, is_read_by_user: true } : m))
       );
       setUserUnreadCount((prev) => Math.max(0, prev - 1));
       window.dispatchEvent(new Event('unreadCountsUpdated'));
-      toast.info('Message marked as read.');
+      toast.success('Reply marked as read ✓');
     } catch (err) {
       console.error('Error marking message as read:', err);
+      toast.error('Failed to mark reply as read');
     }
   };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await messageApi.markAllAsRead({ target: 'user' });
+      setMessages((prev) =>
+        prev.map((m) => ({ ...m, is_read_by_user: true }))
+      );
+      setUserUnreadCount(0);
+      window.dispatchEvent(new Event('unreadCountsUpdated'));
+      toast.success('All replies marked as read ✓');
+    } catch (err) {
+      console.error('Error marking all as read:', err);
+      toast.error('Failed to mark all as read');
+    }
+  };
+
+  const unreadReplies = messages.filter((m) => !m.is_read_by_user && m.admin_reply);
+  const repliedInquiries = messages.filter((m) => m.status === 'replied' || m.admin_reply);
+
+  const filteredUserMessages = messages.filter((m) => {
+    if (messageFilter === 'unread') return !m.is_read_by_user && m.admin_reply;
+    if (messageFilter === 'replied') return m.status === 'replied' || m.admin_reply;
+    return true;
+  });
 
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
 
@@ -366,10 +406,13 @@ const UserProfilePage = () => {
           {/* ========================================================= */}
           <div className="lg:col-span-2 space-y-6">
             {/* Top Navigation Tabs */}
-            <div className="flex items-center gap-2 p-1.5 bg-amber-100/70 backdrop-blur-md rounded-2xl border border-amber-300/80 shadow-sm">
+            <div className="flex flex-col sm:flex-row items-center gap-2 p-1.5 bg-amber-100/70 backdrop-blur-md rounded-2xl border border-amber-300/80 shadow-sm">
               <button
-                onClick={() => setActiveTab('orders')}
-                className={`flex-1 py-3 px-4 rounded-xl font-extrabold text-sm sm:text-base transition-all flex items-center justify-center gap-2 ${
+                onClick={() => {
+                  setActiveTab('orders');
+                  setSearchParams({});
+                }}
+                className={`w-full sm:flex-1 py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-extrabold text-xs sm:text-base transition-all flex items-center justify-center gap-2 ${
                   activeTab === 'orders'
                     ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/20'
                     : 'text-amber-900 hover:bg-amber-200/50'
@@ -380,8 +423,11 @@ const UserProfilePage = () => {
               </button>
 
               <button
-                onClick={() => setActiveTab('messages')}
-                className={`flex-1 py-3 px-4 rounded-xl font-extrabold text-sm sm:text-base transition-all flex items-center justify-center gap-2 relative ${
+                onClick={() => {
+                  setActiveTab('messages');
+                  setSearchParams({ tab: 'messages' });
+                }}
+                className={`w-full sm:flex-1 py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-extrabold text-xs sm:text-base transition-all flex items-center justify-center gap-2 relative ${
                   activeTab === 'messages'
                     ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/20'
                     : 'text-amber-900 hover:bg-amber-200/50'
@@ -390,7 +436,7 @@ const UserProfilePage = () => {
                 <span>💬</span>
                 <span>Inquiries & Messages</span>
                 {userUnreadCount > 0 ? (
-                  <span className="bg-red-500 text-white text-xs font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse flex items-center gap-1">
+                  <span className="bg-red-500 text-white text-[10px] sm:text-xs font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse flex items-center gap-1">
                     <span>✨</span> {userUnreadCount} New
                   </span>
                 ) : (
@@ -622,9 +668,9 @@ const UserProfilePage = () => {
             {activeTab === 'messages' && (
               <div className="space-y-6">
                 {/* Header with Compose Button */}
-                <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-2xl font-extrabold text-amber-950 flex items-center gap-2">
+                    <h2 className="text-xl sm:text-2xl font-extrabold text-amber-950 flex items-center gap-2">
                       <span>💬</span> Direct Apiary Messages & Inquiries
                     </h2>
                     <p className="text-xs text-amber-800/80 mt-1">
@@ -632,7 +678,7 @@ const UserProfilePage = () => {
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 self-start sm:self-auto">
                     <button
                       onClick={() => setShowCompose((prev) => !prev)}
                       className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-full text-xs shadow-md transition-all flex items-center gap-1.5"
@@ -649,17 +695,78 @@ const UserProfilePage = () => {
                   </div>
                 </div>
 
+                {/* Filter Pills & Quick Actions */}
+                <div className="flex flex-wrap items-center justify-between gap-2 p-1.5 bg-amber-50/80 rounded-2xl border border-amber-200 shadow-xs">
+                  <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+                    <button
+                      onClick={() => {
+                        setMessageFilter('all');
+                        setSearchParams({ tab: 'messages', filter: 'all' });
+                      }}
+                      className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-xl font-bold text-xs transition-all text-center ${
+                        messageFilter === 'all'
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs'
+                          : 'text-amber-900 hover:bg-amber-100'
+                      }`}
+                    >
+                      All ({messages.length})
+                    </button>
+                    <button
+                      onClick={() => {
+                        setMessageFilter('unread');
+                        setSearchParams({ tab: 'messages', filter: 'unread' });
+                      }}
+                      className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1 text-center ${
+                        messageFilter === 'unread'
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs'
+                          : 'text-amber-900 hover:bg-amber-100'
+                      }`}
+                    >
+                      <span>✨ Unread Replies</span>
+                      {userUnreadCount > 0 && (
+                        <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">
+                          {userUnreadCount}
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setMessageFilter('replied');
+                        setSearchParams({ tab: 'messages', filter: 'replied' });
+                      }}
+                      className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-xl font-bold text-xs transition-all text-center ${
+                        messageFilter === 'replied'
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs'
+                          : 'text-amber-900 hover:bg-amber-100'
+                      }`}
+                    >
+                      ✅ Replied ({repliedInquiries.length})
+                    </button>
+                  </div>
+
+                  {userUnreadCount > 0 && (
+                    <button
+                      onClick={handleMarkAllAsRead}
+                      className="w-full sm:w-auto px-3.5 py-1.5 rounded-xl font-bold text-xs bg-amber-200/80 hover:bg-amber-300 text-amber-950 transition-all flex items-center justify-center gap-1 shadow-xs ml-auto"
+                      title="Mark all replies as read"
+                    >
+                      <span>✓✓</span>
+                      <span>Mark All Read</span>
+                    </button>
+                  )}
+                </div>
+
                 {/* Inline Message Compose Drawer */}
                 {showCompose && (
-                  <div className="bg-gradient-to-br from-amber-50 via-white to-orange-50 rounded-3xl p-6 border-2 border-amber-300 shadow-xl animate-fadeIn">
-                    <div className="flex items-center justify-between pb-3 mb-4 border-b border-amber-200">
+                  <div className="bg-gradient-to-br from-amber-50 via-white to-orange-50 rounded-3xl p-4 sm:p-6 border-2 border-amber-300 shadow-xl animate-fadeIn">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 mb-4 border-b border-amber-200">
                       <div className="flex items-center gap-2">
                         <span className="text-xl">✍️</span>
-                        <h3 className="font-extrabold text-amber-950 text-base">
+                        <h3 className="font-extrabold text-amber-950 text-sm sm:text-base">
                           Send Direct Message to Apiary Team
                         </h3>
                       </div>
-                      <span className="text-xs text-amber-700 font-semibold bg-amber-100 px-2.5 py-1 rounded-full">
+                      <span className="text-xs text-amber-700 font-semibold bg-amber-100 px-2.5 py-1 rounded-full break-all">
                         From: {user?.email}
                       </span>
                     </div>
@@ -672,7 +779,7 @@ const UserProfilePage = () => {
                         <select
                           value={composeTopic}
                           onChange={(e) => setComposeTopic(e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-amber-300 bg-white font-medium text-amber-950 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-amber-300 bg-white font-medium text-amber-950 text-xs sm:text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none"
                         >
                           {INQUIRY_TOPICS.map((topic) => (
                             <option key={topic} value={topic}>
@@ -692,11 +799,11 @@ const UserProfilePage = () => {
                           value={composeText}
                           onChange={(e) => setComposeText(e.target.value)}
                           placeholder="Write your question, harvest inquiry, bulk honey request, or feedback here... Our team will review and reply swiftly!"
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-amber-300 bg-white font-normal text-amber-950 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none resize-y"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-amber-300 bg-white font-normal text-amber-950 text-xs sm:text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none resize-y"
                         />
                       </div>
 
-                      <div className="flex justify-end gap-2 pt-2">
+                      <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
                         <button
                           type="button"
                           onClick={() => setShowCompose(false)}
@@ -707,7 +814,7 @@ const UserProfilePage = () => {
                         <button
                           type="submit"
                           disabled={isSendingMessage}
-                          className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl text-xs shadow-md transition-all flex items-center gap-1.5"
+                          className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-1.5"
                         >
                           {isSendingMessage ? (
                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -744,9 +851,29 @@ const UserProfilePage = () => {
                   </div>
                 )}
 
-                {/* Empty State */}
+                {/* Empty State: When filter is 'unread' but no unread replies exist */}
+                {!loadingMessages && !messagesError && messageFilter === 'unread' && filteredUserMessages.length === 0 && (
+                  <div className="bg-white/90 backdrop-blur-md rounded-3xl p-8 sm:p-12 text-center border border-amber-200 shadow-md max-w-md mx-auto">
+                    <span className="text-5xl block mb-3">🎉</span>
+                    <h3 className="text-lg sm:text-xl font-bold text-amber-950">No unread replies!</h3>
+                    <p className="text-gray-600 text-xs sm:text-sm mt-2 mb-5">
+                      You have caught up with all responses from our apiary team.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setMessageFilter('all');
+                        setSearchParams({ tab: 'messages', filter: 'all' });
+                      }}
+                      className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-full text-xs shadow-md transition-all"
+                    >
+                      View All Messages ({messages.length})
+                    </button>
+                  </div>
+                )}
+
+                {/* Empty State: When no messages exist at all */}
                 {!loadingMessages && !messagesError && messages.length === 0 && (
-                  <div className="bg-white/90 backdrop-blur-md rounded-3xl p-12 text-center border border-amber-200 shadow-lg max-w-md mx-auto">
+                  <div className="bg-white/90 backdrop-blur-md rounded-3xl p-8 sm:p-12 text-center border border-amber-200 shadow-lg max-w-md mx-auto">
                     <span className="text-6xl block mb-3">💬</span>
                     <h3 className="text-xl font-bold text-amber-950">No inquiries yet</h3>
                     <p className="text-gray-600 text-sm mt-2 mb-6">
@@ -762,9 +889,9 @@ const UserProfilePage = () => {
                 )}
 
                 {/* Messages List */}
-                {!loadingMessages && !messagesError && messages.length > 0 && (
+                {!loadingMessages && !messagesError && filteredUserMessages.length > 0 && (
                   <div className="space-y-6">
-                    {messages.map((msg) => {
+                    {filteredUserMessages.map((msg) => {
                       const msgDate = msg.created_at
                         ? new Date(msg.created_at).toLocaleDateString('en-IN', {
                             day: 'numeric',
@@ -797,10 +924,10 @@ const UserProfilePage = () => {
                           }`}
                         >
                           {/* Message Header */}
-                          <div className="bg-gradient-to-r from-amber-500/10 via-amber-100/50 to-orange-50/50 px-6 py-4 border-b border-amber-200 flex flex-wrap items-center justify-between gap-3">
+                          <div className="bg-gradient-to-r from-amber-500/10 via-amber-100/50 to-orange-50/50 px-4 sm:px-6 py-4 border-b border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <div>
                               <div className="flex items-center gap-2">
-                                <span className="font-extrabold text-amber-950 text-base">
+                                <span className="font-extrabold text-amber-950 text-sm sm:text-base">
                                   {msg.subject || 'Apiary Inquiry'}
                                 </span>
                                 {isUnreadReply && (
@@ -812,7 +939,7 @@ const UserProfilePage = () => {
                               <span className="text-xs text-gray-500">Sent on: {msgDate}</span>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 self-start sm:self-auto">
                               {msg.status === 'replied' ? (
                                 <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 shadow-sm">
                                   <span>✅</span> Replied by Apiary
@@ -826,27 +953,27 @@ const UserProfilePage = () => {
                           </div>
 
                           {/* Message Body */}
-                          <div className="p-6 space-y-5">
+                          <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
                             {/* Customer Question */}
-                            <div className="bg-amber-50/50 rounded-2xl p-4 border border-amber-200/70">
+                            <div className="bg-amber-50/50 rounded-2xl p-3.5 sm:p-4 border border-amber-200/70">
                               <span className="text-xs font-bold text-amber-800 block mb-1">
                                 💬 Your Message:
                               </span>
-                              <p className="text-sm text-amber-950 font-normal whitespace-pre-wrap leading-relaxed">
+                              <p className="text-xs sm:text-sm text-amber-950 font-normal whitespace-pre-wrap leading-relaxed break-words">
                                 {msg.message}
                               </p>
                             </div>
 
                             {/* Official Admin / Apiary Reply */}
                             {msg.admin_reply ? (
-                              <div className="bg-gradient-to-br from-amber-100/70 via-orange-50/80 to-amber-50 rounded-2xl p-5 border-2 border-amber-300 shadow-md">
-                                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-amber-300/80">
+                              <div className="bg-gradient-to-br from-amber-100/70 via-orange-50/80 to-amber-50 rounded-2xl p-4 sm:p-5 border-2 border-amber-300 shadow-md">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-3 border-b border-amber-300/80">
                                   <div className="flex items-center gap-2">
                                     <span className="w-7 h-7 rounded-full bg-amber-600 text-white text-xs font-black flex items-center justify-center shadow">
                                       👑
                                     </span>
                                     <div>
-                                      <h4 className="font-extrabold text-amber-950 text-sm">
+                                      <h4 className="font-extrabold text-amber-950 text-xs sm:text-sm">
                                         Official Response from Aai Ji Honey Apiary Team
                                       </h4>
                                       {replyDate && (
@@ -857,25 +984,29 @@ const UserProfilePage = () => {
                                     </div>
                                   </div>
 
-                                  {isUnreadReply && (
+                                  {isUnreadReply ? (
                                     <button
                                       onClick={() => handleMarkAsRead(msg.id)}
-                                      className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-full text-xs shadow transition-all flex items-center gap-1"
+                                      className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-full text-xs shadow transition-all flex items-center gap-1 self-start sm:self-auto"
                                     >
                                       <span>✓</span> Mark as Read
                                     </button>
+                                  ) : (
+                                    <span className="text-emerald-700 font-bold text-xs flex items-center gap-1 self-start sm:self-auto">
+                                      <span>✓</span> Read
+                                    </span>
                                   )}
                                 </div>
 
-                                <p className="text-sm font-medium text-amber-950 whitespace-pre-wrap leading-relaxed">
+                                <p className="text-xs sm:text-sm font-medium text-amber-950 whitespace-pre-wrap leading-relaxed break-words">
                                   {msg.admin_reply}
                                 </p>
 
-                                <div className="mt-4 pt-3 border-t border-amber-200/70 flex items-center justify-between text-xs text-amber-800/80">
-                                  <span>📬 A copy of this reply was also emailed to {msg.email}</span>
+                                <div className="mt-3 sm:mt-4 pt-3 border-t border-amber-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs text-amber-800/80">
+                                  <span className="break-all">📬 A copy of this reply was also emailed to {msg.email}</span>
                                   {!isUnreadReply && (
                                     <span className="text-emerald-700 font-bold flex items-center gap-1">
-                                      <span>✓</span> Read
+                                      <span>✓</span> Acknowledged
                                     </span>
                                   )}
                                 </div>

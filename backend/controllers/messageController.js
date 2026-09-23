@@ -11,15 +11,27 @@ const createMessage = async (req, res) => {
   try {
     const { name, email, mobile, subject, message } = req.body;
 
+    // Anti-bot honeypot check for inquiries
+    if (req.body.website_url || req.body.bot_trap || req.body.honeypot) {
+      console.warn('🤖 Anti-bot honeypot triggered on message submission.');
+      return res.status(200).json({
+        success: true,
+        message: 'Your inquiry has been sent to our Apiary Team! We will respond shortly.',
+      });
+    }
+
     if (!name || !email || !message) {
       return res.status(400).json({ error: 'Name, email, and message are required.' });
     }
 
-    const cleanName = String(name).trim().slice(0, 100);
+    // Strip any HTML tags to prevent stored XSS attacks
+    const stripHtml = (str) => (str ? String(str).replace(/<[^>]*>?/gm, '').trim() : '');
+
+    const cleanName = stripHtml(name).slice(0, 100);
     const cleanEmail = String(email).trim().toLowerCase().slice(0, 150);
-    const cleanMobile = mobile ? String(mobile).trim().slice(0, 20) : null;
-    const cleanSubject = subject ? String(subject).trim().slice(0, 150) : 'General Inquiry';
-    const cleanMessage = String(message).trim().slice(0, 2000);
+    const cleanMobile = mobile ? stripHtml(mobile).slice(0, 20) : null;
+    const cleanSubject = stripHtml(subject || 'General Inquiry').slice(0, 150);
+    const cleanMessage = stripHtml(message).slice(0, 2000);
 
     // Check if customer is authenticated
     let userId = null;
@@ -76,11 +88,9 @@ const getAllMessages = async (req, res) => {
     const params = [];
 
     if (status === 'unread') {
-      queryText += ' WHERE status = $1';
-      params.push('unread');
+      queryText += ' WHERE is_read_by_admin = FALSE';
     } else if (status === 'replied') {
-      queryText += ' WHERE status = $1';
-      params.push('replied');
+      queryText += " WHERE status = 'replied'";
     }
 
     queryText += ' ORDER BY created_at DESC';
@@ -202,17 +212,68 @@ const markAsRead = async (req, res) => {
   try {
     const { id } = req.params;
     const role = req.user?.role;
+    const { target } = req.body || {};
 
-    if (role === 'admin' || role === 'owner') {
-      await db.query('UPDATE messages SET is_read_by_admin = TRUE WHERE id = $1', [id]);
+    if (target === 'admin' || (role === 'admin' || role === 'owner')) {
+      if (role !== 'admin' && role !== 'owner') {
+        return res.status(403).json({ error: 'Administrator role required to mark admin messages as read' });
+      }
+      await db.query(
+        `UPDATE messages 
+         SET is_read_by_admin = TRUE, 
+             status = CASE WHEN status = 'unread' THEN 'read' ELSE status END 
+         WHERE id = $1`,
+        [id]
+      );
     } else {
-      await db.query('UPDATE messages SET is_read_by_user = TRUE WHERE id = $1', [id]);
+      // Scoped strictly to current customer's ID or email (prevents IDOR)
+      await db.query(
+        `UPDATE messages 
+         SET is_read_by_user = TRUE 
+         WHERE id = $1 AND (user_id = $2 OR LOWER(email) = LOWER($3))`,
+        [id, req.user?.id || '', req.user?.email || '']
+      );
     }
 
-    res.json({ success: true });
+    res.json({ success: true, message: 'Marked as read' });
   } catch (err) {
     console.error('Error marking message as read:', err);
     res.status(500).json({ error: 'Failed to update read status' });
+  }
+};
+
+/**
+ * Mark all messages as read (either for admin or for current user)
+ * PATCH /api/messages/read-all
+ */
+const markAllAsRead = async (req, res) => {
+  try {
+    const role = req.user?.role;
+    const { target } = req.body || {};
+
+    if (target === 'admin' || (target !== 'user' && (role === 'admin' || role === 'owner'))) {
+      if (role !== 'admin' && role !== 'owner') {
+        return res.status(403).json({ error: 'Administrator role required to mark all admin messages as read' });
+      }
+      await db.query(
+        `UPDATE messages 
+         SET is_read_by_admin = TRUE, 
+             status = CASE WHEN status = 'unread' THEN 'read' ELSE status END 
+         WHERE is_read_by_admin = FALSE`
+      );
+    } else {
+      await db.query(
+        `UPDATE messages 
+         SET is_read_by_user = TRUE 
+         WHERE (user_id = $1 OR LOWER(email) = LOWER($2)) AND is_read_by_user = FALSE`,
+        [req.user?.id || '', req.user?.email || '']
+      );
+    }
+
+    res.json({ success: true, message: 'All messages marked as read' });
+  } catch (err) {
+    console.error('Error marking all messages as read:', err);
+    res.status(500).json({ error: 'Failed to mark all as read' });
   }
 };
 
@@ -255,11 +316,31 @@ const getUnreadCounts = async (req, res) => {
   }
 };
 
+/**
+ * Delete a customer message / inquiry
+ * DELETE /messages/:id (Protected, Admin)
+ */
+const deleteMessage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await db.query('DELETE FROM messages WHERE id = $1 RETURNING id', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Message not found' });
+    }
+    res.json({ success: true, message: 'Inquiry deleted successfully', id });
+  } catch (err) {
+    console.error('Error deleting message:', err);
+    res.status(500).json({ error: 'Failed to delete inquiry message' });
+  }
+};
+
 module.exports = {
   createMessage,
   getAllMessages,
   replyToMessage,
   getMyMessages,
   markAsRead,
+  markAllAsRead,
   getUnreadCounts,
+  deleteMessage,
 };

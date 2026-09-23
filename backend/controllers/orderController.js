@@ -7,20 +7,28 @@ const orderService = require('../services/orderService');
  */
 const createOrder = async (req, res, next) => {
   try {
+    // Anti-bot honeypot check
+    if (req.body.website_url || req.body.bot_trap || req.body.honeypot) {
+      console.warn('🤖 Anti-bot honeypot triggered on checkout/order creation.');
+      return res.status(200).json({ message: 'Order submitted.' });
+    }
+
     const { name, email, mobile, address, quantity, product, paymentId } = req.body;
     if (!name || !mobile || !address) {
       return res.status(400).json({ message: 'Name, mobile, and address are required.' });
     }
 
-    // Mass-assignment defense: pick only allowed fields and force status: 'Pending'
+    const stripHtml = (str) => (str ? String(str).replace(/<[^>]*>?/gm, '').trim() : '');
+
+    // Mass-assignment defense: pick only allowed fields, strip HTML, force status: 'Pending'
     const orderData = {
-      name: String(name).trim().slice(0, 100),
+      name: stripHtml(name).slice(0, 100),
       email: email ? String(email).trim().toLowerCase().slice(0, 150) : null,
-      mobile: String(mobile).trim().slice(0, 20),
-      address: String(address).trim().slice(0, 500),
+      mobile: stripHtml(mobile).slice(0, 20),
+      address: stripHtml(address).slice(0, 500),
       quantity: Math.max(1, Math.min(100, parseInt(quantity, 10) || 1)),
       product: typeof product === 'object' && product !== null ? product : {},
-      paymentId: paymentId ? String(paymentId).trim().slice(0, 100) : null,
+      paymentId: paymentId ? stripHtml(paymentId).slice(0, 100) : null,
       status: 'Pending',
     };
 
@@ -74,9 +82,10 @@ const getMyOrders = async (req, res, next) => {
  */
 const getOrders = async (req, res, next) => {
   try {
-    const page = req.query.page || 1;
-    const limit = req.query.limit || 10;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 100;
     const orders = await orderService.getOrders(page, limit);
+    res.set('Cache-Control', 'private, max-age=5, stale-while-revalidate=15');
     res.json(orders);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching orders', error: err });

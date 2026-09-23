@@ -9,7 +9,7 @@ const generateInvoiceNumber = async () => {
   const res = await db.query('SELECT COUNT(*) FROM orders');
   const count = parseInt(res.rows[0].count, 10) || 0;
   const next = count + 1;
-  const year = new Date().getFullYear() + 1;
+  const year = new Date().getFullYear();
   return `AJh/${year},${String(next).padStart(4, '0')}`;
 };
 

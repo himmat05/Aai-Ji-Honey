@@ -68,15 +68,19 @@ export const router = createBrowserRouter([
       {
         path: 'orderDashboard',
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="admin">
             {withSuspense(OrderDashboardPage)}
           </ProtectedRoute>
         ),
       },
       {
+        path: 'dashboard',
+        element: <Navigate to="/orderDashboard" replace />,
+      },
+      {
         path: 'orders',
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="admin">
             {withSuspense(OrderDashboardPage)}
           </ProtectedRoute>
         ),
@@ -84,7 +88,7 @@ export const router = createBrowserRouter([
       {
         path: 'orders/:id',
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="admin">
             {withSuspense(OrderDashboardPage)}
           </ProtectedRoute>
         ),
@@ -92,7 +96,7 @@ export const router = createBrowserRouter([
       {
         path: 'add-product',
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="admin">
             {withSuspense(ProductManagementPage)}
           </ProtectedRoute>
         ),
@@ -100,7 +104,7 @@ export const router = createBrowserRouter([
       {
         path: 'products/:id/edit',
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="admin">
             {withSuspense(ProductManagementPage)}
           </ProtectedRoute>
         ),
@@ -108,7 +112,7 @@ export const router = createBrowserRouter([
       {
         path: 'products/:id/delete',
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="admin">
             {withSuspense(ProductManagementPage)}
           </ProtectedRoute>
         ),
@@ -116,7 +120,7 @@ export const router = createBrowserRouter([
       {
         path: 'products/:id/add',
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="admin">
             {withSuspense(ProductManagementPage)}
           </ProtectedRoute>
         ),
@@ -124,10 +128,18 @@ export const router = createBrowserRouter([
       {
         path: 'products/:id/update',
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="admin">
             {withSuspense(ProductManagementPage)}
           </ProtectedRoute>
         ),
+      },
+      {
+        path: 'admin/gallery',
+        element: <Navigate to="/orderDashboard?tab=gallery" replace />,
+      },
+      {
+        path: 'admin/team',
+        element: <Navigate to="/orderDashboard?tab=team" replace />,
       },
       {
         path: '*',

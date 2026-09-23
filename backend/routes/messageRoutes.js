@@ -6,7 +6,9 @@ const {
   replyToMessage,
   getMyMessages,
   markAsRead,
+  markAllAsRead,
   getUnreadCounts,
+  deleteMessage,
 } = require('../controllers/messageController');
 const { authenticateToken } = require('../middleware/authMiddleware');
 const { requireAdmin } = require('../middleware/roleMiddleware');
@@ -24,8 +26,10 @@ router.get('/my-messages', authenticateToken, getMyMessages);
 // Store Admin message management
 router.get('/', authenticateToken, requireAdmin, getAllMessages);
 router.post('/:id/reply', authenticateToken, requireAdmin, replyToMessage);
+router.delete('/:id', authenticateToken, requireAdmin, deleteMessage);
 
-// Mark message as read
+// Mark messages as read
+router.patch('/read-all', authenticateToken, markAllAsRead);
 router.patch('/:id/read', authenticateToken, markAsRead);
 
 module.exports = router;

@@ -6,7 +6,9 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
 
-const galleryItems = [
+import { galleryApi } from '../../../api/galleryApi';
+
+const DEFAULT_GALLERY_ITEMS = [
   {
     src: '/honey_founder_on work.jpeg',
     title: 'Dr. Sitaram Seervi in the Field',
@@ -94,10 +96,34 @@ const galleryItems = [
 ];
 
 const ImageGallery = () => {
+  const [galleryItems, setGalleryItems] = useState(DEFAULT_GALLERY_ITEMS);
   const [swiperInstance, setSwiperInstance] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxImage, setLightboxImage] = useState(null);
   const thumbnailContainerRef = useRef(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    galleryApi
+      .getGalleryItems()
+      .then((data) => {
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          setGalleryItems(
+            data.map((item) => ({
+              ...item,
+              desc: item.description || item.desc || '',
+            }))
+          );
+        }
+      })
+      .catch((err) => {
+        console.warn('⚠️ Could not load remote gallery items, using defaults:', err.message);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Auto-scroll thumbnail strip horizontally to center active thumb (WITHOUT scrolling the entire page)
   useEffect(() => {
