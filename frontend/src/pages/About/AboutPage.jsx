@@ -273,7 +273,7 @@ const AboutPage = () => {
             <span className="honey-gradient-text">Perfected by Entomology Science.</span>
           </h1>
 
-          <p className="text-base sm:text-lg md:text-xl text-amber-900/85 max-w-3xl mx-auto leading-relaxed font-medium">
+          <p className="text-base sm:text-lg md:text-xl text-amber-950 max-w-3xl mx-auto leading-relaxed font-semibold">
             Step behind the jar into the golden Thar desert — where three generations of Ayurvedic reverence meet the doctoral honeybee research of Dr. Sitaram Seervi to deliver untouched, living honey.
           </p>
 
@@ -329,7 +329,7 @@ const AboutPage = () => {
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-amber-950 font-heading">
               Four Milestones of Our Living Journey
             </h2>
-            <p className="text-sm sm:text-base text-amber-900/80">
+            <p className="text-sm sm:text-base text-amber-950 font-medium">
               Click through each era to experience how a grandmother’s household remedy blossomed into Rajasthan’s leading ethical apiculture movement.
             </p>
           </div>
@@ -469,7 +469,7 @@ const AboutPage = () => {
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-amber-950 font-heading">
               Why Raw Honey Must Be "Alive"
             </h2>
-            <p className="text-sm sm:text-base text-amber-900/80">
+            <p className="text-sm sm:text-base text-amber-950 font-medium">
               Honey is not merely liquid sugar; it is a bio-active cocktail of live enzymes, raw pollen, and plant propolis. Explore the scientific pillars that commercial processing strips away.
             </p>
           </div>
@@ -563,7 +563,7 @@ const AboutPage = () => {
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-amber-950 font-heading">
               The Truth: Raw Honey vs. Supermarket Honey
             </h2>
-            <p className="text-sm sm:text-base text-amber-900/80">
+            <p className="text-sm sm:text-base text-amber-950 font-medium">
               Most store-bought honey is commercially pasteurized and ultra-filtered into plain liquid sugar. See the clear scientific contrast.
             </p>
           </div>
@@ -618,7 +618,7 @@ const AboutPage = () => {
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-amber-950 font-heading">
               Shaped by the Blossoms of Rajasthan
             </h2>
-            <p className="text-sm sm:text-base text-amber-900/80">
+            <p className="text-sm sm:text-base text-amber-950 font-medium">
               Just like fine grapes yield distinct wines, each seasonal flower imparts unique color, aroma, and medicinal enzymes to our honey.
             </p>
           </div>
@@ -685,7 +685,7 @@ const AboutPage = () => {
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-amber-950 font-heading">
               From Desert Bloom to Your Spoon
             </h2>
-            <p className="text-sm sm:text-base text-amber-900/80">
+            <p className="text-sm sm:text-base text-amber-950 font-medium">
               A gentle, non-violent harvesting cycle that protects bee colonies, preserves live enzymes, and ensures zero processing shortcuts.
             </p>
           </div>
@@ -813,7 +813,7 @@ const AboutPage = () => {
             <h2 className="text-3xl sm:text-4xl font-black text-amber-950 font-heading">
               Witness the Apiary with Your Own Eyes
             </h2>
-            <p className="text-sm text-amber-900/80">
+            <p className="text-sm text-amber-950 font-medium">
               Explore authentic photographs captured straight from our ethical desert apiaries, wooden hive boxes, and seasonal blossom harvesting.
             </p>
           </div>

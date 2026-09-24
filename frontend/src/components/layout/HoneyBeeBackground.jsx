@@ -25,8 +25,12 @@ const HoneyBeeBackground = () => {
             minWidth: 200.0,
             scale: 1.0,
             scaleMobile: 1.0,
-            color: 0xf59e0b, // warm honey amber
+            color: 0xd97706, // refined warm honey amber
             backgroundColor: 0xfffdf8,
+            points: 5.0, // Reduced by half from default 10.0 to 5.0 for clean visual space
+            maxDistance: 17.0, // Refined connection line distance
+            spacing: 20.0, // Wider spacing to prevent clustering and visual distraction
+            showDots: true,
           });
         }
       } catch (err) {
@@ -46,11 +50,19 @@ const HoneyBeeBackground = () => {
   }, []);
 
   return (
-    <div
-      ref={vantaRef}
-      className="fixed inset-0 w-full h-full z-[-1]"
-      style={{ pointerEvents: 'none' }}
-    />
+    <>
+      {/* Vanta 3D particle canvas with halved particle count and 50% visual opacity */}
+      <div
+        ref={vantaRef}
+        className="fixed inset-0 w-full h-full z-[-2] pointer-events-none transition-opacity duration-700"
+        style={{ opacity: 0.5 }}
+      />
+      {/* Soft ambient contrast wash that guarantees text and UI clarity across all pages */}
+      <div
+        className="fixed inset-0 w-full h-full z-[-1] pointer-events-none bg-gradient-to-b from-[#fffdf8]/60 via-[#fffdf8]/35 to-[#fffdf8]/75"
+        style={{ pointerEvents: 'none' }}
+      />
+    </>
   );
 };
 
