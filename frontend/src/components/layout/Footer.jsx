@@ -57,7 +57,7 @@ const Footer = () => {
               Named in honour of the loving warmth of a grandmother (Aai Ji), bringing authentic, raw, unheated honey directly from Rajasthan's natural hives to your family dining table.
             </p>
             <div className="pt-2 text-xs font-semibold text-amber-400">
-              📍 Marwar Apiary Division, Rajasthan, India
+              📍 Mewar Apiary Division, Rajasthan, India
             </div>
           </div>
 

@@ -19,8 +19,8 @@ const ERAS = [
     accent: 'from-amber-600 to-orange-500',
   },
   {
-    id: 'era-2023',
-    year: '2023',
+    id: 'era-2024-science',
+    year: '2024',
     badge: 'ENTOMOLOGY RESEARCH',
     title: 'The Scientific Awakening',
     subtitle: 'Doctoral research uncovering the destruction of commercial honey',
@@ -30,7 +30,7 @@ const ERAS = [
     author: '— Dr. Sitaram Seervi (Ph.D. Entomology, Founder)',
     image: '/honey_founder_on work.jpeg',
     tags: ['Ph.D. Field Research', 'Living Enzymes', 'Apis Ecology'],
-    stat: { value: 'Ph.D. Lab', label: 'Entomology Research' },
+    stat: { value: 'Ph.D.(Agril) Entomology', label: 'Entomology Research' },
     accent: 'from-amber-500 to-yellow-600',
   },
   {

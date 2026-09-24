@@ -185,9 +185,9 @@ const ContactPage = () => {
               📍
             </span>
             <h3 className="text-base font-bold text-amber-950 font-heading">Apiary Headquarters</h3>
-            <p className="text-xs text-amber-700 mt-1 mb-2 font-medium">Marwar Apiary Division</p>
+            <p className="text-xs text-amber-700 mt-1 mb-2 font-medium">Mewar Apiary Division</p>
             <span className="text-xs font-bold text-amber-950">
-              Pali / Jodhpur, Rajasthan, India
+              Rajsamand / Udaipur, Rajasthan, India
             </span>
           </div>
         </div>
