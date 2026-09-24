@@ -9,6 +9,7 @@ const HomePage = lazy(() => import('../pages/Home/HomePage'));
 const AboutPage = lazy(() => import('../pages/About/AboutPage'));
 const ContactPage = lazy(() => import('../pages/Contact/ContactPage'));
 const ProductsPage = lazy(() => import('../pages/Products/ProductsPage'));
+const CartPage = lazy(() => import('../pages/Cart/CartPage'));
 const LoginPage = lazy(() => import('../pages/Auth/LoginPage'));
 const OrderDashboardPage = lazy(() => import('../pages/Admin/OrderDashboardPage'));
 const ProductManagementPage = lazy(() => import('../pages/Admin/ProductManagementPage'));
@@ -44,6 +45,18 @@ export const router = createBrowserRouter([
       {
         path: 'store',
         element: <Navigate to="/products" replace />,
+      },
+      {
+        path: 'cart',
+        element: (
+          <ProtectedRoute>
+            {withSuspense(CartPage)}
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'Cart',
+        element: <Navigate to="/cart" replace />,
       },
       {
         path: 'contact',
@@ -140,6 +153,14 @@ export const router = createBrowserRouter([
       {
         path: 'admin/team',
         element: <Navigate to="/orderDashboard?tab=team" replace />,
+      },
+      {
+        path: 'admin/coupons',
+        element: <Navigate to="/orderDashboard?tab=coupons" replace />,
+      },
+      {
+        path: 'admin/promos',
+        element: <Navigate to="/orderDashboard?tab=coupons" replace />,
       },
       {
         path: '*',

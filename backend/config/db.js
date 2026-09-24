@@ -79,7 +79,20 @@ const connectDB = async () => {
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id VARCHAR(50);
       ALTER TABLE products ADD COLUMN IF NOT EXISTS description TEXT;
       ALTER TABLE products ADD COLUMN IF NOT EXISTS flavour VARCHAR(100);
+      ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INT DEFAULT 100;
+      ALTER TABLE products ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
+      ALTER TABLE products ADD COLUMN IF NOT EXISTS original_price NUMERIC(10, 2);
       UPDATE orders SET invoice_number = REPLACE(invoice_number, 'AJh/2027', 'AJh/2026') WHERE invoice_number LIKE '%2027%';
+
+      CREATE TABLE IF NOT EXISTS carts (
+        id VARCHAR(50) PRIMARY KEY,
+        user_id VARCHAR(50) UNIQUE NOT NULL,
+        items JSONB NOT NULL DEFAULT '[]'::jsonb,
+        saved_for_later JSONB NOT NULL DEFAULT '[]'::jsonb,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_carts_user_id ON carts(user_id);
 
       CREATE TABLE IF NOT EXISTS product_ratings (
         id VARCHAR(50) PRIMARY KEY,
@@ -133,6 +146,18 @@ const connectDB = async () => {
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
 
+      CREATE TABLE IF NOT EXISTS coupons (
+        id VARCHAR(50) PRIMARY KEY,
+        code VARCHAR(50) UNIQUE NOT NULL,
+        discount_percentage INT NOT NULL CHECK (discount_percentage > 0 AND discount_percentage <= 100),
+        min_order_amount NUMERIC(10, 2) DEFAULT 0,
+        max_discount NUMERIC(10, 2) DEFAULT NULL,
+        description TEXT,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
       -- High-Performance Database Indexes (Accelerates WHERE, JOIN, and ORDER BY queries)
       CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
       CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
@@ -147,6 +172,8 @@ const connectDB = async () => {
       CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at DESC);
       CREATE INDEX IF NOT EXISTS idx_gallery_items_order ON gallery_items(order_num ASC, created_at DESC);
       CREATE INDEX IF NOT EXISTS idx_team_members_order ON team_members(order_num ASC, created_at ASC);
+      CREATE INDEX IF NOT EXISTS idx_coupons_code ON coupons(code);
+      CREATE INDEX IF NOT EXISTS idx_coupons_is_active ON coupons(is_active);
     `);
 
     // Automatic idempotent initial seeding

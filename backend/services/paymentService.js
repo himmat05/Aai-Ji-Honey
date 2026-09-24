@@ -63,6 +63,52 @@ const createRazorpayOrder = async (productId, quantity = 1) => {
 };
 
 /**
+ * Create a new Razorpay order for multi-item Cart or Buy Now checkout
+ * Validates all products, stock, coupon, tax, shipping server-side
+ */
+const createCartRazorpayOrder = async (items = [], couponCode = null) => {
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new Error('At least one item is required to initiate checkout');
+  }
+
+  const cartService = require('./cartService');
+  const hydrated = await cartService.hydrateCart(items, [], couponCode);
+
+  if (!hydrated.isValidForCheckout || hydrated.items.length === 0) {
+    const errorMsg =
+      hydrated.changes.length > 0
+        ? hydrated.changes.map((c) => c.message).join(' ')
+        : 'One or more items in your order are unavailable or have insufficient stock.';
+    const err = new Error(errorMsg);
+    err.code = 'INVALID_CHECKOUT_STATE';
+    err.status = 400;
+    throw err;
+  }
+
+  const totalInPaise = Math.round(hydrated.total * 100);
+  if (totalInPaise <= 0) {
+    throw new Error('Invalid order total');
+  }
+
+  const options = {
+    amount: totalInPaise,
+    currency: 'INR',
+    receipt: `rcpt_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
+    notes: {
+      itemCount: String(hydrated.itemCount),
+      coupon: hydrated.appliedCoupon ? hydrated.appliedCoupon.code : 'NONE',
+    },
+  };
+
+  const razorpayOrder = await razorpay.orders.create(options);
+
+  return {
+    order: razorpayOrder,
+    hydratedSummary: hydrated,
+  };
+};
+
+/**
  * Verify Razorpay payment signature in constant-time (Timing-attack immune)
  * @param {string} orderId
  * @param {string} paymentId
@@ -119,6 +165,7 @@ const verifyWebhookSignature = (rawBody, signature) => {
 
 module.exports = {
   createRazorpayOrder,
+  createCartRazorpayOrder,
   verifyPaymentSignature,
   verifyWebhookSignature,
 };

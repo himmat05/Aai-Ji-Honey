@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import HoneyBeeBackground from './HoneyBeeBackground';
+import CartDrawer from '../cart/CartDrawer';
 
 const RootLayout = () => {
   const { pathname } = useLocation();
@@ -16,6 +17,7 @@ const RootLayout = () => {
     <div className="flex flex-col min-h-screen relative selection:bg-amber-400 selection:text-amber-950">
       <HoneyBeeBackground />
       <Navbar />
+      <CartDrawer />
       <main className="flex-1">
         <Outlet />
       </main>

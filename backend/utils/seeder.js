@@ -195,11 +195,9 @@ const seedInitialData = async (client) => {
   try {
     const gCheck = await client.query('SELECT COUNT(*)::int AS count FROM gallery_items');
     const tCheck = await client.query('SELECT COUNT(*)::int AS count FROM team_members');
-    if (gCheck.rows[0].count >= 14 && tCheck.rows[0].count >= 5) {
-      return; // Already completely seeded, exit instantly
-    }
 
-    // 1. Seed Gallery Items (check per item so none are missed)
+    // 1. Seed Gallery Items (if needed)
+    if (gCheck.rows[0].count < 14) {
     for (const item of INITIAL_GALLERY_ITEMS) {
       const checkRes = await client.query('SELECT id FROM gallery_items WHERE title = $1 LIMIT 1', [item.title]);
       if (checkRes.rows.length === 0) {
@@ -213,6 +211,7 @@ const seedInitialData = async (client) => {
         );
       }
     }
+  }
 
     // 2. Seed Team Members (check per member so none are missed)
     for (const member of INITIAL_TEAM_MEMBERS) {
@@ -226,6 +225,44 @@ const seedInitialData = async (client) => {
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
           [id, member.name, member.role, member.badge, resolvedUrl, member.expertise, member.email, member.order_num]
         );
+      }
+    }
+
+    // 3. Seed Default Coupons (if table is completely empty)
+    const cCheck = await client.query('SELECT COUNT(*)::int AS count FROM coupons');
+    if (cCheck.rows[0].count === 0) {
+      const defaultCoupons = [
+        {
+          code: 'AAIJI10',
+          discount_percentage: 10,
+          min_order_amount: 500,
+          max_discount: 200,
+          description: '10% OFF on all natural raw honey orders above ₹500',
+        },
+        {
+          code: 'FARMDIRECT',
+          discount_percentage: 15,
+          min_order_amount: 1200,
+          max_discount: 300,
+          description: '15% OFF on desert apiary harvest orders above ₹1200',
+        },
+        {
+          code: 'PUREHONEY',
+          discount_percentage: 20,
+          min_order_amount: 1800,
+          max_discount: 400,
+          description: '20% Mega Wellness Discount on orders above ₹1800',
+        },
+      ];
+
+      for (const coup of defaultCoupons) {
+        const id = crypto.randomBytes(12).toString('hex');
+        await client.query(
+          `INSERT INTO coupons (id, code, discount_percentage, min_order_amount, max_discount, description, is_active)
+           VALUES ($1, $2, $3, $4, $5, $6, TRUE)`,
+          [id, coup.code, coup.discount_percentage, coup.min_order_amount, coup.max_discount, coup.description]
+        );
+        console.log(`🌱 Seeded default coupon: ${coup.code} (${coup.discount_percentage}%)`);
       }
     }
   } catch (err) {

@@ -16,6 +16,9 @@ const getAllProducts = async (req, res, next) => {
         p.offer, 
         p.description, 
         p.flavour, 
+        COALESCE(p.stock, 50)::int AS stock,
+        COALESCE(p.is_active, true)::boolean AS "isActive",
+        p.original_price AS "originalPrice",
         p.created_at AS "createdAt",
         COALESCE(ROUND(AVG(r.rating)::numeric, 1), 0)::float AS "avgRating",
         COUNT(r.id)::int AS "ratingCount"
@@ -28,6 +31,9 @@ const getAllProducts = async (req, res, next) => {
     const products = result.rows.map((p) => ({
       ...p,
       price: parseFloat(p.price) || 0,
+      originalPrice: p.originalPrice ? parseFloat(p.originalPrice) : null,
+      stock: parseInt(p.stock, 10) ?? 50,
+      isActive: p.isActive !== false,
       avgRating: parseFloat(p.avgRating) || 0,
       ratingCount: parseInt(p.ratingCount, 10) || 0,
     }));
@@ -47,32 +53,73 @@ const getAllProducts = async (req, res, next) => {
  */
 const createProduct = async (req, res, next) => {
   try {
-    const { name, price, description, flavour } = req.body;
+    const { name, price, description, flavour, stock, originalPrice } = req.body;
+
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return res.status(400).json({ error: 'Product name is required (2-200 characters)' });
+    }
+    const cleanName = name.trim().slice(0, 200);
+
+    const parsedPrice = parseFloat(price);
+    if (isNaN(parsedPrice) || parsedPrice <= 0 || parsedPrice > 1000000) {
+      return res.status(400).json({ error: 'Valid positive selling price is required (up to ₹10,00,000)' });
+    }
 
     if (!req.file) {
       return res.status(400).json({ error: 'Product image is required' });
     }
 
     const id = crypto.randomBytes(12).toString('hex');
-    const parsedPrice = parseFloat(price);
+    const parsedStock = stock !== undefined 
+      ? Math.max(0, Math.min(1000000, parseInt(stock, 10) || 0)) 
+      : 50;
+
+    let parsedOriginalPrice = null;
+    if (originalPrice !== undefined && originalPrice !== null && String(originalPrice).trim() !== '') {
+      parsedOriginalPrice = parseFloat(originalPrice);
+      if (isNaN(parsedOriginalPrice) || parsedOriginalPrice <= 0) {
+        return res.status(400).json({ error: 'Compare-at price must be a valid positive number' });
+      }
+      if (parsedOriginalPrice <= parsedPrice) {
+        return res.status(400).json({ error: 'Compare-at price (MRP) must be strictly greater than selling price.' });
+      }
+    }
+
+    const cleanFlavour = flavour ? String(flavour).trim().slice(0, 100) : null;
+    const cleanDescription = description ? String(description).trim().slice(0, 2000) : null;
 
     const queryText = `
-      INSERT INTO products (id, name, price, image, description, flavour)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING id AS "_id", name, price, image, offer, description, flavour, created_at AS "createdAt"
+      INSERT INTO products (id, name, price, image, description, flavour, stock, original_price)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING 
+        id AS "_id", 
+        name, 
+        price, 
+        image, 
+        offer, 
+        description, 
+        flavour, 
+        stock, 
+        original_price AS "originalPrice",
+        is_active AS "isActive",
+        created_at AS "createdAt"
     `;
 
     const result = await db.query(queryText, [
       id,
-      name,
+      cleanName,
       parsedPrice,
       req.file.path,
-      description || null,
-      flavour || null,
+      cleanDescription,
+      cleanFlavour,
+      parsedStock,
+      parsedOriginalPrice,
     ]);
     const created = result.rows[0];
     if (created) {
       created.price = parseFloat(created.price) || 0;
+      created.originalPrice = parseFloat(created.originalPrice) || 0;
+      created.stock = parseInt(created.stock, 10) ?? 50;
     }
     res.status(201).json(created);
   } catch (err) {
@@ -88,7 +135,7 @@ const createProduct = async (req, res, next) => {
 const updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, price, description, flavour } = req.body;
+    const { name, price, description, flavour, stock, originalPrice, isActive } = req.body;
 
     const findResult = await db.query('SELECT * FROM products WHERE id = $1', [id]);
     if (findResult.rows.length === 0) {
@@ -96,17 +143,79 @@ const updateProduct = async (req, res, next) => {
     }
 
     const currentProduct = findResult.rows[0];
-    const newName = name || currentProduct.name;
-    const newPrice = price !== undefined ? parseFloat(price) : currentProduct.price;
+    
+    let newName = currentProduct.name;
+    if (name !== undefined) {
+      if (!name || typeof name !== 'string' || !name.trim()) {
+        return res.status(400).json({ error: 'Product name cannot be empty' });
+      }
+      newName = name.trim().slice(0, 200);
+    }
+
+    let newPrice = currentProduct.price;
+    if (price !== undefined) {
+      const parsed = parseFloat(price);
+      if (isNaN(parsed) || parsed <= 0 || parsed > 1000000) {
+        return res.status(400).json({ error: 'Valid positive price is required' });
+      }
+      newPrice = parsed;
+    }
+
     const newImage = req.file ? req.file.path : currentProduct.image;
-    const newDescription = description !== undefined ? description : currentProduct.description;
-    const newFlavour = flavour !== undefined ? flavour : currentProduct.flavour;
+    const newDescription = description !== undefined ? (description ? String(description).trim().slice(0, 2000) : null) : currentProduct.description;
+    const newFlavour = flavour !== undefined ? (flavour ? String(flavour).trim().slice(0, 100) : null) : currentProduct.flavour;
+    
+    let newStock = currentProduct.stock ?? 50;
+    if (stock !== undefined) {
+      const parsedStock = parseInt(stock, 10);
+      if (isNaN(parsedStock) || parsedStock < 0) {
+        return res.status(400).json({ error: 'Stock must be a non-negative integer' });
+      }
+      newStock = Math.min(1000000, parsedStock);
+    }
+
+    let newOriginalPrice = currentProduct.original_price;
+    if (originalPrice !== undefined) {
+      if (originalPrice === null || originalPrice === '' || String(originalPrice).trim() === '') {
+        newOriginalPrice = null;
+      } else {
+        const parsed = parseFloat(originalPrice);
+        if (isNaN(parsed) || parsed <= 0) {
+          return res.status(400).json({ error: 'Compare-at price must be a valid positive number' });
+        }
+        if (parsed <= newPrice) {
+          return res.status(400).json({ error: 'Compare-at price (MRP) must be strictly greater than selling price.' });
+        }
+        newOriginalPrice = parsed;
+      }
+    }
+
+    const newIsActive = isActive !== undefined ? Boolean(isActive) : (currentProduct.is_active !== false);
 
     const updateQuery = `
       UPDATE products
-      SET name = $1, price = $2, image = $3, description = $4, flavour = $5
-      WHERE id = $6
-      RETURNING id AS "_id", name, price, image, offer, description, flavour, created_at AS "createdAt"
+      SET 
+        name = $1, 
+        price = $2, 
+        image = $3, 
+        description = $4, 
+        flavour = $5,
+        stock = $6,
+        original_price = $7,
+        is_active = $8
+      WHERE id = $9
+      RETURNING 
+        id AS "_id", 
+        name, 
+        price, 
+        image, 
+        offer, 
+        description, 
+        flavour, 
+        stock, 
+        original_price AS "originalPrice",
+        is_active AS "isActive",
+        created_at AS "createdAt"
     `;
 
     const result = await db.query(updateQuery, [
@@ -115,11 +224,16 @@ const updateProduct = async (req, res, next) => {
       newImage,
       newDescription,
       newFlavour,
+      newStock,
+      newOriginalPrice,
+      newIsActive,
       id,
     ]);
     const updated = result.rows[0];
     if (updated) {
       updated.price = parseFloat(updated.price) || 0;
+      updated.originalPrice = parseFloat(updated.originalPrice) || 0;
+      updated.stock = parseInt(updated.stock, 10) ?? 50;
     }
     res.json(updated);
   } catch (err) {

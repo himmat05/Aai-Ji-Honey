@@ -7,16 +7,19 @@ import { printTaxInvoice } from '../../utils/invoicePrinter';
 import { formatDate } from '../../utils/formatters';
 import GalleryManagementSection from './components/GalleryManagementSection';
 import TeamManagementSection from './components/TeamManagementSection';
+import CouponManagementSection from './components/CouponManagementSection';
 
 const OrderDashboardPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Main Tab: 'orders', 'messages', 'gallery', or 'team'
+  // Main Tab: 'orders', 'messages', 'gallery', 'team', or 'coupons'
   const [activeMainTab, setActiveMainTab] = useState(() => {
     const tab = searchParams.get('tab');
-    if (['messages', 'gallery', 'team'].includes(tab)) return tab;
+    if (['messages', 'gallery', 'team', 'coupons'].includes(tab)) return tab;
     return 'orders';
   });
+
+  const [couponsCount, setCouponsCount] = useState(0);
 
   // Responsive screen width tracking for dynamic sliding reel items
   const [windowWidth, setWindowWidth] = useState(
@@ -56,7 +59,7 @@ const OrderDashboardPage = () => {
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     const filterParam = searchParams.get('filter');
-    if (['messages', 'gallery', 'team', 'orders'].includes(tabParam)) {
+    if (['messages', 'gallery', 'team', 'coupons', 'orders'].includes(tabParam)) {
       setActiveMainTab(tabParam);
     }
     if (filterParam) setMessageFilter(filterParam);
@@ -716,6 +719,25 @@ const OrderDashboardPage = () => {
           >
             <span>👥 Scientists & Team</span>
           </button>
+
+          <button
+            onClick={() => {
+              setActiveMainTab('coupons');
+              setSearchParams({ tab: 'coupons' });
+            }}
+            className={`pb-2 px-3.5 sm:px-5 font-black text-xs sm:text-sm uppercase tracking-wider transition-all relative flex items-center gap-1.5 sm:gap-2 flex-shrink-0 cursor-pointer ${
+              activeMainTab === 'coupons'
+                ? 'text-amber-950 border-b-4 border-amber-500 -mb-[10px]'
+                : 'text-amber-800/70 hover:text-amber-950'
+            }`}
+          >
+            <span>🏷️ Promo Codes</span>
+            {couponsCount > 0 && (
+              <span className="bg-amber-100 text-amber-900 text-xs px-2 py-0.5 rounded-full font-black border border-amber-300">
+                {couponsCount}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* ========================================================= */}
@@ -1146,6 +1168,13 @@ const OrderDashboardPage = () => {
         {/* TAB 4: TEAM CONTENT */}
         {/* ========================================================= */}
         {activeMainTab === 'team' && <TeamManagementSection />}
+
+        {/* ========================================================= */}
+        {/* TAB 5: PROMO CODES CONTENT */}
+        {/* ========================================================= */}
+        {activeMainTab === 'coupons' && (
+          <CouponManagementSection onCouponsUpdated={(cnt) => setCouponsCount(cnt)} />
+        )}
       </div>
     </div>
   );

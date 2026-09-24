@@ -8,6 +8,8 @@ const productRoutes = require('./productRoutes');
 const messageRoutes = require('./messageRoutes');
 const galleryRoutes = require('./galleryRoutes');
 const teamRoutes = require('./teamRoutes');
+const cartRoutes = require('./cartRoutes');
+const couponRoutes = require('./couponRoutes');
 
 const db = require('../config/db');
 
@@ -56,6 +58,8 @@ router.use('/products', productRoutes);
 router.use('/messages', messageRoutes);
 router.use('/gallery', galleryRoutes);
 router.use('/team', teamRoutes);
+router.use('/cart', cartRoutes);
+router.use('/coupons', couponRoutes);
 
 // Mount modules with /api prefix for dual-compatibility
 router.use('/api', authRoutes);
@@ -65,6 +69,8 @@ router.use('/api/products', productRoutes);
 router.use('/api/messages', messageRoutes);
 router.use('/api/gallery', galleryRoutes);
 router.use('/api/team', teamRoutes);
+router.use('/api/cart', cartRoutes);
+router.use('/api/coupons', couponRoutes);
 
 module.exports = router;
 

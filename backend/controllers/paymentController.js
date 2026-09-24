@@ -9,40 +9,34 @@ const jwt = require('jsonwebtoken');
  * POST /create-order
  */
 const createOrder = async (req, res, next) => {
-  const { productId, quantity, amount } = req.body;
+  const { productId, quantity, amount, items, cartItems, coupon } = req.body;
 
   try {
     let payment;
-    if (productId) {
-      payment = await paymentService.createRazorpayOrder(productId, quantity || 1);
-    } else if (amount) {
-      // Fallback for direct amount if testing
-      const parsedAmount = parseInt(amount, 10);
-      if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        return res.status(400).json({ error: 'Valid payment amount is required' });
-      }
-      const razorpay = require('../config/razorpay');
-      const crypto = require('crypto');
-      const order = await razorpay.orders.create({
-        amount: parsedAmount,
-        currency: 'INR',
-        receipt: `rcpt_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
-      });
-      payment = { order };
-    } else {
-      return res.status(400).json({ error: 'Product ID is required to initiate order' });
-    }
+    const checkoutItems = items || cartItems;
 
-    // Return order and deliver Key ID dynamically at runtime
-    res.json({
-      order: payment.order,
-      keyId: process.env.RAZORPAY_KEY_ID,
-      product: payment.product,
-      quantity: payment.quantity,
-    });
+    if (Array.isArray(checkoutItems) && checkoutItems.length > 0) {
+      payment = await paymentService.createCartRazorpayOrder(checkoutItems, coupon);
+      return res.json({
+        order: payment.order,
+        keyId: process.env.RAZORPAY_KEY_ID,
+        summary: payment.hydratedSummary,
+      });
+    } else if (productId) {
+      payment = await paymentService.createRazorpayOrder(productId, quantity || 1);
+      return res.json({
+        order: payment.order,
+        keyId: process.env.RAZORPAY_KEY_ID,
+        product: payment.product,
+        quantity: payment.quantity,
+      });
+    } else {
+      return res.status(400).json({ error: 'Valid product ID or cart items required to initiate secure checkout' });
+    }
   } catch (err) {
     console.error('Error creating Razorpay order:', err.message);
-    res.status(500).json({ error: 'Failed to initiate secure payment gateway' });
+    const status = err.status || 500;
+    res.status(status).json({ error: err.message || 'Failed to initiate secure payment gateway' });
   }
 };
 
@@ -75,36 +69,75 @@ const verifyPayment = async (req, res, next) => {
     });
   }
 
+  // Helper to sanitize strings and strip HTML
+  const stripHtml = (str) => (str ? String(str).replace(/<[^>]*>?/gm, '').trim() : '');
+
   // 2. If order details are provided, persist the verified order into NeonDB
   try {
     let savedOrder = null;
     if (orderDetails && orderDetails.name && orderDetails.mobile && orderDetails.address) {
-      // Extract user ID from token if authenticated
-      let resolvedUserId = orderDetails.userId || null;
+      // Security fix: Strictly derive user ID from authenticated JWT token (Never trust client body)
+      let resolvedUserId = null;
       const authHeader = req.headers.authorization;
-      if (authHeader && authHeader.startsWith('Bearer ') && !resolvedUserId) {
+      if (authHeader && authHeader.startsWith('Bearer ')) {
         try {
           const token = authHeader.split(' ')[1];
           const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
           if (decoded && decoded.id) {
             resolvedUserId = decoded.id;
           }
-        } catch (tokenErr) {}
+        } catch (tokenErr) {
+          // Token invalid or expired
+        }
       }
 
       const cleanOrderData = {
-        name: String(orderDetails.name).trim().slice(0, 100),
-        email: orderDetails.email ? String(orderDetails.email).trim().toLowerCase().slice(0, 150) : null,
-        mobile: String(orderDetails.mobile).trim().slice(0, 20),
-        address: String(orderDetails.address).trim().slice(0, 500),
+        name: stripHtml(orderDetails.name).slice(0, 100),
+        email: orderDetails.email ? stripHtml(orderDetails.email).toLowerCase().slice(0, 150) : null,
+        mobile: stripHtml(orderDetails.mobile).slice(0, 20),
+        address: stripHtml(orderDetails.address).slice(0, 500),
         quantity: Math.max(1, Math.min(100, parseInt(orderDetails.quantity, 10) || 1)),
         product: typeof orderDetails.product === 'object' && orderDetails.product !== null ? orderDetails.product : {},
-        paymentId: razorpay_payment_id,
+        paymentId: stripHtml(razorpay_payment_id).slice(0, 100),
         status: 'Processing', // Verified paid order ready for processing
         userId: resolvedUserId,
       };
 
       savedOrder = await orderService.createOrder(cleanOrderData);
+
+      // 3. Atomically decrement stock in database
+      const db = require('../config/db');
+      const itemsToDeduct = Array.isArray(orderDetails.items) && orderDetails.items.length > 0
+        ? orderDetails.items
+        : orderDetails.product
+        ? [{ id: orderDetails.product.id || orderDetails.product._id, quantity: cleanOrderData.quantity }]
+        : [];
+
+      for (const it of itemsToDeduct) {
+        const pId = it.id || it.productId || it._id;
+        const pQty = Math.max(1, parseInt(it.quantity, 10) || 1);
+        if (pId) {
+          try {
+            await db.query(
+              'UPDATE products SET stock = GREATEST(0, stock - $1) WHERE id = $2',
+              [pQty, pId]
+            );
+          } catch (stockErr) {
+            console.warn(`Failed to deduct stock for product ${pId}:`, stockErr.message);
+          }
+        }
+      }
+
+      // 4. Clear only purchased items from user's persistent cart (leaving Buy Now or unselected items intact)
+      if (resolvedUserId && !orderDetails.isBuyNow && itemsToDeduct.length > 0) {
+        const cartService = require('../services/cartService');
+        const purchasedIds = itemsToDeduct.map((i) => i.id || i.productId || i._id).filter(Boolean);
+        try {
+          await cartService.clearPurchasedItems(resolvedUserId, purchasedIds);
+        } catch (cartClearErr) {
+          console.warn('Failed to clear purchased items from cart:', cartClearErr.message);
+        }
+      }
     }
 
     res.json({
@@ -114,7 +147,6 @@ const verifyPayment = async (req, res, next) => {
     });
   } catch (saveError) {
     console.error('Error saving verified order:', saveError);
-    // Signature was valid but DB write failed: return success with warning so frontend can notify support
     res.status(500).json({
       success: false,
       message: 'Payment verified successfully, but failed to save order to database. Please contact support.',

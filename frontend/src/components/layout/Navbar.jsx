@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import AuthModal from '../common/AuthModal';
 import { messageApi } from '../../api/messageApi';
+import CartBadge from '../cart/CartBadge';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -125,8 +126,9 @@ const Navbar = () => {
             ))}
           </nav>
 
-          {/* Desktop Auth Controls */}
+          {/* Desktop Auth & Cart Controls */}
           <div className="hidden lg:flex items-center gap-3">
+            <CartBadge />
             {isAuthenticated ? (
               <div className="flex items-center gap-2.5">
                 {isUserAdmin ? (
@@ -186,8 +188,9 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Cart & Menu Button */}
           <div className="flex items-center gap-2 lg:hidden">
+            <CartBadge isMobile={true} />
             {!isAuthenticated && (
               <Link
                 to="/login"

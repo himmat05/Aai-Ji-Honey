@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { toast } from 'react-toastify';
 import { productApi } from '../../api/productApi';
 import ProductCard from './components/ProductCard';
 import OrderModal from './components/OrderModal';
@@ -320,6 +321,11 @@ const ProductsPage = () => {
                 key={product._id}
                 product={product}
                 onSelect={(prod) => {
+                  const stockVal = prod.stock !== undefined && prod.stock !== null ? parseInt(prod.stock, 10) : 50;
+                  if (stockVal <= 0 || prod.isActive === false) {
+                    toast.error('Item out of stock');
+                    return;
+                  }
                   if (!isAuthenticated) {
                     setPendingProduct(prod);
                     setIsAuthModalOpen(true);
