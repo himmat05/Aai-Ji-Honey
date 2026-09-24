@@ -300,7 +300,7 @@ const OrderModal = ({ product = null, initialQuantity = 1, isCartCheckout = fals
                   {activeProduct.name}
                 </h3>
                 <div className="flex items-center justify-between text-xs font-bold text-amber-900 mt-1">
-                  <span>₹{activeProduct.price} / jar</span>
+                  <span>₹{activeProduct.price} / Jar</span>
                   <span className="text-emerald-700">Stock: {activeProduct.stock}</span>
                 </div>
               </div>
