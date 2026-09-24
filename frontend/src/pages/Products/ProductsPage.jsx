@@ -15,6 +15,7 @@ const ProductsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedFlavour, setSelectedFlavour] = useState('ALL');
+  const [selectedWeight, setSelectedWeight] = useState('ALL');
   const [priceRange, setPriceRange] = useState('ALL'); // ALL, UNDER_400, 400_700, ABOVE_700
   const [sortBy, setSortBy] = useState('FEATURED'); // FEATURED, PRICE_ASC, PRICE_DESC, NAME_ASC
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,6 +38,23 @@ const ProductsPage = () => {
     fetchProducts();
   }, []);
 
+  // Helper to extract product weight normalized to grams
+  const getProductWeightInGrams = (p) => {
+    if (p.weight !== null && p.weight !== undefined && String(p.weight).trim() !== '') {
+      const num = parseFloat(p.weight);
+      if (!isNaN(num) && num > 0) {
+        return p.weightUnit === 'kg' ? Math.round(num * 1000) : Math.round(num);
+      }
+    }
+    const match = p.name?.match(/(\d+(?:\.\d+)?)\s*(kg|g|gram|gm|kgs)/i);
+    if (match) {
+      const num = parseFloat(match[1]);
+      const isKg = match[2].toLowerCase().startsWith('k');
+      return isKg ? Math.round(num * 1000) : Math.round(num);
+    }
+    return 500;
+  };
+
   // Dynamically extract all unique flavours from existing products
   const availableFlavours = useMemo(() => {
     const list = [];
@@ -47,6 +65,26 @@ const ProductsPage = () => {
       }
     });
     return list;
+  }, [products]);
+
+  // Dynamically extract all unique weights from existing products
+  const availableWeights = useMemo(() => {
+    const map = new Map();
+    products.forEach((p) => {
+      const g = getProductWeightInGrams(p);
+      if (g) {
+        const label = g >= 1000 ? (g % 1000 === 0 ? `${g / 1000}kg` : `${(g / 1000).toFixed(1)}kg`) : `${g}g`;
+        map.set(g, label);
+      }
+    });
+    if (map.size === 0) {
+      map.set(250, '250g');
+      map.set(500, '500g');
+      map.set(1000, '1kg');
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([grams, label]) => ({ grams, label }));
   }, [products]);
 
   // Combined filtering and sorting
@@ -72,6 +110,14 @@ const ProductsPage = () => {
           }
         }
 
+        // Weight filter
+        if (selectedWeight !== 'ALL') {
+          const prodGrams = getProductWeightInGrams(p);
+          if (prodGrams !== Number(selectedWeight)) {
+            return false;
+          }
+        }
+
         // Price filter
         const price = Number(p.price) || 0;
         if (priceRange === 'UNDER_400' && price >= 400) return false;
@@ -86,12 +132,18 @@ const ProductsPage = () => {
         if (sortBy === 'NAME_ASC') return a.name.localeCompare(b.name);
         return 0; // default featured
       });
-  }, [products, searchQuery, selectedFlavour, priceRange, sortBy]);
+  }, [products, searchQuery, selectedFlavour, selectedWeight, priceRange, sortBy]);
 
-  const hasActiveFilters = selectedFlavour !== 'ALL' || priceRange !== 'ALL' || searchQuery !== '' || sortBy !== 'FEATURED';
+  const hasActiveFilters =
+    selectedFlavour !== 'ALL' ||
+    selectedWeight !== 'ALL' ||
+    priceRange !== 'ALL' ||
+    searchQuery !== '' ||
+    sortBy !== 'FEATURED';
 
   const resetFilters = () => {
     setSelectedFlavour('ALL');
+    setSelectedWeight('ALL');
     setPriceRange('ALL');
     setSortBy('FEATURED');
     setSearchQuery('');
@@ -160,50 +212,80 @@ const ProductsPage = () => {
             </div>
           </div>
 
-          {/* Filter Rows: Flavour & Price */}
-          <div className="pt-3 border-t border-amber-200/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            
-            {/* Flavour Filter Pills */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-xs font-extrabold text-amber-900 mr-1 flex items-center gap-1">
-                <span>🌼</span> Flavour:
-              </span>
+          {/* Filter Row 1: Flavour */}
+          <div className="pt-3 border-t border-amber-200/60 flex items-center gap-1.5 flex-wrap">
+            <span className="text-xs font-extrabold text-amber-900 mr-1 flex items-center gap-1">
+              <span>🌼</span> Flavour:
+            </span>
+            <button
+              onClick={() => setSelectedFlavour('ALL')}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                selectedFlavour === 'ALL'
+                  ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-sm'
+                  : 'bg-white/80 text-amber-900 border border-amber-200 hover:bg-amber-50'
+              }`}
+            >
+              All Flavours
+            </button>
+
+            {/* Standard Market Varieties and Dynamic flavours */}
+            {Array.from(new Set([
+              'Mustard',
+              'Babul',
+              'Berseem',
+              'Multi Floral',
+              'Moringa',
+              'Fennel',
+              'Wild Flora',
+              'Ajwain',
+              'Jamun',
+              'Ber',
+              'Tulsi',
+              ...availableFlavours
+            ])).map((flv) => (
               <button
-                onClick={() => setSelectedFlavour('ALL')}
+                key={flv}
+                onClick={() => setSelectedFlavour(flv)}
                 className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-                  selectedFlavour === 'ALL'
+                  selectedFlavour === flv
                     ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-sm'
                     : 'bg-white/80 text-amber-900 border border-amber-200 hover:bg-amber-50'
                 }`}
               >
-                All Flavours
+                {flv}
               </button>
+            ))}
+          </div>
 
-              {/* Standard Market Varieties and Dynamic flavours */}
-              {Array.from(new Set([
-                'Mustard',
-                'Babul',
-                'Berseem',
-                'Multi Floral',
-                'Moringa',
-                'Fennel',
-                'Wild Flora',
-                'Ajwain',
-                'Jamun',
-                'Ber',
-                'Tulsi',
-                ...availableFlavours
-              ])).map((flv) => (
+          {/* Filter Row 2: Weight & Price */}
+          <div className="pt-3 border-t border-amber-200/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            
+            {/* Weight Filter Pills */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs font-extrabold text-amber-900 mr-1 flex items-center gap-1">
+                <span>⚖️</span> Weight:
+              </span>
+              <button
+                onClick={() => setSelectedWeight('ALL')}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                  selectedWeight === 'ALL'
+                    ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-sm'
+                    : 'bg-white/80 text-amber-900 border border-amber-200 hover:bg-amber-50'
+                }`}
+              >
+                All Sizes
+              </button>
+              {availableWeights.map((w) => (
                 <button
-                  key={flv}
-                  onClick={() => setSelectedFlavour(flv)}
+                  key={w.grams}
+                  onClick={() => setSelectedWeight(w.grams)}
                   className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-                    selectedFlavour === flv
+                    selectedWeight === w.grams
                       ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-sm'
                       : 'bg-white/80 text-amber-900 border border-amber-200 hover:bg-amber-50'
                   }`}
                 >
-                  {flv}
+                  {w.label}
                 </button>
               ))}
             </div>

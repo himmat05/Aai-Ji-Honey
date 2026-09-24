@@ -82,6 +82,8 @@ const connectDB = async () => {
       ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INT DEFAULT 100;
       ALTER TABLE products ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
       ALTER TABLE products ADD COLUMN IF NOT EXISTS original_price NUMERIC(10, 2);
+      ALTER TABLE products ADD COLUMN IF NOT EXISTS weight NUMERIC(10, 2);
+      ALTER TABLE products ADD COLUMN IF NOT EXISTS weight_unit VARCHAR(20) DEFAULT 'g';
       UPDATE orders SET invoice_number = REPLACE(invoice_number, 'AJh/2027', 'AJh/2026') WHERE invoice_number LIKE '%2027%';
 
       CREATE TABLE IF NOT EXISTS carts (

@@ -19,6 +19,8 @@ const getAllProducts = async (req, res, next) => {
         COALESCE(p.stock, 50)::int AS stock,
         COALESCE(p.is_active, true)::boolean AS "isActive",
         p.original_price AS "originalPrice",
+        p.weight::float AS weight,
+        COALESCE(p.weight_unit, 'g') AS "weightUnit",
         p.created_at AS "createdAt",
         COALESCE(ROUND(AVG(r.rating)::numeric, 1), 0)::float AS "avgRating",
         COUNT(r.id)::int AS "ratingCount"
@@ -34,6 +36,8 @@ const getAllProducts = async (req, res, next) => {
       originalPrice: p.originalPrice ? parseFloat(p.originalPrice) : null,
       stock: parseInt(p.stock, 10) ?? 50,
       isActive: p.isActive !== false,
+      weight: p.weight !== null && p.weight !== undefined ? parseFloat(p.weight) : null,
+      weightUnit: p.weightUnit || 'g',
       avgRating: parseFloat(p.avgRating) || 0,
       ratingCount: parseInt(p.ratingCount, 10) || 0,
     }));
@@ -53,7 +57,7 @@ const getAllProducts = async (req, res, next) => {
  */
 const createProduct = async (req, res, next) => {
   try {
-    const { name, price, description, flavour, stock, originalPrice } = req.body;
+    const { name, price, description, flavour, stock, originalPrice, weight, weightUnit } = req.body;
 
     if (!name || typeof name !== 'string' || !name.trim()) {
       return res.status(400).json({ error: 'Product name is required (2-200 characters)' });
@@ -85,12 +89,23 @@ const createProduct = async (req, res, next) => {
       }
     }
 
+    let parsedWeight = null;
+    if (weight !== undefined && weight !== null && String(weight).trim() !== '') {
+      parsedWeight = parseFloat(weight);
+      if (isNaN(parsedWeight) || parsedWeight <= 0) {
+        return res.status(400).json({ error: 'Weight must be a positive number' });
+      }
+    }
+    const cleanWeightUnit = (weightUnit && ['kg', 'g', 'gram'].includes(String(weightUnit).toLowerCase()))
+      ? (String(weightUnit).toLowerCase() === 'kg' ? 'kg' : 'g')
+      : 'g';
+
     const cleanFlavour = flavour ? String(flavour).trim().slice(0, 100) : null;
     const cleanDescription = description ? String(description).trim().slice(0, 2000) : null;
 
     const queryText = `
-      INSERT INTO products (id, name, price, image, description, flavour, stock, original_price)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      INSERT INTO products (id, name, price, image, description, flavour, stock, original_price, weight, weight_unit)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING 
         id AS "_id", 
         name, 
@@ -101,6 +116,8 @@ const createProduct = async (req, res, next) => {
         flavour, 
         stock, 
         original_price AS "originalPrice",
+        weight::float AS weight,
+        COALESCE(weight_unit, 'g') AS "weightUnit",
         is_active AS "isActive",
         created_at AS "createdAt"
     `;
@@ -114,12 +131,16 @@ const createProduct = async (req, res, next) => {
       cleanFlavour,
       parsedStock,
       parsedOriginalPrice,
+      parsedWeight,
+      cleanWeightUnit,
     ]);
     const created = result.rows[0];
     if (created) {
       created.price = parseFloat(created.price) || 0;
       created.originalPrice = parseFloat(created.originalPrice) || 0;
       created.stock = parseInt(created.stock, 10) ?? 50;
+      created.weight = created.weight !== null && created.weight !== undefined ? parseFloat(created.weight) : null;
+      created.weightUnit = created.weightUnit || 'g';
     }
     res.status(201).json(created);
   } catch (err) {
@@ -135,7 +156,7 @@ const createProduct = async (req, res, next) => {
 const updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, price, description, flavour, stock, originalPrice, isActive } = req.body;
+    const { name, price, description, flavour, stock, originalPrice, isActive, weight, weightUnit } = req.body;
 
     const findResult = await db.query('SELECT * FROM products WHERE id = $1', [id]);
     if (findResult.rows.length === 0) {
@@ -190,6 +211,24 @@ const updateProduct = async (req, res, next) => {
       }
     }
 
+    let newWeight = currentProduct.weight;
+    if (weight !== undefined) {
+      if (weight === null || weight === '' || String(weight).trim() === '') {
+        newWeight = null;
+      } else {
+        const parsed = parseFloat(weight);
+        if (isNaN(parsed) || parsed <= 0) {
+          return res.status(400).json({ error: 'Weight must be a positive number' });
+        }
+        newWeight = parsed;
+      }
+    }
+
+    let newWeightUnit = currentProduct.weight_unit || 'g';
+    if (weightUnit !== undefined) {
+      newWeightUnit = String(weightUnit).toLowerCase() === 'kg' ? 'kg' : 'g';
+    }
+
     const newIsActive = isActive !== undefined ? Boolean(isActive) : (currentProduct.is_active !== false);
 
     const updateQuery = `
@@ -202,8 +241,10 @@ const updateProduct = async (req, res, next) => {
         flavour = $5,
         stock = $6,
         original_price = $7,
-        is_active = $8
-      WHERE id = $9
+        is_active = $8,
+        weight = $9,
+        weight_unit = $10
+      WHERE id = $11
       RETURNING 
         id AS "_id", 
         name, 
@@ -214,6 +255,8 @@ const updateProduct = async (req, res, next) => {
         flavour, 
         stock, 
         original_price AS "originalPrice",
+        weight::float AS weight,
+        COALESCE(weight_unit, 'g') AS "weightUnit",
         is_active AS "isActive",
         created_at AS "createdAt"
     `;
@@ -227,6 +270,8 @@ const updateProduct = async (req, res, next) => {
       newStock,
       newOriginalPrice,
       newIsActive,
+      newWeight,
+      newWeightUnit,
       id,
     ]);
     const updated = result.rows[0];
@@ -234,6 +279,8 @@ const updateProduct = async (req, res, next) => {
       updated.price = parseFloat(updated.price) || 0;
       updated.originalPrice = parseFloat(updated.originalPrice) || 0;
       updated.stock = parseInt(updated.stock, 10) ?? 50;
+      updated.weight = updated.weight !== null && updated.weight !== undefined ? parseFloat(updated.weight) : null;
+      updated.weightUnit = updated.weightUnit || 'g';
     }
     res.json(updated);
   } catch (err) {

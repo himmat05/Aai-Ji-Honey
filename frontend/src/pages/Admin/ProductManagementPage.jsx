@@ -29,6 +29,8 @@ const ProductManagementPage = () => {
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [originalPrice, setOriginalPrice] = useState('');
+  const [weight, setWeight] = useState('');
+  const [weightUnit, setWeightUnit] = useState('g');
   const [stock, setStock] = useState(50);
   const [flavour, setFlavour] = useState('Mustard Blossom');
   const [customFlavour, setCustomFlavour] = useState('');
@@ -64,6 +66,8 @@ const ProductManagementPage = () => {
     setName('');
     setPrice('');
     setOriginalPrice('');
+    setWeight('');
+    setWeightUnit('g');
     setStock(50);
     setFlavour('Mustard Blossom');
     setCustomFlavour('');
@@ -100,6 +104,10 @@ const ProductManagementPage = () => {
       if (originalPrice) {
         formData.append('originalPrice', originalPrice);
       }
+      if (weight !== '' && weight !== null && weight !== undefined) {
+        formData.append('weight', weight);
+        formData.append('weightUnit', weightUnit);
+      }
 
       const resolvedFlavour = flavour === 'Other' ? (customFlavour.trim() || 'Custom Flavour') : flavour;
       formData.append('flavour', resolvedFlavour);
@@ -134,6 +142,8 @@ const ProductManagementPage = () => {
     setName(product.name || '');
     setPrice(product.price || '');
     setOriginalPrice(product.originalPrice || '');
+    setWeight(product.weight !== null && product.weight !== undefined ? product.weight : '');
+    setWeightUnit(product.weightUnit || 'g');
     setStock(product.stock !== undefined ? product.stock : 50);
     
     const existingFlavour = product.flavour || 'Mustard Blossom';
@@ -317,41 +327,80 @@ const ProductManagementPage = () => {
               </div>
             </div>
 
-            {/* Row 3: Warehouse In-Stock Quantity */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-semibold text-amber-900">
-                  Warehouse In-Stock (Units) *
-                </label>
-                <span
-                  className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
-                    stock <= 0
-                      ? 'bg-red-100 text-red-700 border border-red-300'
-                      : stock < 5
-                      ? 'bg-orange-100 text-orange-700 border border-orange-300 animate-pulse'
-                      : 'bg-emerald-100 text-emerald-700 border border-emerald-300'
-                  }`}
-                >
-                  {stock <= 0
-                    ? '● Out of Stock'
-                    : stock < 5
-                    ? `⚠️ Limited Stock (${stock})`
-                    : `● In Stock (${stock})`}
-                </span>
+            {/* Row 3: Product Weight & Warehouse Stock */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Product Net Weight */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-amber-900">
+                    Net Weight / Pack Size
+                  </label>
+                  {weight && (
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                      ⚖️ Preview: {weight}{weightUnit}
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    step="any"
+                    placeholder="e.g., 500 or 1"
+                    value={weight}
+                    onChange={(e) => setWeight(e.target.value)}
+                    className="flex-1 border-2 border-amber-200 p-3 rounded-xl focus:outline-none focus:border-amber-500 transition-colors bg-amber-50/20 text-amber-950 font-bold"
+                  />
+                  <select
+                    value={weightUnit}
+                    onChange={(e) => setWeightUnit(e.target.value)}
+                    className="w-32 border-2 border-amber-200 p-3 rounded-xl focus:outline-none focus:border-amber-500 transition-colors bg-white text-amber-950 font-bold"
+                  >
+                    <option value="g">Gram (g)</option>
+                    <option value="kg">Kg (kg)</option>
+                  </select>
+                </div>
+                <p className="text-xs text-amber-700/80 mt-1">
+                  Shown on product cards (e.g. 500g, 1kg) and used for shop weight filtering.
+                </p>
               </div>
-              <input
-                type="number"
-                min="0"
-                step="1"
-                placeholder="e.g., 50"
-                value={stock}
-                onChange={(e) => setStock(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                required
-                className="w-full border-2 border-amber-200 p-3 rounded-xl focus:outline-none focus:border-amber-500 transition-colors bg-amber-50/20 text-amber-950 font-bold"
-              />
-              <p className="text-xs text-amber-700/80 mt-1">
-                📦 Lower stock limit is 5 (shows ⚠️ Limited Stock in shop). At 0, it shows Out of Stock and blocks orders.
-              </p>
+
+              {/* Warehouse In-Stock Quantity */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-amber-900">
+                    Warehouse In-Stock (Units) *
+                  </label>
+                  <span
+                    className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                      stock <= 0
+                        ? 'bg-red-100 text-red-700 border border-red-300'
+                        : stock < 5
+                        ? 'bg-orange-100 text-orange-700 border border-orange-300 animate-pulse'
+                        : 'bg-emerald-100 text-emerald-700 border border-emerald-300'
+                    }`}
+                  >
+                    {stock <= 0
+                      ? '● Out of Stock'
+                      : stock < 5
+                      ? `⚠️ Limited Stock (${stock})`
+                      : `● In Stock (${stock})`}
+                  </span>
+                </div>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="e.g., 50"
+                  value={stock}
+                  onChange={(e) => setStock(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                  required
+                  className="w-full border-2 border-amber-200 p-3 rounded-xl focus:outline-none focus:border-amber-500 transition-colors bg-amber-50/20 text-amber-950 font-bold"
+                />
+                <p className="text-xs text-amber-700/80 mt-1">
+                  📦 Lower stock limit is 5 (shows ⚠️ Limited Stock in shop). At 0, it blocks orders.
+                </p>
+              </div>
             </div>
 
             {/* Description */}
@@ -459,22 +508,27 @@ const ProductManagementPage = () => {
 
                   <div className="p-5 flex-1 flex flex-col justify-between">
                     <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span
-                          className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                            (prod.stock ?? 50) <= 0
-                              ? 'bg-red-100 text-red-700 border border-red-300'
+                      <div className="flex items-center justify-between mb-1.5 flex-wrap gap-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span
+                            className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                              (prod.stock ?? 50) <= 0
+                                ? 'bg-red-100 text-red-700 border border-red-300'
+                                : (prod.stock ?? 50) < 5
+                                ? 'bg-orange-100 text-orange-700 border border-orange-300 animate-pulse'
+                                : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                            }`}
+                          >
+                            {(prod.stock ?? 50) <= 0
+                              ? '● Out of Stock (0)'
                               : (prod.stock ?? 50) < 5
-                              ? 'bg-orange-100 text-orange-700 border border-orange-300 animate-pulse'
-                              : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                          }`}
-                        >
-                          {(prod.stock ?? 50) <= 0
-                            ? '● Out of Stock (0)'
-                            : (prod.stock ?? 50) < 5
-                            ? `⚠️ Limited Stock (${prod.stock})`
-                            : `● In Stock (${prod.stock})`}
-                        </span>
+                              ? `⚠️ Limited Stock (${prod.stock})`
+                              : `● In Stock (${prod.stock})`}
+                          </span>
+                          <span className="text-[10px] font-bold text-amber-900 bg-amber-100/90 border border-amber-300 px-2 py-0.5 rounded-full">
+                            ⚖️ {prod.weight ? `${prod.weight}${prod.weightUnit || 'g'}` : '500g'}
+                          </span>
+                        </div>
                         {prod.originalPrice > prod.price && (
                           <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                             {Math.round(((prod.originalPrice - prod.price) / prod.originalPrice) * 100)}% OFF

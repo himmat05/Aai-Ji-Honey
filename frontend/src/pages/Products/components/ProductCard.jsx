@@ -22,6 +22,18 @@ const ProductCard = ({ product, onSelect }) => {
   const isOutOfStock = availableStock <= 0 || product.isActive === false;
   const isLowStock = !isOutOfStock && availableStock < 5;
 
+  const displayWeight = (() => {
+    if (product.weight !== null && product.weight !== undefined && String(product.weight).trim() !== '') {
+      return `${product.weight}${product.weightUnit || 'g'}`;
+    }
+    const match = product.name?.match(/(\d+(?:\.\d+)?)\s*(kg|g|gram|gm|kgs)/i);
+    if (match) {
+      const unit = match[2].toLowerCase().startsWith('k') ? 'kg' : 'g';
+      return `${match[1]}${unit}`;
+    }
+    return '500g';
+  })();
+
   const handleProductClick = () => {
     if (isOutOfStock) {
       toast.error('Item out of stock');
@@ -121,8 +133,9 @@ const ProductCard = ({ product, onSelect }) => {
             </span>
           </div>
         )}
-        <span className="absolute bottom-2.5 right-2.5 bg-white/90 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-md border border-amber-200/80 shadow-xs">
-          Glass Jar • 500g
+        <span className="absolute bottom-2.5 right-2.5 bg-white/95 text-amber-950 text-[11px] font-extrabold px-2.5 py-0.5 rounded-md border border-amber-200/90 shadow-xs flex items-center gap-1">
+          <span>⚖️</span>
+          <span>{displayWeight}</span>
         </span>
       </div>
 
