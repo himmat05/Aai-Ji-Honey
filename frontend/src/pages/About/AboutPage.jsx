@@ -25,7 +25,7 @@ const ERAS = [
     title: 'The Scientific Awakening',
     subtitle: 'Doctoral research uncovering the destruction of commercial honey',
     story:
-      'Pursuing his passion for natural sciences, Dr. Sitaram Seervi completed his Ph.D. in Entomology, specializing in the behavioral ecology and nectar-foraging patterns of Indian honeybees (Apis dorsata and Apis florea). His laboratory research revealed a shocking truth: commercial brands heat honey to 75°C and micro-filter it to prevent crystallization, permanently killing live diastase enzymes, destroying pollen, and degrading beneficial bio-flavonoids. Dr. Seervi resolved to build an apiary where science protects nature, never exploits it.',
+      'Dr. Sitaram Seervi completed his Ph.D. in Entomology, specializing in the behavioral ecology and nectar-foraging patterns of honeybees, including the Indian honeybees Apis dorsata and Apis florea , as well as the European honeybee Apis mellifera . During his professional career, he was actively involved in the scientific management of Apis mellifera, pollination ecology, colony health monitoring, bee nutrition, and the identification and management of diseases and pests in apiaries. He also played a key role in training and guiding beekeepers on scientific and sustainable beekeeping practices. Through his dedicated efforts, he contributed significantly to research trials, field-level implementation, and the promotion of sustainable beekeeping.',
     quote: '"Heating honey to make it look clear is like boiling fresh fruit juice until every vitamin is destroyed. Real honey must remain alive."',
     author: '— Dr. Sitaram Seervi (Ph.D. Entomology, Founder)',
     image: '/honey_founder_on work.jpeg',
@@ -340,11 +340,10 @@ const AboutPage = () => {
               <button
                 key={era.id}
                 onClick={() => setSelectedEraIndex(idx)}
-                className={`px-4 sm:px-6 py-3 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center gap-2 whitespace-nowrap shadow-sm cursor-pointer ${
-                  selectedEraIndex === idx
-                    ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg scale-105 ring-2 ring-amber-400/50'
-                    : 'honey-glass text-amber-950 hover:bg-amber-100 border border-amber-200'
-                }`}
+                className={`px-4 sm:px-6 py-3 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center gap-2 whitespace-nowrap shadow-sm cursor-pointer ${selectedEraIndex === idx
+                  ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg scale-105 ring-2 ring-amber-400/50'
+                  : 'honey-glass text-amber-950 hover:bg-amber-100 border border-amber-200'
+                  }`}
               >
                 <span className="text-base sm:text-lg">
                   {idx === 0 ? '👵' : idx === 1 ? '🔬' : idx === 2 ? '🐝' : '🍯'}
@@ -371,7 +370,7 @@ const AboutPage = () => {
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-amber-950/80 via-transparent to-transparent" />
-                  
+
                   {/* Floating Stat Badge */}
                   <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md rounded-2xl p-3.5 border border-amber-300/80 shadow-lg flex items-center justify-between">
                     <div>
@@ -483,11 +482,10 @@ const AboutPage = () => {
                   <button
                     key={pillar.id}
                     onClick={() => setActiveScienceId(pillar.id)}
-                    className={`w-full text-left p-5 rounded-2xl transition-all duration-300 border flex items-start gap-4 shadow-sm cursor-pointer ${
-                      isActive
-                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xl scale-[1.02] border-amber-600'
-                        : 'honey-glass hover:bg-amber-100/70 border-amber-200/80 text-amber-950'
-                    }`}
+                    className={`w-full text-left p-5 rounded-2xl transition-all duration-300 border flex items-start gap-4 shadow-sm cursor-pointer ${isActive
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xl scale-[1.02] border-amber-600'
+                      : 'honey-glass hover:bg-amber-100/70 border-amber-200/80 text-amber-950'
+                      }`}
                   >
                     <span className="text-3xl p-2.5 rounded-2xl bg-white/20 shadow-inner flex-shrink-0">
                       {pillar.icon}
@@ -631,11 +629,10 @@ const AboutPage = () => {
                 <div
                   key={flora.id}
                   onClick={() => setSelectedFloraId(flora.id)}
-                  className={`honey-glass rounded-3xl p-6 border transition-all duration-300 cursor-pointer shadow-lg flex flex-col justify-between ${
-                    isSelected
-                      ? 'ring-4 ring-amber-400 border-amber-500 bg-amber-50/90 shadow-2xl scale-[1.03]'
-                      : 'border-amber-200/80 hover:border-amber-400 hover:shadow-xl'
-                  }`}
+                  className={`honey-glass rounded-3xl p-6 border transition-all duration-300 cursor-pointer shadow-lg flex flex-col justify-between ${isSelected
+                    ? 'ring-4 ring-amber-400 border-amber-500 bg-amber-50/90 shadow-2xl scale-[1.03]'
+                    : 'border-amber-200/80 hover:border-amber-400 hover:shadow-xl'
+                    }`}
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
