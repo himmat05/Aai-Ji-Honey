@@ -159,10 +159,10 @@ const ContactPage = () => {
             <h3 className="text-base font-bold text-amber-950 font-heading">Helpline / WhatsApp</h3>
             <p className="text-xs text-amber-700 mt-1 mb-2 font-medium">Direct Apiary Assistance</p>
             <a
-              href="tel:+919876543210"
+              href="tel:+919610047740"
               className="text-sm font-black text-amber-900 hover:text-amber-600 transition-colors"
             >
-              +91 98765 43210
+              +91 96100 47740
             </a>
           </div>
 
@@ -316,7 +316,7 @@ const ContactPage = () => {
                   </label>
                   <input
                     type="tel"
-                    placeholder="+91 9876543210"
+                    placeholder="+91 96100 47740"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     className="w-full px-4 py-2.5 rounded-xl border border-amber-300 focus:ring-2 focus:ring-amber-500 focus:outline-none text-sm bg-amber-50/30"

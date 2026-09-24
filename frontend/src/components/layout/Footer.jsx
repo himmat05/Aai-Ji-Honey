@@ -104,7 +104,9 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-2">
                 <span>📞</span>
-                <span>Direct Hive Helpline: +91 98765 43210</span>
+                <a href="tel:+919610047740" className="hover:text-amber-300 transition-colors">
+                  Direct Hive Helpline: +91 96100 47740
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <span>🚚</span>
