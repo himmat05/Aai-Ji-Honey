@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { toast } from 'react-toastify';
 import { customerAuthApi } from '../api/customerAuthApi';
 
 const AuthContext = createContext(null);
@@ -51,9 +50,6 @@ export const AuthProvider = ({ children }) => {
     const now = Date.now();
     if (lastActive && now - lastActive > INACTIVITY_TIMEOUT_MS) {
       logout();
-      toast.warn('⚠️ Your session expired due to 1 hour of inactivity. Please log in again.', {
-        toastId: 'session-timeout',
-      });
       return;
     }
 
@@ -80,9 +76,6 @@ export const AuthProvider = ({ children }) => {
       const recorded = parseInt(localStorage.getItem('last_activity_time'), 10) || lastRecorded;
       if (Date.now() - recorded > INACTIVITY_TIMEOUT_MS) {
         logout();
-        toast.warn('⚠️ Your session expired due to 1 hour of inactivity. Please log in again.', {
-          toastId: 'session-timeout',
-        });
         const protectedPaths = ['/orderDashboard', '/orders', '/profile', '/admin'];
         if (protectedPaths.some((p) => window.location.pathname.startsWith(p))) {
           window.location.href = '/login';
