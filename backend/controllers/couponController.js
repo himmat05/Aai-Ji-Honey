@@ -128,10 +128,59 @@ const toggleCouponStatus = async (req, res) => {
   }
 };
 
+/**
+ * POST /api/coupons/validate
+ * Public validation for promo codes against an order subtotal
+ */
+const validateCoupon = async (req, res) => {
+  try {
+    const { code, subtotal } = req.body;
+    if (!code || typeof code !== 'string' || !code.trim()) {
+      return res.status(400).json({ valid: false, message: 'Please enter a promo code' });
+    }
+
+    const coupon = await couponService.getCouponByCode(code.trim());
+    if (!coupon) {
+      return res.status(200).json({ valid: false, message: 'Invalid or expired promo code.' });
+    }
+
+    const orderSubtotal = Math.max(0, parseFloat(subtotal) || 0);
+    const minOrder = parseFloat(coupon.min_order_amount) || 0;
+    if (orderSubtotal < minOrder) {
+      return res.status(200).json({
+        valid: false,
+        message: `Promo code requires a minimum order value of ₹${minOrder}.`,
+      });
+    }
+
+    const discountPct = parseInt(coupon.discount_percentage, 10);
+    const maxDisc = coupon.max_discount ? parseFloat(coupon.max_discount) : null;
+    const calculated = Math.round((orderSubtotal * discountPct) / 100);
+    const discount = maxDisc ? Math.min(calculated, maxDisc) : calculated;
+
+    return res.json({
+      valid: true,
+      coupon: {
+        id: coupon.id,
+        code: coupon.code,
+        discountPercentage: discountPct,
+        minOrderAmount: minOrder,
+        maxDiscount: maxDisc,
+        description: coupon.description || `${discountPct}% OFF`,
+        discount,
+      },
+    });
+  } catch (err) {
+    console.error('Error validating coupon:', err);
+    res.status(500).json({ valid: false, message: 'Failed to validate promo code' });
+  }
+};
+
 module.exports = {
   getPublicCoupons,
   getAdminCoupons,
   createCoupon,
   deleteCoupon,
   toggleCouponStatus,
+  validateCoupon,
 };

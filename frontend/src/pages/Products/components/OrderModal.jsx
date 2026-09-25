@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { paymentApi } from '../../../api/paymentApi';
+import couponApi from '../../../api/couponApi';
 import useAuth from '../../../hooks/useAuth';
 import useCart from '../../../hooks/useCart';
 import AddressInputFields from '../../../components/common/AddressInputFields';
@@ -26,19 +27,114 @@ const OrderModal = ({ product = null, initialQuantity = 1, isCartCheckout = fals
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Buy Now Promo Code states
+  const [inputCoupon, setInputCoupon] = useState('');
+  const [buyNowCoupon, setBuyNowCoupon] = useState(null);
+  const [couponError, setCouponError] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [loadingCoupons, setLoadingCoupons] = useState(true);
+
+  // Fetch active public coupons when modal opens
+  useEffect(() => {
+    let isMounted = true;
+    const fetchCoupons = async () => {
+      try {
+        setLoadingCoupons(true);
+        const data = await couponApi.getPublicCoupons();
+        if (isMounted && data?.coupons) {
+          setAvailableCoupons(data.coupons);
+        }
+      } catch (err) {
+        console.error('Error fetching public coupons in OrderModal:', err);
+      } finally {
+        if (isMounted) setLoadingCoupons(false);
+      }
+    };
+    fetchCoupons();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Price calculations
   const isBuyNow = !isCartCheckout && activeProduct;
-  const singleItemTotal = isBuyNow ? activeProduct.price * formData.quantity : 0;
+  const singleItemSubtotal = isBuyNow ? activeProduct.price * formData.quantity : 0;
   const singleItemOriginal = isBuyNow ? (activeProduct.originalPrice || Math.round(activeProduct.price * 1.25)) * formData.quantity : 0;
-  const singleItemShipping = singleItemTotal >= 999 ? 0 : 50;
-  const singleItemTax = Math.round(singleItemTotal * 0.05);
-  const singleGrandTotal = singleItemTotal + singleItemShipping + singleItemTax;
+  const singleItemCouponDiscount = isBuyNow ? (buyNowCoupon?.discount || 0) : 0;
+  const singleTaxable = Math.max(0, singleItemSubtotal - singleItemCouponDiscount);
+  const singleItemShipping = (singleItemSubtotal === 0 || singleItemSubtotal >= 999) ? 0 : 50;
+  const singleItemTax = Math.round(singleTaxable * 0.05);
+  const singleGrandTotal = Math.max(0, singleTaxable + singleItemShipping + singleItemTax);
 
   const totalPayable = isCartCheckout ? cart.total : singleGrandTotal;
-  const totalSubtotal = isCartCheckout ? cart.subtotal : singleItemTotal;
+  const totalSubtotal = isCartCheckout ? cart.subtotal : singleItemSubtotal;
   const totalShipping = isCartCheckout ? cart.shipping : singleItemShipping;
   const totalTax = isCartCheckout ? cart.tax : singleItemTax;
-  const appliedCouponDiscount = isCartCheckout ? (cart.couponDiscount || 0) : 0;
+  const appliedCouponDiscount = isCartCheckout ? (cart.couponDiscount || 0) : singleItemCouponDiscount;
+  const activeAppliedCoupon = isCartCheckout ? cart.appliedCoupon : buyNowCoupon;
+
+  // Re-evaluate applied Buy Now coupon when quantity changes
+  useEffect(() => {
+    if (!isCartCheckout && buyNowCoupon && activeProduct) {
+      const currentSubtotal = activeProduct.price * formData.quantity;
+      if (buyNowCoupon.minOrderAmount && currentSubtotal < buyNowCoupon.minOrderAmount) {
+        toast.warn(`Promo code ${buyNowCoupon.code} requires a minimum order of ₹${buyNowCoupon.minOrderAmount}. Coupon removed.`);
+        setBuyNowCoupon(null);
+        setCouponError(`Promo code ${buyNowCoupon.code} requires min order of ₹${buyNowCoupon.minOrderAmount}.`);
+      } else {
+        const calculated = Math.round((currentSubtotal * buyNowCoupon.discountPercentage) / 100);
+        const newDiscount = buyNowCoupon.maxDiscount
+          ? Math.min(calculated, buyNowCoupon.maxDiscount)
+          : calculated;
+        if (newDiscount !== buyNowCoupon.discount) {
+          setBuyNowCoupon((prev) => (prev ? { ...prev, discount: newDiscount } : null));
+        }
+      }
+    }
+  }, [formData.quantity, activeProduct, isCartCheckout, buyNowCoupon?.code]);
+
+  const handleApplyBuyNowCoupon = async (codeOverride) => {
+    const targetCode = String(codeOverride || inputCoupon).trim().toUpperCase();
+    if (!targetCode) {
+      toast.warn('Please enter a promo code.');
+      return;
+    }
+
+    setCouponLoading(true);
+    setCouponError(null);
+
+    try {
+      const res = await couponApi.validateCoupon({
+        code: targetCode,
+        subtotal: singleItemSubtotal,
+      });
+
+      if (res?.valid && res.coupon) {
+        setBuyNowCoupon(res.coupon);
+        setInputCoupon('');
+        setCouponError(null);
+        toast.success(`🎉 Promo code ${res.coupon.code} applied! Saved ₹${res.coupon.discount}`);
+      } else {
+        const msg = res?.message || 'Invalid or expired promo code.';
+        setCouponError(msg);
+        toast.error(msg);
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to validate promo code.';
+      setCouponError(msg);
+      toast.error(msg);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveBuyNowCoupon = () => {
+    setBuyNowCoupon(null);
+    setInputCoupon('');
+    setCouponError(null);
+    toast.info('Promo code removed');
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -109,6 +205,7 @@ const OrderModal = ({ product = null, initialQuantity = 1, isCartCheckout = fals
         orderPayload = {
           productId: activeProduct._id || activeProduct.id,
           quantity: parseInt(formData.quantity, 10) || 1,
+          coupon: buyNowCoupon?.code || null,
         };
       }
 
@@ -146,6 +243,8 @@ const OrderModal = ({ product = null, initialQuantity = 1, isCartCheckout = fals
                 quantity: isCartCheckout ? cart.itemCount : parseInt(formData.quantity, 10),
                 userId: user?.id || null,
                 isBuyNow: !isCartCheckout,
+                coupon: activeAppliedCoupon?.code || null,
+                couponDiscount: appliedCouponDiscount || 0,
                 items: isCartCheckout
                   ? cartItems.map((i) => ({
                       productId: i.productId,
@@ -164,7 +263,7 @@ const OrderModal = ({ product = null, initialQuantity = 1, isCartCheckout = fals
                         name: activeProduct.name,
                         price: activeProduct.price,
                         quantity: parseInt(formData.quantity, 10),
-                        totalprice: singleItemTotal,
+                        totalprice: singleItemSubtotal,
                         flavour: activeProduct.flavour,
                         image: activeProduct.image,
                       },
@@ -182,6 +281,8 @@ const OrderModal = ({ product = null, initialQuantity = 1, isCartCheckout = fals
                       totalprice: totalPayable,
                       image: activeProduct.image,
                       flavour: activeProduct.flavour,
+                      coupon: buyNowCoupon?.code || null,
+                      couponDiscount: buyNowCoupon?.discount || 0,
                     },
               },
             };
@@ -416,13 +517,116 @@ const OrderModal = ({ product = null, initialQuantity = 1, isCartCheckout = fals
             </div>
           )}
 
+          {/* Promo Code Section (Buy Now Mode) */}
+          {!isCartCheckout && (
+            <div className="bg-amber-50/70 p-4 rounded-2xl border border-amber-200/90 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-amber-950 uppercase tracking-wider">
+                  🏷️ Apply Promo Code
+                </label>
+                {buyNowCoupon && (
+                  <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
+                    Active: {buyNowCoupon.code}
+                  </span>
+                )}
+              </div>
+
+              {!buyNowCoupon ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={inputCoupon}
+                    onChange={(e) => setInputCoupon(e.target.value.toUpperCase())}
+                    placeholder="Enter Promo Code"
+                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-white border border-amber-300 text-amber-950 font-bold text-xs uppercase placeholder:normal-case placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleApplyBuyNowCoupon()}
+                    disabled={!inputCoupon.trim() || couponLoading}
+                    className="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-40 text-white font-black text-xs uppercase rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    {couponLoading ? (
+                      <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    ) : null}
+                    <span>{couponLoading ? 'Checking...' : 'Apply'}</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-700 font-black">✓ {buyNowCoupon.code}</span>
+                    <span className="text-emerald-800 font-semibold text-[11px]">
+                      ({buyNowCoupon.description || `${buyNowCoupon.discountPercentage}% OFF`})
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveBuyNowCoupon}
+                    className="text-red-500 hover:text-red-700 font-bold text-xs underline cursor-pointer"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+
+              {couponError && (
+                <p className="text-xs text-red-600 font-semibold flex items-center gap-1">
+                  <span>⚠️</span>
+                  <span>{couponError}</span>
+                </p>
+              )}
+
+              {/* Available Coupons list or No Promo Code Available */}
+              {!buyNowCoupon && (
+                <div className="pt-1">
+                  {loadingCoupons ? (
+                    <div className="text-[11px] text-amber-800/70 flex items-center gap-1.5 font-medium py-0.5">
+                      <span className="w-3 h-3 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></span>
+                      <span>Loading available promo codes...</span>
+                    </div>
+                  ) : availableCoupons.length > 0 ? (
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-amber-900/80">Available Vouchers:</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {availableCoupons.map((c) => (
+                          <button
+                            key={c.id || c.code}
+                            type="button"
+                            onClick={() => {
+                              setInputCoupon(c.code);
+                              handleApplyBuyNowCoupon(c.code);
+                            }}
+                            className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-950 transition-all flex items-center gap-1 cursor-pointer"
+                            title={c.description || `${c.discount_percentage}% OFF`}
+                          >
+                            <span>🏷️</span>
+                            <span>{c.code}</span>
+                            <span className="text-emerald-800 font-extrabold bg-emerald-100 px-1 py-0.2 rounded text-[9px]">
+                              {c.discount_percentage}% OFF
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-2.5 rounded-xl bg-amber-100/40 border border-amber-200 text-xs text-amber-900/80 flex items-center gap-2 font-medium">
+                      <span>🏷️</span>
+                      <span>No promo code available at the moment</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Price Summary Breakdown */}
           <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl p-4 border-2 border-amber-200 space-y-2 text-sm text-gray-700">
             <p className="font-bold text-amber-900 mb-2 flex items-center justify-between">
               <span>💰 Price Summary</span>
-              {isCartCheckout && cart.appliedCoupon && (
+              {activeAppliedCoupon && (
                 <span className="text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-                  🏷️ {cart.appliedCoupon.code} Applied
+                  🏷️ {activeAppliedCoupon.code} Applied
                 </span>
               )}
             </p>
@@ -430,10 +634,23 @@ const OrderModal = ({ product = null, initialQuantity = 1, isCartCheckout = fals
               <span>Subtotal:</span>
               <span className="font-bold text-amber-950">₹{totalSubtotal}</span>
             </div>
-            {appliedCouponDiscount > 0 && (
-              <div className="flex justify-between text-emerald-700 font-bold">
-                <span>Promo Discount ({cart.appliedCoupon?.code}):</span>
-                <span>-₹{appliedCouponDiscount}</span>
+            {appliedCouponDiscount > 0 && activeAppliedCoupon && (
+              <div className="flex justify-between items-center text-xs bg-emerald-50 text-emerald-800 p-2.5 rounded-xl border border-emerald-200">
+                <div className="flex items-center gap-1.5">
+                  <span>🏷️ Promo Discount ({activeAppliedCoupon.code}):</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-black text-sm">-₹{appliedCouponDiscount}</span>
+                  {!isCartCheckout && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveBuyNowCoupon}
+                      className="text-red-500 hover:text-red-700 text-xs font-bold underline cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
               </div>
             )}
             <div className="flex justify-between text-xs text-gray-600">

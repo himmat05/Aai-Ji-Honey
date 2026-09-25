@@ -23,12 +23,17 @@ const createOrder = async (req, res, next) => {
         summary: payment.hydratedSummary,
       });
     } else if (productId) {
-      payment = await paymentService.createRazorpayOrder(productId, quantity || 1);
+      const cleanQty = Math.max(1, parseInt(quantity, 10) || 1);
+      payment = await paymentService.createCartRazorpayOrder(
+        [{ productId, quantity: cleanQty }],
+        coupon
+      );
       return res.json({
         order: payment.order,
         keyId: process.env.RAZORPAY_KEY_ID,
-        product: payment.product,
-        quantity: payment.quantity,
+        summary: payment.hydratedSummary,
+        product: payment.hydratedSummary?.items?.[0] || null,
+        quantity: cleanQty,
       });
     } else {
       return res.status(400).json({ error: 'Valid product ID or cart items required to initiate secure checkout' });

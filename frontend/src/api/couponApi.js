@@ -10,6 +10,14 @@ export const couponApi = {
   },
 
   /**
+   * Validate a coupon against a checkout subtotal
+   */
+  validateCoupon: async ({ code, subtotal }) => {
+    const response = await apiClient.post('/api/coupons/validate', { code, subtotal });
+    return response.data;
+  },
+
+  /**
    * Get all coupons for store Admin (active & inactive)
    */
   getAdminCoupons: async () => {

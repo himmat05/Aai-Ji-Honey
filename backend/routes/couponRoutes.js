@@ -6,6 +6,7 @@ const { requireAdmin } = require('../middleware/roleMiddleware');
 
 // Public route: active promo codes for shoppers
 router.get('/', couponController.getPublicCoupons);
+router.post('/validate', couponController.validateCoupon);
 
 // Admin routes: strictly protected for store administrators / owner
 router.get('/admin', authenticateToken, requireAdmin, couponController.getAdminCoupons);
