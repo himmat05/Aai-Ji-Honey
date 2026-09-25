@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
+import useCart from '../../hooks/useCart';
 import AuthModal from '../common/AuthModal';
 import { messageApi } from '../../api/messageApi';
 import CartBadge from '../cart/CartBadge';
@@ -13,6 +14,7 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState({ adminUnread: 0, userUnread: 0 });
   const { isAuthenticated, isOwner, isAdmin, isCustomer, user, logout } = useAuth();
+  const { itemCount, setIsDrawerOpen } = useCart();
   const isUserAdmin = isOwner || isAdmin || user?.role === 'admin' || user?.role === 'owner';
 
   // Fetch live unread message counts for badges
@@ -82,24 +84,24 @@ const Navbar = () => {
           <Link
             to="/"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="flex items-center gap-3 group no-underline"
+            className="flex items-center gap-2 sm:gap-3 group no-underline shrink-0 min-w-0"
           >
-            <div className="relative">
+            <div className="relative shrink-0">
               <div className="absolute -inset-1 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full blur opacity-40 group-hover:opacity-75 transition duration-300"></div>
               <img
-                className="relative w-12 h-12 md:w-14 md:h-14 p-1.5 rounded-full bg-white shadow-md border border-amber-200 group-hover:rotate-6 group-hover:scale-105 transition-all duration-300"
+                className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 p-1 sm:p-1.5 rounded-full bg-white shadow-md border border-amber-200 group-hover:rotate-6 group-hover:scale-105 transition-all duration-300"
                 src="/favicon.ico"
                 alt="Aai Ji Honey Logo"
               />
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xl md:text-2xl font-black tracking-tight text-amber-950 font-heading">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1 sm:gap-1.5 whitespace-nowrap">
+                <span className="text-xl sm:text-2xl font-black tracking-tight text-amber-950 font-heading whitespace-nowrap">
                   Aai Ji <span className="honey-gradient-text">Honey</span>
                 </span>
-                <span className="text-sm">✨</span>
+                <span className="text-xs sm:text-sm">✨</span>
               </div>
-              <p className="text-[11px] font-semibold text-amber-700 tracking-wider uppercase hidden sm:block">
+              <p className="text-[11px] font-semibold text-amber-700 tracking-wider uppercase hidden sm:block whitespace-nowrap">
                 100% Pure • Rajasthan Apiaries
               </p>
             </div>
@@ -188,20 +190,21 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile Cart & Menu Button */}
-          <div className="flex items-center gap-2 lg:hidden">
-            <CartBadge isMobile={true} />
-            {!isAuthenticated && (
+          {/* Mobile Auth/Cart & Menu Button */}
+          <div className="flex items-center gap-2 lg:hidden shrink-0">
+            {isAuthenticated ? (
+              <CartBadge isMobile={true} />
+            ) : (
               <Link
                 to="/login"
-                className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full shadow no-underline"
+                className="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold rounded-full shadow-sm hover:shadow transition-all whitespace-nowrap shrink-0 no-underline inline-flex items-center justify-center"
               >
                 Sign In
               </Link>
             )}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-amber-100/80 border border-amber-300 text-amber-950 text-xl hover:bg-amber-200 transition-colors"
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-amber-100/80 border border-amber-300 text-amber-950 text-xl hover:bg-amber-200 transition-colors shrink-0"
               aria-label="Toggle navigation menu"
             >
               {isMenuOpen ? '✕' : '☰'}
@@ -238,6 +241,27 @@ const Navbar = () => {
 
           {isAuthenticated ? (
             <div className="pt-3 border-t border-amber-200 space-y-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  setIsDrawerOpen(true);
+                }}
+                className="w-full flex items-center justify-between px-4 py-2.5 bg-amber-50 hover:bg-amber-100/80 border border-amber-200 rounded-xl text-amber-950 font-bold text-sm shadow-xs transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  <span>🛒</span>
+                  <span>Shopping Cart</span>
+                </span>
+                {itemCount > 0 ? (
+                  <span className="bg-gradient-to-r from-amber-600 to-orange-600 text-white text-xs font-black px-2 py-0.5 rounded-full shadow-xs">
+                    {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                  </span>
+                ) : (
+                  <span className="text-xs text-amber-700 font-medium">Empty</span>
+                )}
+              </button>
+
               {isUserAdmin ? (
                 <Link
                   to={unreadCounts.adminUnread > 0 ? "/orderDashboard?tab=messages&filter=unread" : "/orderDashboard"}
