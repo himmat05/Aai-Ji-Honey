@@ -67,6 +67,7 @@ const Navbar = () => {
     { name: 'Our Honey', path: '/products', icon: '🛍️' },
     { name: 'Our Story', path: '/about', icon: '🐝' },
     { name: 'Contact & Apiary', path: '/contact', icon: '📍' },
+    { name: 'Careers', path: '/careers', icon: '💼' },
   ];
 
   return (

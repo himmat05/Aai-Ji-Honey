@@ -133,15 +133,6 @@ const INITIAL_TEAM_MEMBERS = [
     order_num: 3,
   },
   {
-    name: 'Mr. Bhanwar Lal Bhayal',
-    role: 'General Manager (Operations)',
-    badge: 'SUPPLY CHAIN',
-    image: '/Aai-ji-Honey-General-manager.jpg',
-    expertise: 'M.Com, Cold Supply Chain & Hive Quality Logistics',
-    email: 'pipliahiran@gmail.com',
-    order_num: 4,
-  },
-  {
     name: 'Mr. Sobha Lal',
     role: 'Head of Accounts & Finance',
     badge: 'FINANCE & AUDIT',
@@ -198,20 +189,20 @@ const seedInitialData = async (client) => {
 
     // 1. Seed Gallery Items (if needed)
     if (gCheck.rows[0].count < 14) {
-    for (const item of INITIAL_GALLERY_ITEMS) {
-      const checkRes = await client.query('SELECT id FROM gallery_items WHERE title = $1 LIMIT 1', [item.title]);
-      if (checkRes.rows.length === 0) {
-        console.log(`🌱 Seeding gallery item: "${item.title}"`);
-        const id = crypto.randomBytes(12).toString('hex');
-        const resolvedUrl = await uploadToCloudinaryIfPossible(item.src);
-        await client.query(
-          `INSERT INTO gallery_items (id, src, title, tag, description, order_num)
+      for (const item of INITIAL_GALLERY_ITEMS) {
+        const checkRes = await client.query('SELECT id FROM gallery_items WHERE title = $1 LIMIT 1', [item.title]);
+        if (checkRes.rows.length === 0) {
+          console.log(`🌱 Seeding gallery item: "${item.title}"`);
+          const id = crypto.randomBytes(12).toString('hex');
+          const resolvedUrl = await uploadToCloudinaryIfPossible(item.src);
+          await client.query(
+            `INSERT INTO gallery_items (id, src, title, tag, description, order_num)
            VALUES ($1, $2, $3, $4, $5, $6)`,
-          [id, resolvedUrl, item.title, item.tag, item.description, item.order_num]
-        );
+            [id, resolvedUrl, item.title, item.tag, item.description, item.order_num]
+          );
+        }
       }
     }
-  }
 
     // 2. Seed Team Members (check per member so none are missed)
     for (const member of INITIAL_TEAM_MEMBERS) {
@@ -263,6 +254,78 @@ const seedInitialData = async (client) => {
           [id, coup.code, coup.discount_percentage, coup.min_order_amount, coup.max_discount, coup.description]
         );
         console.log(`🌱 Seeded default coupon: ${coup.code} (${coup.discount_percentage}%)`);
+      }
+    }
+
+    // 4. Seed Initial Job Openings (if table is empty)
+    const jCheck = await client.query('SELECT COUNT(*)::int AS count FROM job_openings');
+    if (jCheck.rows[0].count === 0) {
+      const defaultJobs = [
+        {
+          title: 'Apiculture Field Specialist & Colony Inspector',
+          department: 'Apiculture & Field Operations',
+          location: 'Pali / Mewar Apiary Division, Rajasthan',
+          employment_type: 'Full-Time',
+          experience_required: '1-3 Years',
+          salary_range: '₹25,000 - ₹38,000 / month',
+          description: 'Work directly with Dr. Sitaram Seervi to oversee colony health across Rajasthan desert flora, conduct disease surveillance, and assist with seasonal migrations and ethical queen-rearing.',
+          requirements: 'B.Sc. in Agriculture, Zoology, Entomology, or hands-on experience in beekeeping. Passion for bee welfare, willingness to travel across Marwar/Mewar field stations, valid two-wheeler license.',
+          order_num: 1,
+        },
+        {
+          title: 'Honey Quality & NMR Testing Lab Analyst',
+          department: 'Research & Quality Assurance',
+          location: 'Central Testing Hub, Udaipur, Rajasthan',
+          employment_type: 'Full-Time',
+          experience_required: '1-2 Years',
+          salary_range: '₹28,000 - ₹42,000 / month',
+          description: 'Perform rigorous moisture analysis, pollen density counts, and HMF/diastase enzyme testing to ensure every single batch meets NMR-grade pure honey standards without any adulteration.',
+          requirements: 'B.Sc. / M.Sc. in Food Technology, Biochemistry, or Chemistry. Familiarity with refractometers, spectrophotometers, and FSSAI honey testing protocols. High analytical accuracy.',
+          order_num: 2,
+        },
+        {
+          title: 'E-Commerce Logistics & Cold-Chain Executive',
+          department: 'Supply Chain & Operations',
+          location: 'Udaipur Fulfillment Center, Rajasthan',
+          employment_type: 'Full-Time',
+          experience_required: '0-2 Years',
+          salary_range: '₹20,000 - ₹30,000 / month',
+          description: 'Coordinate delicate UV-glass jar packaging, cold storage temperature maintenance, inventory reconciliation, and courier dispatch partner management across nationwide delivery routes.',
+          requirements: 'Graduate in any discipline. Experience with e-commerce shipping platforms (Shiprocket, Bluedart, Delhivery), warehouse stock auditing, and meticulous fragile packaging standards.',
+          order_num: 3,
+        },
+        {
+          title: 'Brand Storyteller & Apiculture Content Creator',
+          department: 'Marketing & Outreach',
+          location: 'Hybrid / Rajasthan (Udaipur or Jodhpur)',
+          employment_type: 'Full-Time / Part-Time',
+          experience_required: '1+ Years',
+          salary_range: '₹22,000 - ₹35,000 / month',
+          description: 'Capture real hive harvesting sessions, create informative reels on Ayurvedic honey benefits, and document our tribal farmer empowerment initiatives across Instagram and YouTube.',
+          requirements: 'Demonstrated portfolio in short-form video creation (Reels, Shorts), mobile videography, basic Hindi/English copywriting. Genuine enthusiasm for rural heritage and organic food.',
+          order_num: 4,
+        },
+      ];
+
+      for (const job of defaultJobs) {
+        const id = crypto.randomBytes(12).toString('hex');
+        await client.query(
+          `INSERT INTO job_openings (id, title, department, location, employment_type, experience_required, salary_range, description, requirements, order_num, is_active)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, TRUE)`,
+          [
+            id,
+            job.title,
+            job.department,
+            job.location,
+            job.employment_type,
+            job.experience_required,
+            job.salary_range,
+            job.description,
+            job.requirements,
+            job.order_num,
+          ]
+        );
+        console.log(`🌱 Seeded default career opening: "${job.title}"`);
       }
     }
   } catch (err) {

@@ -17,6 +17,10 @@ dist
 dist-ssr
 *.local
 
+# Uploaded candidate resumes (privacy protection)
+backend/uploads/resumes/*
+!backend/uploads/resumes/.gitkeep
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

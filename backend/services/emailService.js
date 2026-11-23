@@ -149,7 +149,82 @@ const sendMessageReplyEmail = async ({
   }
 };
 
+/**
+ * Send acknowledgment email to job applicant
+ * @param {Object} params - { toEmail, applicantName, jobTitle, trackingId }
+ */
+const sendCareerApplicationEmail = async ({ toEmail, applicantName, jobTitle, trackingId }) => {
+  try {
+    const transporter = getTransporter();
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fefce8; margin: 0; padding: 20px; color: #1c1917; }
+          .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; border: 1px solid #fde68a; box-shadow: 0 10px 25px rgba(217, 119, 6, 0.1); }
+          .header { background: linear-gradient(135deg, #d97706, #b45309); padding: 30px 25px; text-align: center; color: white; }
+          .header h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+          .content { padding: 30px 25px; line-height: 1.6; }
+          .badge { display: inline-block; background: #fef3c7; color: #92400e; font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 50px; border: 1px solid #fcd34d; margin-bottom: 15px; }
+          .tracking-box { background: #fffbeb; border: 1px dashed #f59e0b; border-radius: 12px; padding: 15px; margin: 20px 0; text-align: center; }
+          .footer { background: #451a03; color: #fde68a; text-align: center; padding: 20px; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🐝 Aai Ji Honey — Recruitment Team</h1>
+          </div>
+          <div class="content">
+            <div class="badge">Application Received</div>
+            <p>Dear <strong>${applicantName || 'Applicant'}</strong>,</p>
+            <p>
+              Thank you for applying to join the hive at <strong>Aai Ji Honey</strong> for the position of:
+              <br/>
+              <strong style="color: #b45309; font-size: 16px;">${jobTitle || 'Apiculture Team Member'}</strong>.
+            </p>
+            <div class="tracking-box">
+              <span style="font-size: 12px; color: #78350f; text-transform: uppercase; font-weight: 700;">Application Tracking Reference</span>
+              <div style="font-size: 18px; font-weight: 900; color: #b45309; letter-spacing: 1px; margin-top: 4px;">${trackingId}</div>
+            </div>
+            <p>
+              Our HR Director, <strong>Dr. Neha Tomar</strong>, and the apiculture operations leadership team carefully review every resume. If your profile matches our seasonal requirements, our team will connect with you via mobile or email for an introductory discussion.
+            </p>
+            <p style="color: #78350f; font-size: 13px;">
+              🌿 <em>"Working with bees is working with nature's purest vitality. We appreciate your interest in our sustainable apiculture mission."</em>
+            </p>
+          </div>
+          <div class="footer">
+            <p style="margin: 0 0 5px 0;">Aai Ji Honey — Traditional Rajasthan Apiaries</p>
+            <p style="margin: 0;">Mewar Apiary Division, Rajasthan, India • aaijihoney24@gmail.com</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const mailOptions = {
+      from: `Aai Ji Honey Careers <${process.env.EMAIL_FROM}>`,
+      to: toEmail,
+      subject: `🐝 Application Received: ${jobTitle} (${trackingId}) — Aai Ji Honey`,
+      text: `Hello ${applicantName},\n\nThank you for applying to Aai Ji Honey for the position of "${jobTitle}".\n\nYour Application Tracking ID is: ${trackingId}\n\nOur HR and Apiculture leadership team will review your application and contact you if shortlisted.\n\nWarm regards,\nDr. Neha Tomar & Dr. Sitaram Seervi\nAai Ji Honey Team`,
+      html: htmlContent,
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`📧 Career confirmation email sent successfully to ${toEmail}`);
+    return true;
+  } catch (err) {
+    console.warn('⚠️ Could not send career acknowledgment email:', err.message);
+    return false;
+  }
+};
+
 module.exports = {
   sendLoginEmail,
   sendMessageReplyEmail,
+  sendCareerApplicationEmail,
 };

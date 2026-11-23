@@ -11,6 +11,7 @@ const ContactPage = lazy(() => import('../pages/Contact/ContactPage'));
 const ProductsPage = lazy(() => import('../pages/Products/ProductsPage'));
 const CartPage = lazy(() => import('../pages/Cart/CartPage'));
 const LoginPage = lazy(() => import('../pages/Auth/LoginPage'));
+const CareersPage = lazy(() => import('../pages/Careers/CareersPage'));
 const OrderDashboardPage = lazy(() => import('../pages/Admin/OrderDashboardPage'));
 const ProductManagementPage = lazy(() => import('../pages/Admin/ProductManagementPage'));
 const UserProfilePage = lazy(() => import('../pages/Profile/UserProfilePage'));
@@ -65,6 +66,18 @@ export const router = createBrowserRouter([
       {
         path: 'Contact',
         element: <Navigate to="/contact" replace />,
+      },
+      {
+        path: 'careers',
+        element: withSuspense(CareersPage),
+      },
+      {
+        path: 'Careers',
+        element: <Navigate to="/careers" replace />,
+      },
+      {
+        path: 'jobs',
+        element: <Navigate to="/careers" replace />,
       },
       {
         path: 'login',

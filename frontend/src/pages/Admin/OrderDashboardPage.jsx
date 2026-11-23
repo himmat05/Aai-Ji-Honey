@@ -8,18 +8,21 @@ import { formatDate } from '../../utils/formatters';
 import GalleryManagementSection from './components/GalleryManagementSection';
 import TeamManagementSection from './components/TeamManagementSection';
 import CouponManagementSection from './components/CouponManagementSection';
+import CareerManagementSection from './components/CareerManagementSection';
 
 const OrderDashboardPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Main Tab: 'orders', 'messages', 'gallery', 'team', or 'coupons'
+  // Main Tab: 'orders', 'messages', 'gallery', 'team', 'coupons', or 'careers'
   const [activeMainTab, setActiveMainTab] = useState(() => {
     const tab = searchParams.get('tab');
-    if (['messages', 'gallery', 'team', 'coupons'].includes(tab)) return tab;
+    if (['messages', 'gallery', 'team', 'coupons', 'careers'].includes(tab)) return tab;
     return 'orders';
   });
 
   const [couponsCount, setCouponsCount] = useState(0);
+  const [applicationsCount, setApplicationsCount] = useState(0);
+  const [unreadAppsCount, setUnreadAppsCount] = useState(0);
 
   // Responsive screen width tracking for dynamic sliding reel items
   const [windowWidth, setWindowWidth] = useState(
@@ -59,7 +62,7 @@ const OrderDashboardPage = () => {
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     const filterParam = searchParams.get('filter');
-    if (['messages', 'gallery', 'team', 'coupons', 'orders'].includes(tabParam)) {
+    if (['messages', 'gallery', 'team', 'coupons', 'orders', 'careers'].includes(tabParam)) {
       setActiveMainTab(tabParam);
     }
     if (filterParam) setMessageFilter(filterParam);
@@ -738,6 +741,30 @@ const OrderDashboardPage = () => {
               </span>
             )}
           </button>
+
+          <button
+            onClick={() => {
+              setActiveMainTab('careers');
+              setSearchParams({ tab: 'careers' });
+            }}
+            className={`pb-2 px-3.5 sm:px-5 font-black text-xs sm:text-sm uppercase tracking-wider transition-all relative flex items-center gap-1.5 sm:gap-2 flex-shrink-0 cursor-pointer ${
+              activeMainTab === 'careers'
+                ? 'text-amber-950 border-b-4 border-amber-500 -mb-[10px]'
+                : 'text-amber-800/70 hover:text-amber-950'
+            }`}
+          >
+            <span>💼 Careers & Hiring</span>
+            {unreadAppsCount > 0 ? (
+              <span className="bg-red-500 text-white text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full font-black shadow-sm animate-pulse flex items-center gap-1">
+                <span>🔴</span>
+                <span>{unreadAppsCount} new</span>
+              </span>
+            ) : applicationsCount > 0 ? (
+              <span className="bg-amber-100 text-amber-900 text-xs px-2 py-0.5 rounded-full font-black border border-amber-300">
+                {applicationsCount}
+              </span>
+            ) : null}
+          </button>
         </div>
 
         {/* ========================================================= */}
@@ -1174,6 +1201,18 @@ const OrderDashboardPage = () => {
         {/* ========================================================= */}
         {activeMainTab === 'coupons' && (
           <CouponManagementSection onCouponsUpdated={(cnt) => setCouponsCount(cnt)} />
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB 6: CAREERS & APPLICATIONS CONTENT */}
+        {/* ========================================================= */}
+        {activeMainTab === 'careers' && (
+          <CareerManagementSection
+            onApplicationsUpdated={(total, unread) => {
+              setApplicationsCount(total);
+              setUnreadAppsCount(unread);
+            }}
+          />
         )}
       </div>
     </div>

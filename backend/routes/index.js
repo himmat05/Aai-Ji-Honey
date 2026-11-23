@@ -10,6 +10,7 @@ const galleryRoutes = require('./galleryRoutes');
 const teamRoutes = require('./teamRoutes');
 const cartRoutes = require('./cartRoutes');
 const couponRoutes = require('./couponRoutes');
+const careerRoutes = require('./careerRoutes');
 
 const db = require('../config/db');
 
@@ -60,6 +61,7 @@ router.use('/gallery', galleryRoutes);
 router.use('/team', teamRoutes);
 router.use('/cart', cartRoutes);
 router.use('/coupons', couponRoutes);
+router.use('/careers', careerRoutes);
 
 // Mount modules with /api prefix for dual-compatibility
 router.use('/api', authRoutes);
@@ -71,6 +73,7 @@ router.use('/api/gallery', galleryRoutes);
 router.use('/api/team', teamRoutes);
 router.use('/api/cart', cartRoutes);
 router.use('/api/coupons', couponRoutes);
+router.use('/api/careers', careerRoutes);
 
 module.exports = router;
 

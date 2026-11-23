@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import useAuth from '../../hooks/useAuth';
 import { messageApi } from '../../api/messageApi';
@@ -264,6 +265,33 @@ const ContactPage = () => {
               );
             })}
           </div>
+        </div>
+
+        {/* Careers & Apiculture Outreach Callout */}
+        <div className="max-w-5xl mx-auto rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-amber-500/20 via-orange-500/15 to-amber-600/20 border border-amber-300/80 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+            <span className="w-14 h-14 rounded-2xl bg-amber-500/25 border border-amber-500/35 flex items-center justify-center text-3xl shrink-0 shadow-sm">
+              💼
+            </span>
+            <div>
+              <span className="text-[11px] font-black uppercase tracking-wider text-amber-800">
+                Work With Dr. Neha Tomar & Dr. Sitaram Seervi
+              </span>
+              <h3 className="text-lg sm:text-xl font-black text-amber-950 font-heading">
+                Interested in Apiculture Careers or Field Internships?
+              </h3>
+              <p className="text-xs text-amber-900/80 mt-0.5">
+                We are actively looking for entomologists, QC lab researchers, and logistics specialists across Rajasthan.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/careers"
+            className="px-6 py-3 rounded-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all shrink-0 no-underline flex items-center gap-2 whitespace-nowrap"
+          >
+            <span>View Open Roles</span>
+            <span>→</span>
+          </Link>
         </div>
 
         {/* Interactive Contact & Inquiry Form */}

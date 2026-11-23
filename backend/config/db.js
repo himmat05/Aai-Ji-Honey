@@ -160,6 +160,50 @@ const connectDB = async () => {
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
 
+      CREATE TABLE IF NOT EXISTS job_openings (
+        id VARCHAR(50) PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        department VARCHAR(100) NOT NULL,
+        location VARCHAR(100) NOT NULL,
+        employment_type VARCHAR(50) DEFAULT 'Full-Time',
+        experience_required VARCHAR(50),
+        salary_range VARCHAR(100),
+        description TEXT NOT NULL,
+        requirements TEXT,
+        order_num INT DEFAULT 0,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS job_applications (
+        id VARCHAR(50) PRIMARY KEY,
+        job_id VARCHAR(50) REFERENCES job_openings(id) ON DELETE SET NULL,
+        job_title VARCHAR(255) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        mobile VARCHAR(50) NOT NULL,
+        city VARCHAR(100),
+        experience VARCHAR(50),
+        linkedin_url TEXT,
+        cover_note TEXT,
+        resume_url TEXT NOT NULL,
+        resume_public_id TEXT,
+        resume_data TEXT,
+        resume_mimetype VARCHAR(100) DEFAULT 'application/pdf',
+        resume_filename VARCHAR(255),
+        status VARCHAR(50) DEFAULT 'new',
+        admin_notes TEXT,
+        is_read_by_admin BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- Idempotent column migrations for job_applications
+      ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS resume_data TEXT;
+      ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS resume_mimetype VARCHAR(100) DEFAULT 'application/pdf';
+      ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS resume_filename VARCHAR(255);
+
       -- High-Performance Database Indexes (Accelerates WHERE, JOIN, and ORDER BY queries)
       CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
       CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
@@ -176,6 +220,11 @@ const connectDB = async () => {
       CREATE INDEX IF NOT EXISTS idx_team_members_order ON team_members(order_num ASC, created_at ASC);
       CREATE INDEX IF NOT EXISTS idx_coupons_code ON coupons(code);
       CREATE INDEX IF NOT EXISTS idx_coupons_is_active ON coupons(is_active);
+      CREATE INDEX IF NOT EXISTS idx_job_openings_active ON job_openings(is_active);
+      CREATE INDEX IF NOT EXISTS idx_job_openings_order ON job_openings(order_num ASC, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_job_applications_status ON job_applications(status);
+      CREATE INDEX IF NOT EXISTS idx_job_applications_created ON job_applications(created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_job_applications_email ON job_applications(email);
     `);
 
     // Automatic idempotent initial seeding

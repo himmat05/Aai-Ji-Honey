@@ -41,8 +41,23 @@ const paymentLimiter = rateLimit({
   },
 });
 
+/**
+ * Career & Job Application Limiter: 10 applications per hour per IP
+ * Protects resume upload storage from spam flood and bots
+ */
+const careerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    message: 'Too many job applications from this network. Please wait an hour before submitting another.',
+  },
+});
+
 module.exports = {
   generalLimiter,
   authLimiter,
   paymentLimiter,
+  careerLimiter,
 };
