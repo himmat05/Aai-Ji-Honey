@@ -293,77 +293,122 @@ const sendMessageReplyEmail = async ({
   replyMessage,
 }) => {
   try {
+    const safeCustomerName = customerName || 'Valued Customer';
+    const safeSubject = subject || 'General Inquiry';
+
     const htmlContent = `
       <!DOCTYPE html>
-      <html>
+      <html lang="en">
       <head>
         <meta charset="utf-8">
-        <style>
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fffdf8; color: #451a03; margin: 0; padding: 20px; }
-          .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #fde68a; box-shadow: 0 10px 25px rgba(217,119,6,0.1); }
-          .header { background: linear-gradient(135deg, #d97706, #f59e0b); padding: 30px 20px; text-align: center; color: #ffffff; }
-          .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 0.5px; }
-          .header p { margin: 5px 0 0 0; font-size: 13px; opacity: 0.9; }
-          .content { padding: 30px 25px; }
-          .greeting { font-size: 16px; font-weight: 600; color: #78350f; margin-bottom: 15px; }
-          .reply-box { background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 18px 20px; border-radius: 0 12px 12px 0; margin: 20px 0; line-height: 1.6; font-size: 15px; color: #78350f; }
-          .original-box { background-color: #f5f5f4; border-radius: 10px; padding: 14px 18px; margin-top: 25px; font-size: 13px; color: #78716c; line-height: 1.5; }
-          .footer { background: #fafaf9; padding: 20px; text-align: center; font-size: 12px; color: #a8a29e; border-top: 1px solid #f5f5f4; }
-          .portal-link { display: inline-block; background: #f59e0b; color: #ffffff !important; padding: 10px 24px; border-radius: 9999px; text-decoration: none; font-weight: bold; font-size: 13px; margin-top: 15px; }
-        </style>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Aai Ji Honey - Response to Your Inquiry</title>
       </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>🍯 Aai Ji Honey</h1>
-            <p>100% Pure, Raw & Natural Apiary Harvest</p>
-          </div>
-          <div class="content">
-            <div class="greeting">Namaste ${customerName || 'Customer'},</div>
-            <p style="line-height: 1.6; font-size: 14px; color: #57534e;">
-              Thank you for contacting us. Dr. Sitaram Seervi and the Aai Ji Honey Apiary Team have reviewed your inquiry and replied to your message:
-            </p>
-            
-            <div class="reply-box">
-              <strong style="display: block; margin-bottom: 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #b45309;">
-                Official Response:
-              </strong>
-              ${replyMessage.replace(/\n/g, '<br/>')}
-            </div>
+      <body style="margin: 0; padding: 0; background-color: #fbf8f1; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #292524; -webkit-font-smoothing: antialiased;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fbf8f1; padding: 25px 15px;">
+          <tr>
+            <td align="center">
+              <!-- Main Card Container -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 580px; background-color: #ffffff; border-radius: 18px; overflow: hidden; border: 1px solid #fde68a; box-shadow: 0 4px 20px rgba(180, 83, 9, 0.08);">
+                
+                <!-- Brand Header -->
+                <tr>
+                  <td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 28px 24px; text-align: center;">
+                    <h1 style="margin: 0; font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">
+                      🍯 Aai Ji Honey
+                    </h1>
+                    <p style="margin: 6px 0 0; font-size: 13px; color: #fef3c7; font-weight: 500;">
+                      100% Pure, Raw & Natural Apiary Harvest
+                    </p>
+                  </td>
+                </tr>
 
-            <p style="font-size: 13px; color: #78716c;">
-              You can also view this response anytime by logging into your account profile on our website.
-            </p>
+                <!-- Content Body -->
+                <tr>
+                  <td style="padding: 32px 28px;">
+                    <!-- Greeting -->
+                    <h2 style="margin: 0 0 16px; font-size: 18px; font-weight: 700; color: #78350f;">
+                      Namaste ${safeCustomerName},
+                    </h2>
+                    
+                    <p style="margin: 0 0 22px; font-size: 15px; line-height: 1.6; color: #44403c;">
+                      Thank you for contacting us. Our apiary team has reviewed your inquiry and here is our response:
+                    </p>
 
-            <div style="text-align: center; margin: 25px 0;">
-              <a href="https://aai-ji-honey.onrender.com/profile" class="portal-link">View in Your Profile</a>
-            </div>
+                    <!-- Prominent Admin Response Card -->
+                    <div style="background-color: #fffbeb; border: 1.5px solid #fcd34d; border-left: 5px solid #d97706; border-radius: 12px; padding: 20px 22px; margin-bottom: 24px;">
+                      <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: #b45309; margin-bottom: 10px;">
+                        💬 Official Response from Aai Ji Honey:
+                      </div>
+                      <div style="font-size: 16px; line-height: 1.65; color: #1c1917; font-weight: 500;">
+                        ${replyMessage.replace(/\n/g, '<br/>')}
+                      </div>
+                    </div>
 
-            <div class="original-box">
-              <strong style="color: #44403c;">Your Original Inquiry (${subject || 'General Inquiry'}):</strong><br/>
-              "${originalMessage.replace(/\n/g, '<br/>')}"
-            </div>
-          </div>
-          <div class="footer">
-            <p style="margin: 0 0 5px 0;">Aai Ji Honey — Traditional Apiaries, Rajasthan, India</p>
-            <p style="margin: 0;">Pure • Unpasteurized • Raw Wild Honey</p>
-          </div>
-        </div>
+                    <!-- Original Inquiry Reference -->
+                    <div style="background-color: #f5f5f4; border-radius: 12px; padding: 16px 20px; margin-bottom: 26px;">
+                      <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #78716c; margin-bottom: 6px;">
+                        📌 In reference to your question (${safeSubject}):
+                      </div>
+                      <div style="font-size: 14px; line-height: 1.5; color: #57534e; font-style: italic;">
+                        "${originalMessage.replace(/\n/g, '<br/>')}"
+                      </div>
+                    </div>
+
+                    <!-- Call To Action Button -->
+                    <div style="text-align: center; margin: 28px 0 18px;">
+                      <a href="https://aai-ji-honey.onrender.com" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff !important; text-decoration: none; padding: 13px 30px; font-size: 14px; font-weight: 700; border-radius: 9999px; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);">
+                        Visit Aai Ji Honey Store 🍯
+                      </a>
+                    </div>
+
+                    <!-- Follow-up Support Note -->
+                    <p style="margin: 20px 0 0; font-size: 13px; line-height: 1.5; color: #78716c; text-align: center;">
+                      Have more questions? Reply directly to this email or reach us on WhatsApp: 
+                      <strong style="color: #92400e;">+91 7877841085</strong>.
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                  <td style="background-color: #fafaf9; border-top: 1px solid #f5f5f4; padding: 22px 24px; text-align: center;">
+                    <p style="margin: 0 0 6px; font-size: 13px; font-weight: 700; color: #78350f;">
+                      Dr. Sitaram Seervi & The Aai Ji Honey Apiary Team
+                    </p>
+                    <p style="margin: 0; font-size: 12px; color: #a8a29e;">
+                      Traditional Wild Harvest Apiaries • Mewar, Rajasthan, India
+                    </p>
+                  </td>
+                </tr>
+
+              </table>
+            </td>
+          </tr>
+        </table>
       </body>
       </html>
     `;
 
     const textContent =
-      `Namaste ${customerName || 'Customer'},\n\n` +
-      `Regarding your inquiry: "${originalMessage}"\n\n` +
-      `Official Response:\n${replyMessage}\n\n` +
-      `You can also view this response in your profile at: https://aai-ji-honey.onrender.com/profile\n\n` +
-      `- Dr. Sitaram Seervi & Aai Ji Honey Team`;
+      `Namaste ${safeCustomerName},\n\n` +
+      `Thank you for contacting Aai Ji Honey. Here is our response to your inquiry:\n\n` +
+      `==================================================\n` +
+      `💬 OFFICIAL RESPONSE:\n` +
+      `${replyMessage}\n` +
+      `==================================================\n\n` +
+      `📌 In reference to your question (${safeSubject}):\n` +
+      `"${originalMessage}"\n\n` +
+      `Visit our store: https://aai-ji-honey.onrender.com\n\n` +
+      `Have more questions? Reply directly to this email or reach us on WhatsApp: +91 7877841085.\n\n` +
+      `Warm regards,\n` +
+      `Dr. Sitaram Seervi & The Aai Ji Honey Apiary Team\n` +
+      `Traditional Wild Harvest Apiaries • Rajasthan, India`;
 
     const result = await sendEmailUnified({
       to: toEmail,
       fromName: 'Aai Ji Honey Apiary Team',
-      subject: `🍯 Response to your inquiry: ${subject || 'Aai Ji Honey'}`,
+      subject: `🍯 Response to your inquiry: ${safeSubject}`,
       text: textContent,
       html: htmlContent,
     });
