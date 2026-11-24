@@ -616,9 +616,115 @@ const getResumeFile = async (req, res) => {
   }
 };
 
+/**
+ * Public: Track candidate application status by Application ID
+ * GET /api/careers/track/:id
+ */
+const trackApplication = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id || typeof id !== 'string' || !id.trim()) {
+      return res.status(400).json({ error: 'Please enter a valid Application Tracking ID.' });
+    }
+
+    const cleanId = id.trim();
+
+    const query = `
+      SELECT 
+        id,
+        job_id,
+        job_title,
+        name,
+        city,
+        status,
+        created_at,
+        updated_at
+      FROM job_applications
+      WHERE LOWER(id) = LOWER($1)
+      LIMIT 1
+    `;
+
+    const result = await db.query(query, [cleanId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: `No application found with ID "${cleanId}". Please check the code received in your confirmation message or email.`,
+      });
+    }
+
+    const app = result.rows[0];
+
+    // Helper to mask candidate name for privacy (e.g., "Himmat Sirwee" -> "Himmat S.")
+    const maskName = (fullName) => {
+      if (!fullName) return 'Candidate';
+      const parts = fullName.trim().split(/\s+/);
+      if (parts.length === 1) return parts[0];
+      return `${parts[0]} ${parts[parts.length - 1][0].toUpperCase()}.`;
+    };
+
+    // User-friendly descriptions and milestone stages
+    const STAGE_DETAILS = {
+      new: {
+        stage: 1,
+        title: 'Application Received & Under Initial Review',
+        description: 'Your resume and profile have been safely logged and are queued for review by our HR & Apiculture recruitment team.',
+        badgeColor: 'amber',
+      },
+      shortlisted: {
+        stage: 2,
+        title: 'Profile Shortlisted',
+        description: 'Great news! Your qualifications and background have passed our initial screening and have been forwarded to the hiring team.',
+        badgeColor: 'blue',
+      },
+      interviewing: {
+        stage: 3,
+        title: 'Interview & Assessment Round',
+        description: 'Our hiring manager is coordinating an interview session with you. Please keep an eye on your phone and email for scheduling.',
+        badgeColor: 'purple',
+      },
+      hired: {
+        stage: 4,
+        title: 'Offer Extended / Selected',
+        description: 'Congratulations! You have been selected to join the Aai Ji Honey family. Welcome aboard!',
+        badgeColor: 'emerald',
+      },
+      rejected: {
+        stage: 0,
+        title: 'Application Closed',
+        description: 'Thank you for your interest and effort. While we decided to move forward with other candidates for this specific opening, your profile remains in our talent database for future vacancies.',
+        badgeColor: 'rose',
+      },
+    };
+
+    const statusKey = (app.status || 'new').toLowerCase();
+    const stageInfo = STAGE_DETAILS[statusKey] || STAGE_DETAILS.new;
+
+    return res.status(200).json({
+      success: true,
+      application: {
+        id: app.id,
+        jobTitle: app.job_title,
+        candidateName: maskName(app.name),
+        city: app.city,
+        status: statusKey,
+        stage: stageInfo.stage,
+        stageTitle: stageInfo.title,
+        stageDescription: stageInfo.description,
+        badgeColor: stageInfo.badgeColor,
+        appliedAt: app.created_at,
+        lastUpdatedAt: app.updated_at,
+      },
+    });
+  } catch (err) {
+    console.error('Error tracking application:', err);
+    return res.status(500).json({ error: 'Failed to retrieve application tracking details.' });
+  }
+};
+
 module.exports = {
   getActiveJobOpenings,
   applyForJob,
+  trackApplication,
   getAllApplications,
   updateApplicationStatus,
   deleteApplication,

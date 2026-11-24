@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import { careerApi } from '../../api/careerApi';
+import { formatDate } from '../../utils/formatters';
 
 const CULTURE_PILLARS = [
   {
@@ -118,6 +119,50 @@ const CareersPage = () => {
 
   const [resumeFile, setResumeFile] = useState(null);
   const [fileError, setFileError] = useState('');
+
+  // Tracking Application state
+  const [searchParams] = useSearchParams();
+  const [trackInputId, setTrackInputId] = useState('');
+  const [trackingData, setTrackingData] = useState(null);
+  const [trackingLoading, setTrackingLoading] = useState(false);
+  const [trackError, setTrackError] = useState('');
+  const [isTrackModalOpen, setIsTrackModalOpen] = useState(false);
+
+  // Handle application tracking
+  const handleTrackApplication = async (idToTrack) => {
+    const targetId = (idToTrack || trackInputId).trim().toUpperCase();
+    if (!targetId) {
+      toast.error('Please enter your Application Code (e.g. AJH-APP-xxxxxx-xxxx)');
+      return;
+    }
+
+    try {
+      setTrackingLoading(true);
+      setTrackError('');
+      const res = await careerApi.trackApplication(targetId);
+      if (res && res.application) {
+        setTrackingData(res.application);
+        setTrackInputId(targetId);
+        setIsTrackModalOpen(true);
+      }
+    } catch (err) {
+      const msg = err.response?.data?.error || err.message || 'Application not found. Please verify your tracking code.';
+      setTrackError(msg);
+      toast.error(msg);
+    } finally {
+      setTrackingLoading(false);
+    }
+  };
+
+  // Auto-track if URL contains ?track=AJH-APP-...
+  useEffect(() => {
+    const trackParam = searchParams.get('track');
+    if (trackParam && trackParam.trim()) {
+      const code = trackParam.trim().toUpperCase();
+      setTrackInputId(code);
+      handleTrackApplication(code);
+    }
+  }, [searchParams]);
 
   // Fetch jobs on mount
   useEffect(() => {
@@ -338,15 +383,25 @@ const CareersPage = () => {
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <a
               href="#openings"
-              className="px-6 py-3 rounded-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold text-xs uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-300 no-underline"
+              className="px-6 py-3 rounded-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold text-xs uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-300 no-underline cursor-pointer"
             >
               Explore Open Roles ↓
             </a>
             <button
               onClick={() => handleOpenApplyModal(null)}
-              className="px-6 py-3 rounded-full bg-white/90 hover:bg-amber-100 text-amber-950 font-bold text-xs uppercase tracking-wider border border-amber-300 shadow-sm transition-all"
+              className="px-6 py-3 rounded-full bg-white/90 hover:bg-amber-100 text-amber-950 font-bold text-xs uppercase tracking-wider border border-amber-300 shadow-sm transition-all cursor-pointer"
             >
               Submit Open CV / Resume
+            </button>
+            <button
+              onClick={() => {
+                setIsTrackModalOpen(true);
+                setTrackError('');
+              }}
+              className="px-6 py-3 rounded-full bg-amber-100/90 hover:bg-amber-200 text-amber-950 font-black text-xs uppercase tracking-wider border border-amber-400 shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>🔍</span>
+              <span>Track Application</span>
             </button>
           </div>
         </div>
@@ -382,6 +437,65 @@ const CareersPage = () => {
               </p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* 2.5 QUICK APPLICATION TRACKER BANNER */}
+      {/* ========================================================= */}
+      <section className="mb-14 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-orange-500/10 border border-amber-300/80 shadow-md flex flex-col lg:flex-row items-center justify-between gap-6">
+        <div className="max-w-xl text-center lg:text-left">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-200/70 border border-amber-300 text-amber-950 text-[10px] font-black uppercase tracking-wider mb-2">
+            <span>🔍</span>
+            <span>Candidate Self-Service</span>
+          </div>
+          <h3 className="text-xl sm:text-2xl font-black text-amber-950 font-heading">
+            Already Applied to Our Hive?
+          </h3>
+          <p className="text-xs sm:text-sm text-amber-900/80 mt-1">
+            Enter your Application Tracking Code to check resume review status, screening feedback, and interview schedules live.
+          </p>
+        </div>
+
+        <div className="w-full lg:w-auto flex flex-col sm:flex-row gap-2.5 shrink-0">
+          <div className="relative">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-amber-800/70">
+              🏷️
+            </span>
+            <input
+              type="text"
+              placeholder="e.g. AJH-APP-..."
+              value={trackInputId}
+              onChange={(e) => {
+                setTrackInputId(e.target.value.toUpperCase());
+                setTrackError('');
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleTrackApplication();
+                }
+              }}
+              className="w-full sm:w-64 pl-10 pr-3.5 py-3 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-mono font-bold text-amber-950 uppercase placeholder-amber-900/40 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-inner"
+            />
+          </div>
+          <button
+            onClick={() => handleTrackApplication()}
+            disabled={trackingLoading || !trackInputId.trim()}
+            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black uppercase tracking-wider shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {trackingLoading ? (
+              <>
+                <span className="animate-spin text-sm">⏳</span>
+                <span>Checking...</span>
+              </>
+            ) : (
+              <>
+                <span>Track Status</span>
+                <span>➔</span>
+              </>
+            )}
+          </button>
         </div>
       </section>
 
@@ -596,12 +710,23 @@ const CareersPage = () => {
                     📧 An acknowledgment email has been sent to your inbox.
                   </p>
 
-                  <div className="pt-4">
+                  <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
+                    <button
+                      onClick={() => {
+                        const tid = submittedApplication.trackingId;
+                        handleCloseModal();
+                        handleTrackApplication(tid);
+                      }}
+                      className="px-6 py-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <span>🔍</span>
+                      <span>Track Application Status Now</span>
+                    </button>
                     <button
                       onClick={handleCloseModal}
-                      className="btn-honey-primary px-8 py-3 text-xs font-bold uppercase tracking-wider"
+                      className="px-6 py-3 rounded-full bg-white hover:bg-amber-50 text-amber-950 text-xs font-bold uppercase tracking-wider border border-amber-300 transition-all cursor-pointer"
                     >
-                      Close & Return to Website
+                      Close & Return
                     </button>
                   </div>
                 </div>
@@ -859,6 +984,220 @@ const CareersPage = () => {
                 </form>
               )}
             </div>
+          </div>
+        </div>
+      )}
+      {/* ========================================================= */}
+      {/* 5. TRACK APPLICATION MODAL */}
+      {/* ========================================================= */}
+      {isTrackModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-amber-950/60 backdrop-blur-md overflow-y-auto animate-[fadeIn_0.2s_ease-out]"
+          onClick={() => setIsTrackModalOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-2xl bg-gradient-to-b from-amber-50/95 via-white to-amber-50/90 rounded-3xl p-6 sm:p-8 border border-amber-200/90 shadow-2xl shadow-amber-900/20 text-amber-950 overflow-hidden my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between pb-4 border-b border-amber-200/80 mb-6">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 block">
+                  Aai Ji Honey • Candidate Portal
+                </span>
+                <h3 className="text-xl sm:text-2xl font-black text-amber-950 font-heading">
+                  Track Application Status 🔍
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsTrackModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-amber-200/70 hover:bg-amber-300 text-amber-950 font-black text-sm flex items-center justify-center transition-colors cursor-pointer"
+                aria-label="Close track modal"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Tracking Search Input */}
+            <div className="mb-6">
+              <label className="block text-xs font-bold text-amber-900 uppercase tracking-wider mb-2">
+                Enter Your Application Code (from email or registration screen)
+              </label>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleTrackApplication();
+                }}
+                className="flex flex-col sm:flex-row gap-2.5"
+              >
+                <div className="relative flex-1">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-amber-800/70">
+                    🏷️
+                  </span>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. AJH-APP-738291-A4F2"
+                    value={trackInputId}
+                    onChange={(e) => {
+                      setTrackInputId(e.target.value.toUpperCase());
+                      setTrackError('');
+                    }}
+                    className="w-full pl-10 pr-3.5 py-3 rounded-2xl bg-white border border-amber-300 text-xs sm:text-sm font-mono font-bold text-amber-950 tracking-wider placeholder-amber-900/40 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-inner"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={trackingLoading || !trackInputId.trim()}
+                  className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {trackingLoading ? (
+                    <>
+                      <span className="animate-spin text-sm">⏳</span>
+                      <span>Searching...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Track Status</span>
+                      <span>➔</span>
+                    </>
+                  )}
+                </button>
+              </form>
+              {trackError && (
+                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-medium flex items-center gap-2">
+                  <span>⚠️</span>
+                  <span>{trackError}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Tracking Result Card */}
+            {trackingData && (
+              <div className="bg-white/95 rounded-2xl p-5 sm:p-6 border border-amber-300/80 shadow-md space-y-5 animate-[fadeIn_0.2s_ease-out]">
+                {/* Top Info */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-amber-100">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-base sm:text-lg font-black text-amber-950 font-heading">
+                        {trackingData.jobTitle}
+                      </h4>
+                      <span className="font-mono text-[10px] px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-extrabold border border-amber-300">
+                        {trackingData.id}
+                      </span>
+                    </div>
+                    <p className="text-xs text-amber-800/80 mt-1">
+                      Applicant: <strong>{trackingData.candidateName}</strong> • {trackingData.city || 'India'}
+                    </p>
+                  </div>
+
+                  {/* Status Pill */}
+                  <div className="shrink-0">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-xs ${
+                        trackingData.status === 'hired'
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          : trackingData.status === 'shortlisted'
+                          ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                          : trackingData.status === 'interviewing'
+                          ? 'bg-purple-100 text-purple-800 border border-purple-300'
+                          : trackingData.status === 'rejected'
+                          ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                          : 'bg-amber-100 text-amber-900 border border-amber-300'
+                      }`}
+                    >
+                      <span>
+                        {trackingData.status === 'hired'
+                          ? '🎉'
+                          : trackingData.status === 'shortlisted'
+                          ? '⭐'
+                          : trackingData.status === 'interviewing'
+                          ? '🎙️'
+                          : trackingData.status === 'rejected'
+                          ? '📁'
+                          : '⏳'}
+                      </span>
+                      <span>{trackingData.stageTitle}</span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Visual Step Progress Tracker (If active application) */}
+                {trackingData.status !== 'rejected' && (
+                  <div className="pt-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 block mb-3">
+                      Recruitment Pipeline Progress
+                    </span>
+                    <div className="grid grid-cols-4 gap-1 sm:gap-2">
+                      {[
+                        { num: 1, label: 'Submitted' },
+                        { num: 2, label: 'Shortlisted' },
+                        { num: 3, label: 'Interview' },
+                        { num: 4, label: 'Hired' },
+                      ].map((st) => {
+                        const isDone = trackingData.stage > st.num || (trackingData.stage === 4 && st.num === 4);
+                        const isCurrent = trackingData.stage === st.num;
+                        return (
+                          <div key={st.num} className="text-center">
+                            <div
+                              className={`h-2 sm:h-2.5 rounded-full mb-1.5 transition-all ${
+                                isDone
+                                  ? 'bg-emerald-500'
+                                  : isCurrent
+                                  ? 'bg-amber-500 animate-pulse'
+                                  : 'bg-amber-100'
+                              }`}
+                            />
+                            <span
+                              className={`text-[10px] sm:text-xs font-black block leading-tight ${
+                                isDone
+                                  ? 'text-emerald-800'
+                                  : isCurrent
+                                  ? 'text-amber-900'
+                                  : 'text-amber-800/40'
+                              }`}
+                            >
+                              {st.label}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Stage Description Notice */}
+                <div
+                  className={`p-4 rounded-2xl border text-xs sm:text-sm leading-relaxed ${
+                    trackingData.status === 'hired'
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                      : trackingData.status === 'rejected'
+                      ? 'bg-rose-50 border-rose-200 text-rose-900'
+                      : 'bg-amber-50/80 border-amber-200 text-amber-950'
+                  }`}
+                >
+                  <p className="font-semibold">{trackingData.stageDescription}</p>
+                </div>
+
+                {/* Footer Timestamps & WhatsApp Support */}
+                <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-[11px] text-amber-800/80 border-t border-amber-100">
+                  <div>
+                    <span>Applied on: <strong>{formatDate(trackingData.appliedAt)}</strong></span>
+                  </div>
+                  <div>
+                    <a
+                      href={`https://wa.me/919610047740?text=Hello%20Aai%20Ji%20Honey%2C%20I%20am%20inquiring%20about%20my%20job%20application%20${trackingData.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 font-bold text-[11px] transition-all no-underline"
+                    >
+                      <span>💬</span>
+                      <span>Ask HR on WhatsApp</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

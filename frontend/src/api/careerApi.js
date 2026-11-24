@@ -16,6 +16,11 @@ export const careerApi = {
     return response.data;
   },
 
+  trackApplication: async (applicationId) => {
+    const response = await apiClient.get(`/careers/track/${encodeURIComponent(String(applicationId).trim())}`);
+    return response.data;
+  },
+
   // Admin Job Opening Management
   getAdminJobs: async () => {
     const response = await apiClient.get('/careers/admin/jobs');

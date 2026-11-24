@@ -8,6 +8,7 @@ const { requireAdmin } = require('../middleware/roleMiddleware');
 const {
   getActiveJobOpenings,
   applyForJob,
+  trackApplication,
   getAllApplications,
   updateApplicationStatus,
   deleteApplication,
@@ -24,6 +25,9 @@ const {
 
 // Get active job openings
 router.get('/jobs', getActiveJobOpenings);
+
+// Track candidate application status by Application ID
+router.get('/track/:id', trackApplication);
 
 // Submit job application with resume file (Rate limited: 10/hr)
 router.post('/apply', careerLimiter, (req, res, next) => {
