@@ -295,6 +295,7 @@ const sendMessageReplyEmail = async ({
   try {
     const safeCustomerName = customerName || 'Valued Customer';
     const safeSubject = subject || 'General Inquiry';
+    const storeUrl = process.env.FRONTEND_URL || 'https://aai-ji-honey.vercel.app';
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -332,7 +333,7 @@ const sendMessageReplyEmail = async ({
                     </h2>
                     
                     <p style="margin: 0 0 22px; font-size: 15px; line-height: 1.6; color: #44403c;">
-                      Thank you for contacting us. Our apiary team has reviewed your inquiry and here is our response:
+                      Thank you for contacting us. Our apiary team has reviewed your inquiry.
                     </p>
 
                     <!-- Prominent Admin Response Card -->
@@ -345,19 +346,19 @@ const sendMessageReplyEmail = async ({
                       </div>
                     </div>
 
-                    <!-- Original Inquiry Reference -->
-                    <div style="background-color: #f5f5f4; border-radius: 12px; padding: 16px 20px; margin-bottom: 26px;">
-                      <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #78716c; margin-bottom: 6px;">
-                        📌 In reference to your question (${safeSubject}):
+                    <!-- Full Original Inquiry Reference -->
+                    <div style="background-color: #f7f6f4; border-radius: 12px; padding: 18px 20px; margin-bottom: 26px; border: 1px solid #e7e5e4;">
+                      <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: #78716c; margin-bottom: 8px;">
+                        📌 Your Full Inquiry (${safeSubject}):
                       </div>
-                      <div style="font-size: 14px; line-height: 1.5; color: #57534e; font-style: italic;">
-                        "${originalMessage.replace(/\n/g, '<br/>')}"
+                      <div style="font-size: 14px; line-height: 1.6; color: #44403c; font-weight: 500;">
+                        ${originalMessage.replace(/\n/g, '<br/>')}
                       </div>
                     </div>
 
                     <!-- Call To Action Button -->
                     <div style="text-align: center; margin: 28px 0 18px;">
-                      <a href="https://aai-ji-honey.onrender.com" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff !important; text-decoration: none; padding: 13px 30px; font-size: 14px; font-weight: 700; border-radius: 9999px; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);">
+                      <a href="${storeUrl}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff !important; text-decoration: none; padding: 13px 30px; font-size: 14px; font-weight: 700; border-radius: 9999px; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);">
                         Visit Aai Ji Honey Store 🍯
                       </a>
                     </div>
@@ -365,7 +366,7 @@ const sendMessageReplyEmail = async ({
                     <!-- Follow-up Support Note -->
                     <p style="margin: 20px 0 0; font-size: 13px; line-height: 1.5; color: #78716c; text-align: center;">
                       Have more questions? Reply directly to this email or reach us on WhatsApp: 
-                      <strong style="color: #92400e;">+91 7877841085</strong>.
+                      <a href="https://wa.me/919610047740" target="_blank" style="color: #92400e; font-weight: 800; text-decoration: underline;">+91 96100 47740</a>.
                     </p>
                   </td>
                 </tr>
@@ -392,15 +393,15 @@ const sendMessageReplyEmail = async ({
 
     const textContent =
       `Namaste ${safeCustomerName},\n\n` +
-      `Thank you for contacting Aai Ji Honey. Here is our response to your inquiry:\n\n` +
+      `Thank you for contacting us. Our apiary team has reviewed your inquiry.\n\n` +
       `==================================================\n` +
-      `💬 OFFICIAL RESPONSE:\n` +
+      `💬 OFFICIAL RESPONSE FROM AAI JI HONEY:\n` +
       `${replyMessage}\n` +
       `==================================================\n\n` +
-      `📌 In reference to your question (${safeSubject}):\n` +
-      `"${originalMessage}"\n\n` +
-      `Visit our store: https://aai-ji-honey.onrender.com\n\n` +
-      `Have more questions? Reply directly to this email or reach us on WhatsApp: +91 7877841085.\n\n` +
+      `📌 YOUR FULL INQUIRY (${safeSubject}):\n` +
+      `${originalMessage}\n\n` +
+      `Visit our store: ${storeUrl}\n\n` +
+      `Have more questions? Reply directly to this email or reach us on WhatsApp: +91 96100 47740 (https://wa.me/919610047740).\n\n` +
       `Warm regards,\n` +
       `Dr. Sitaram Seervi & The Aai Ji Honey Apiary Team\n` +
       `Traditional Wild Harvest Apiaries • Rajasthan, India`;
