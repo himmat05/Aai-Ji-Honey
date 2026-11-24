@@ -114,12 +114,23 @@ const sendViaResend = async ({ to, subject, html, text, fromName = 'Aai Ji Honey
 const sendEmailUnified = async ({ to, subject, html, text, fromName = 'Aai Ji Honey' }) => {
   // 1. Try Brevo HTTPS API if key configured
   if (process.env.BREVO_API_KEY) {
+    const rawKey = String(process.env.BREVO_API_KEY).trim();
+    if (rawKey.startsWith('xsmtpsib-')) {
+      return {
+        success: false,
+        error:
+          'Invalid Brevo Key type: You provided an SMTP key (xsmtpsib-...). Brevo HTTPS API requires an API Key (xkeysib-...). In Brevo, click your profile -> SMTP & API -> API Keys tab -> Generate a new API key.',
+      };
+    }
+
     try {
       await sendViaBrevo({ to, subject, html, text, fromName });
       console.log(`📧 Email delivered via Brevo HTTP API (Port 443) to ${to}`);
       return { success: true, provider: 'brevo' };
     } catch (brevoErr) {
+      const errDetail = brevoErr.response?.data?.message || brevoErr.message;
       console.error('❌ Brevo API error:', brevoErr.response?.data || brevoErr.message);
+      return { success: false, error: `Brevo API Error: ${errDetail}` };
     }
   }
 
@@ -173,11 +184,21 @@ const sendEmailUnified = async ({ to, subject, html, text, fromName = 'Aai Ji Ho
 const verifySmtpConnection = async () => {
   // If Brevo configured, test Brevo HTTP API
   if (process.env.BREVO_API_KEY) {
+    const rawKey = String(process.env.BREVO_API_KEY).trim();
+    if (rawKey.startsWith('xsmtpsib-')) {
+      return {
+        connected: false,
+        provider: 'Brevo',
+        error:
+          'Invalid Key: You configured an SMTP key (xsmtpsib-...). Brevo HTTPS API requires an API Key (xkeysib-...). In Brevo, click profile -> SMTP & API -> API Keys tab -> Generate a new API key.',
+      };
+    }
+
     try {
       const res = await axios.get('https://api.brevo.com/v3/account', {
         headers: {
           accept: 'application/json',
-          'api-key': String(process.env.BREVO_API_KEY).trim(),
+          'api-key': rawKey,
         },
         timeout: 8000,
       });
