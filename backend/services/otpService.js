@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const db = require('../config/db');
-const { getTransporter } = require('./emailService');
+const { getTransporter, sendEmailUnified } = require('./emailService');
 
 /**
  * Generate a 6-digit cryptographic numeric OTP
@@ -91,15 +91,14 @@ const sendOtpEmail = async (email, otp, purpose) => {
     </html>
   `;
 
-  const transporter = getTransporter();
-  await transporter.sendMail({
-    from: `"Aai Ji Honey" <${process.env.EMAIL_FROM}>`,
+  await sendEmailUnified({
     to: email,
+    fromName: 'Aai Ji Honey',
     subject,
     html,
   });
 
-  console.log(`📧 OTP email sent to ${email} for purpose: ${purpose}`);
+  console.log(`📧 OTP email dispatched to ${email} for purpose: ${purpose}`);
 };
 
 /**

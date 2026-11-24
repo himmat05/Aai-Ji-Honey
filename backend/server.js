@@ -107,9 +107,13 @@ app.listen(PORT, () => {
   } else {
     console.log('⚠️ Google OAuth: GOOGLE_CLIENT_ID is not configured in .env');
   }
-  if (process.env.EMAIL_FROM && process.env.EMAIL_PASS) {
-    console.log(`📧 Email SMTP Active: Sender account ${process.env.EMAIL_FROM.trim()}`);
+  if (process.env.BREVO_API_KEY) {
+    console.log('📧 Email Service: Brevo HTTPS API Active (Port 443 - Render Free Compatible)');
+  } else if (process.env.RESEND_API_KEY) {
+    console.log('📧 Email Service: Resend HTTPS API Active (Port 443 - Render Free Compatible)');
+  } else if (process.env.EMAIL_FROM && process.env.EMAIL_PASS) {
+    console.log(`📧 Email SMTP Active: Sender account ${process.env.EMAIL_FROM.trim()} (Gmail SMTP Port 465)`);
   } else {
-    console.warn('⚠️ Email SMTP: EMAIL_FROM or EMAIL_PASS is missing in environment variables. Outbound emails will fail!');
+    console.warn('⚠️ Email Service: No email credentials configured in environment variables.');
   }
 });

@@ -47,9 +47,157 @@ const getTransporter = () => {
 };
 
 /**
- * Test SMTP connection diagnostics
+ * Send email via Brevo REST API (HTTPS Port 443 - works on Render Free tier without SMTP blocks)
+ */
+const sendViaBrevo = async ({ to, subject, html, text, fromName = 'Aai Ji Honey' }) => {
+  const apiKey = process.env.BREVO_API_KEY ? String(process.env.BREVO_API_KEY).trim() : '';
+  if (!apiKey) return null;
+
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_FROM || 'Sitaramseervi88@gmail.com';
+  const toList = Array.isArray(to) ? to.map((e) => ({ email: e })) : [{ email: to }];
+
+  const payload = {
+    sender: { name: fromName, email: senderEmail },
+    to: toList,
+    subject,
+    htmlContent: html,
+    textContent: text || (html ? html.replace(/<[^>]*>?/gm, '') : ''),
+  };
+
+  const response = await axios.post('https://api.brevo.com/v3/smtp/email', payload, {
+    headers: {
+      accept: 'application/json',
+      'api-key': apiKey,
+      'content-type': 'application/json',
+    },
+    timeout: 10000,
+  });
+
+  return response.data;
+};
+
+/**
+ * Send email via Resend REST API (HTTPS Port 443 - works on Render Free tier)
+ */
+const sendViaResend = async ({ to, subject, html, text, fromName = 'Aai Ji Honey' }) => {
+  const apiKey = process.env.RESEND_API_KEY ? String(process.env.RESEND_API_KEY).trim() : '';
+  if (!apiKey) return null;
+
+  const fromEmail = process.env.RESEND_FROM || 'onboarding@resend.dev';
+  const toList = Array.isArray(to) ? to : [to];
+
+  const payload = {
+    from: fromEmail.includes('<') ? fromEmail : `${fromName} <${fromEmail}>`,
+    to: toList,
+    subject,
+    html,
+    text: text || (html ? html.replace(/<[^>]*>?/gm, '') : ''),
+  };
+
+  const response = await axios.post('https://api.resend.com/emails', payload, {
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    timeout: 10000,
+  });
+
+  return response.data;
+};
+
+/**
+ * Unified email sender:
+ * 1. Brevo HTTP API (Port 443 HTTPS - 100% bypasses Render Free SMTP block)
+ * 2. Resend HTTP API (Port 443 HTTPS)
+ * 3. Nodemailer Gmail SMTP (Port 465 - Localhost or Render Paid)
+ */
+const sendEmailUnified = async ({ to, subject, html, text, fromName = 'Aai Ji Honey' }) => {
+  // 1. Try Brevo HTTPS API if key configured
+  if (process.env.BREVO_API_KEY) {
+    try {
+      await sendViaBrevo({ to, subject, html, text, fromName });
+      console.log(`📧 Email delivered via Brevo HTTP API (Port 443) to ${to}`);
+      return { success: true, provider: 'brevo' };
+    } catch (brevoErr) {
+      console.error('❌ Brevo API error:', brevoErr.response?.data || brevoErr.message);
+    }
+  }
+
+  // 2. Try Resend HTTPS API if key configured
+  if (process.env.RESEND_API_KEY) {
+    try {
+      await sendViaResend({ to, subject, html, text, fromName });
+      console.log(`📧 Email delivered via Resend HTTP API (Port 443) to ${to}`);
+      return { success: true, provider: 'resend' };
+    } catch (resendErr) {
+      console.error('❌ Resend API error:', resendErr.response?.data || resendErr.message);
+    }
+  }
+
+  // 3. Fallback to standard Nodemailer SMTP (Gmail port 465)
+  const { user, pass } = getCleanCredentials();
+  if (!user || !pass) {
+    return {
+      success: false,
+      error: 'No email credentials configured. Set BREVO_API_KEY or EMAIL_FROM/EMAIL_PASS.',
+    };
+  }
+
+  const transporter = getTransporter();
+  const mailOptions = {
+    from: `${fromName} <${user}>`,
+    to,
+    subject,
+    text,
+    html,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`📧 Email delivered via Gmail SMTP to ${to}`);
+    return { success: true, provider: 'smtp' };
+  } catch (smtpErr) {
+    console.error('❌ SMTP sendMail failed:', smtpErr.message);
+    let friendlyError = smtpErr.message;
+    if (smtpErr.code === 'ETIMEDOUT' || smtpErr.message.includes('timeout')) {
+      friendlyError =
+        'Connection timeout: Render Free Tier blocks outbound SMTP ports (465/587). Add BREVO_API_KEY to Render Environment Variables to send via HTTPS Port 443.';
+    }
+    return { success: false, error: friendlyError, code: smtpErr.code };
+  }
+};
+
+/**
+ * Test SMTP or HTTP email connection diagnostics
  */
 const verifySmtpConnection = async () => {
+  // If Brevo configured, test Brevo HTTP API
+  if (process.env.BREVO_API_KEY) {
+    try {
+      const res = await axios.get('https://api.brevo.com/v3/account', {
+        headers: {
+          accept: 'application/json',
+          'api-key': String(process.env.BREVO_API_KEY).trim(),
+        },
+        timeout: 8000,
+      });
+      return {
+        connected: true,
+        provider: 'Brevo HTTP API (Port 443 HTTPS - Render Free Compatible)',
+        configuredEmail: res.data?.email || process.env.EMAIL_FROM,
+        host: 'api.brevo.com',
+        port: 443,
+      };
+    } catch (bErr) {
+      return {
+        connected: false,
+        provider: 'Brevo HTTP API',
+        error: bErr.response?.data?.message || bErr.message || 'Brevo API key validation failed',
+      };
+    }
+  }
+
+  // Otherwise test standard Gmail SMTP
   const { user, pass } = getCleanCredentials();
   if (!user || !pass) {
     return {
@@ -60,12 +208,24 @@ const verifySmtpConnection = async () => {
   try {
     const transporter = getTransporter();
     await transporter.verify();
-    return { connected: true, user };
+    return {
+      connected: true,
+      provider: 'Google SMTP (Port 465)',
+      configuredEmail: user,
+      host: 'smtp.gmail.com',
+      port: 465,
+    };
   } catch (err) {
+    let friendlyError = err.message || 'SMTP connection verification failed';
+    if (err.code === 'ETIMEDOUT' || err.message?.includes('timeout')) {
+      friendlyError =
+        'Connection timeout: Render Free Tier blocks outbound SMTP ports (465/587). Add BREVO_API_KEY to Render Environment Variables to send via HTTPS Port 443 for free.';
+    }
     return {
       connected: false,
-      error: err.message || 'SMTP connection verification failed',
+      error: friendlyError,
       code: err.code || 'SMTP_ERROR',
+      provider: 'Google SMTP',
     };
   }
 };
@@ -88,25 +248,12 @@ const sendLoginEmail = async (toEmail, ip) => {
       console.error('🌐 IP location lookup failed:', locationError.message);
     }
 
-    const transporter = getTransporter();
-
-    const mailOptions = {
-      from: `Aai Ji Honey Security <${process.env.EMAIL_FROM}>`,
+    await sendEmailUnified({
       to: toEmail,
+      fromName: 'Aai Ji Honey Security',
       subject: '🔐 Login Alert - Owner Dashboard Access',
-      text: `Hello,
-
-Your owner dashboard was just accessed on ${new Date().toLocaleString()}.
-
-Login Location: ${locationInfo}
-IP Address: ${ip}
-
-If this wasn't you, please secure your account immediately.
-
-- Aai Ji Honey Team`,
-    };
-
-    await transporter.sendMail(mailOptions);
+      text: `Hello,\n\nYour owner dashboard was just accessed on ${new Date().toLocaleString()}.\n\nLogin Location: ${locationInfo}\nIP Address: ${ip}\n\nIf this wasn't you, please secure your account immediately.\n\n- Aai Ji Honey Team`,
+    });
     console.log(`📧 Login alert email sent successfully to ${toEmail}`);
   } catch (error) {
     console.error('❌ Failed to send login email:', error.message);
@@ -125,8 +272,6 @@ const sendMessageReplyEmail = async ({
   replyMessage,
 }) => {
   try {
-    const transporter = getTransporter();
-
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -187,21 +332,27 @@ const sendMessageReplyEmail = async ({
       </html>
     `;
 
-    const mailOptions = {
-      from: `Aai Ji Honey Apiary Team <${process.env.EMAIL_FROM}>`,
-      to: toEmail,
-      subject: `🍯 Response to your inquiry: ${subject || 'Aai Ji Honey'}`,
-      text: `Namaste ${customerName || 'Customer'},\n\n` +
-        `Regarding your inquiry: "${originalMessage}"\n\n` +
-        `Official Response:\n${replyMessage}\n\n` +
-        `You can also view this response in your profile at: https://aai-ji-honey.onrender.com/profile\n\n` +
-        `- Dr. Sitaram Seervi & Aai Ji Honey Team`,
-      html: htmlContent,
-    };
+    const textContent =
+      `Namaste ${customerName || 'Customer'},\n\n` +
+      `Regarding your inquiry: "${originalMessage}"\n\n` +
+      `Official Response:\n${replyMessage}\n\n` +
+      `You can also view this response in your profile at: https://aai-ji-honey.onrender.com/profile\n\n` +
+      `- Dr. Sitaram Seervi & Aai Ji Honey Team`;
 
-    await transporter.sendMail(mailOptions);
-    console.log(`📧 Customer reply email sent successfully to ${toEmail}`);
-    return { success: true };
+    const result = await sendEmailUnified({
+      to: toEmail,
+      fromName: 'Aai Ji Honey Apiary Team',
+      subject: `🍯 Response to your inquiry: ${subject || 'Aai Ji Honey'}`,
+      text: textContent,
+      html: htmlContent,
+    });
+
+    if (result.success) {
+      console.log(`📧 Customer reply email sent successfully to ${toEmail} via ${result.provider}`);
+      return { success: true, provider: result.provider };
+    } else {
+      return { success: false, error: result.error };
+    }
   } catch (err) {
     console.error('❌ Failed to send reply email:', err.message);
     return { success: false, error: err.message };
@@ -214,8 +365,6 @@ const sendMessageReplyEmail = async ({
  */
 const sendCareerApplicationEmail = async ({ toEmail, applicantName, jobTitle, trackingId }) => {
   try {
-    const transporter = getTransporter();
-
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -265,17 +414,17 @@ const sendCareerApplicationEmail = async ({ toEmail, applicantName, jobTitle, tr
       </html>
     `;
 
-    const mailOptions = {
-      from: `Aai Ji Honey Careers <${process.env.EMAIL_FROM}>`,
-      to: toEmail,
-      subject: `🐝 Application Received: ${jobTitle} (${trackingId}) — Aai Ji Honey`,
-      text: `Hello ${applicantName},\n\nThank you for applying to Aai Ji Honey for the position of "${jobTitle}".\n\nYour Application Tracking ID is: ${trackingId}\n\nOur HR and Apiculture leadership team will review your application and contact you if shortlisted.\n\nWarm regards,\nDr. Neha Tomar & Dr. Sitaram Seervi\nAai Ji Honey Team`,
-      html: htmlContent,
-    };
+    const textContent = `Hello ${applicantName},\n\nThank you for applying to Aai Ji Honey for the position of "${jobTitle}".\n\nYour Application Tracking ID is: ${trackingId}\n\nOur HR and Apiculture leadership team will review your application and contact you if shortlisted.\n\nWarm regards,\nDr. Neha Tomar & Dr. Sitaram Seervi\nAai Ji Honey Team`;
 
-    await transporter.sendMail(mailOptions);
-    console.log(`📧 Career confirmation email sent successfully to ${toEmail}`);
-    return true;
+    const result = await sendEmailUnified({
+      to: toEmail,
+      fromName: 'Aai Ji Honey Careers',
+      subject: `🐝 Application Received: ${jobTitle} (${trackingId}) — Aai Ji Honey`,
+      text: textContent,
+      html: htmlContent,
+    });
+
+    return result.success;
   } catch (err) {
     console.warn('⚠️ Could not send career acknowledgment email:', err.message);
     return false;
@@ -284,6 +433,7 @@ const sendCareerApplicationEmail = async ({ toEmail, applicantName, jobTitle, tr
 
 module.exports = {
   getTransporter,
+  sendEmailUnified,
   verifySmtpConnection,
   sendLoginEmail,
   sendMessageReplyEmail,

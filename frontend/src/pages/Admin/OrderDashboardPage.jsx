@@ -1216,8 +1216,8 @@ const OrderDashboardPage = () => {
                     </p>
                     <p className="text-[11px] opacity-90 mt-0.5">
                       {smtpStatus.connected
-                        ? `Authenticated as ${smtpStatus.configuredEmail} via IPv4 (${smtpStatus.host}:${smtpStatus.port}). Reply emails will be delivered properly.`
-                        : `Error: ${smtpStatus.error || 'Connection timed out'}. Ensure EMAIL_FROM and EMAIL_PASS (App Password) are set in Render Environment without spaces.`}
+                        ? `Connected to ${smtpStatus.provider || 'Mail Provider'} (${smtpStatus.configuredEmail} - ${smtpStatus.host}:${smtpStatus.port}). Reply emails will be delivered properly.`
+                        : smtpStatus.error || 'Connection timed out. Render Free Tier blocks outbound SMTP ports 465/587.'}
                     </p>
                   </div>
                 </div>
