@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ImageGallery from './components/ImageGallery';
+import WriteReviewModal from '../../components/WriteReviewModal';
+import { reviewApi } from '../../api/reviewApi';
+import { formatDate } from '../../utils/formatters';
 
 const AnimatedBeesAroundJar = () => {
   return (
@@ -89,6 +92,42 @@ const AnimatedBeesAroundJar = () => {
 const HomePage = () => {
   const [activeFaq, setActiveFaq] = useState(null);
 
+  // Dynamic Community Reviews State
+  const [reviews, setReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+  const [reviewCategory, setReviewCategory] = useState('all');
+  const [reviewStats, setReviewStats] = useState({
+    totalReviews: 0,
+    averageRating: 5.0,
+    breakdown: {},
+  });
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [activePhotoModal, setActivePhotoModal] = useState(null);
+
+  const fetchReviews = async (cat = 'all') => {
+    try {
+      setLoadingReviews(true);
+      const params = {};
+      if (cat && cat !== 'all') params.category = cat;
+      const data = await reviewApi.getReviews(params);
+      setReviews(data.reviews || []);
+      if (data.stats) setReviewStats(data.stats);
+    } catch (err) {
+      console.error('Failed to load reviews:', err);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReviews(reviewCategory);
+  }, [reviewCategory]);
+
+  const handleReviewSubmitted = (newReview) => {
+    setReviews((prev) => [newReview, ...prev]);
+    fetchReviews(reviewCategory);
+  };
+
   const stats = [
     { value: '10,000+', label: 'Happy Families', icon: '💛' },
     { value: '500+', label: 'Tribal Beekeepers', icon: '👨‍🌾' },
@@ -152,30 +191,6 @@ const HomePage = () => {
       feature: 'Crystallization',
       aaiJi: 'Naturally crystallizes over time (hallmark of raw honey)',
       commercial: 'Chemically prevented from crystallizing',
-    },
-  ];
-
-  const reviews = [
-    {
-      name: 'Pooja Rathore',
-      location: 'Jaipur, Rajasthan',
-      text: 'The floral aroma upon opening the jar is unlike any supermarket honey. Thick, raw, and my kids love it in their morning warm milk!',
-      rating: 5,
-      product: 'Mustard Blossom Raw Honey',
-    },
-    {
-      name: 'Vikramaditya Singh',
-      location: 'New Delhi',
-      text: 'Knowing this is directly supported by entomology researcher Dr. Seervi gives me 100% confidence in its purity. Real raw honey is irreplaceable.',
-      rating: 5,
-      product: 'Wild Flora Multi-Flora Honey',
-    },
-    {
-      name: 'Ananya Sharma',
-      location: 'Udaipur',
-      text: 'Fast express delivery and beautifully packed in sustainable glass jars. The mild crystallization proves its genuine raw harvest!',
-      rating: 5,
-      product: 'Ajwain Herbal Honey',
     },
   ];
 
@@ -450,56 +465,224 @@ const HomePage = () => {
       </section>
 
       {/* ========================================================= */}
-      {/* 6. REAL CUSTOMER REVIEWS */}
+      {/* 6. REAL COMMUNITY REVIEWS & EXPERIENCES */}
       {/* ========================================================= */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-amber-50/60 to-orange-50/40">
+      <section id="reviews" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-amber-50/60 to-orange-50/40 relative">
         <div className="max-w-7xl mx-auto">
-          
-          <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
-            <span className="px-4 py-1.5 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-xs font-extrabold uppercase tracking-widest inline-block">
-              Loved by Honey Lovers
-            </span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-amber-950 tracking-tight">
-              Words From Our Community
-            </h2>
-            <p className="text-amber-900/80 text-sm">
-              Discover what families across India have to say about the pure taste of Aai Ji Honey.
-            </p>
-          </div>
+          {/* Section Header */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+            <div className="space-y-3 max-w-2xl">
+              <span className="px-4 py-1.5 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-xs font-extrabold uppercase tracking-widest inline-flex items-center gap-1.5 shadow-xs">
+                <span>🍯</span> Loved by Honey Lovers
+              </span>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-amber-950 tracking-tight font-heading">
+                Words From Our Community
+              </h2>
+              <p className="text-amber-900/80 text-sm sm:text-base leading-relaxed">
+                Discover honest experiences from families, chefs, and wellness lovers across India who enjoy the 100% pure taste of Aai Ji Honey.
+              </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {reviews.map((rev, idx) => (
-              <div
-                key={idx}
-                className="honey-glass honey-glass-hover rounded-3xl p-8 relative flex flex-col justify-between"
-              >
-                <div className="space-y-4">
-                  {/* Rating Stars */}
+              {/* Rating Stats Badge */}
+              {reviewStats.totalReviews > 0 && (
+                <div className="flex flex-wrap items-center gap-3 pt-1">
                   <div className="flex items-center gap-1 text-amber-500 text-lg">
-                    {Array.from({ length: rev.rating }).map((_, i) => (
-                      <span key={i}>★</span>
-                    ))}
+                    {'★'.repeat(Math.round(reviewStats.averageRating || 5))}
                   </div>
-
-                  <p className="text-sm text-amber-950 font-medium leading-relaxed italic">
-                    "{rev.text}"
-                  </p>
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-amber-200/80 flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-bold text-amber-950">{rev.name}</h4>
-                    <p className="text-xs text-amber-700">{rev.location}</p>
-                  </div>
-                  <span className="px-2.5 py-1 rounded-full bg-amber-100 text-[10px] font-bold text-amber-800">
-                    Verified Buyer ✓
+                  <span className="font-black text-sm text-amber-950">
+                    {reviewStats.averageRating} / 5.0
+                  </span>
+                  <span className="text-xs text-amber-800/80 font-medium">
+                    • ({reviewStats.totalReviews} verified {reviewStats.totalReviews === 1 ? 'review' : 'reviews'})
                   </span>
                 </div>
-              </div>
+              )}
+            </div>
+
+            {/* Write a Review Button */}
+            <div className="flex-shrink-0">
+              <button
+                onClick={() => setIsReviewModalOpen(true)}
+                className="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-sm rounded-full shadow-lg shadow-amber-900/15 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+              >
+                <span>✍️</span>
+                <span>Write a Review</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Category Filter Pills */}
+          <div className="flex flex-wrap items-center gap-2 mb-10 pb-2 overflow-x-auto">
+            {[
+              { id: 'all', label: 'All Reviews', icon: '🌟' },
+              { id: 'quality', label: 'Honey Taste & Quality', icon: '🍯' },
+              { id: 'delivery', label: 'Packaging & Delivery', icon: '📦' },
+              { id: 'service', label: 'Website & Service', icon: '🌐' },
+              { id: 'purity', label: 'Apiary Purity', icon: '🐝' },
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setReviewCategory(cat.id)}
+                className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs border ${
+                  reviewCategory === cat.id
+                    ? 'bg-amber-500 text-white border-amber-600 shadow-md'
+                    : 'bg-white/80 hover:bg-amber-100/70 text-amber-950 border-amber-200'
+                }`}
+              >
+                <span>{cat.icon}</span>
+                <span>{cat.label}</span>
+              </button>
             ))}
           </div>
 
+          {/* Reviews Grid */}
+          {loadingReviews ? (
+            <div className="text-center py-20">
+              <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-amber-950 font-bold text-sm">Loading community reviews... 🍯</p>
+            </div>
+          ) : reviews.length === 0 ? (
+            <div className="honey-glass rounded-3xl p-10 sm:p-14 text-center border border-amber-200/90 shadow-xl max-w-lg mx-auto">
+              <span className="text-5xl block mb-3 animate-bounce">🍯</span>
+              <h3 className="text-xl font-black text-amber-950 font-heading">
+                Be the First to Review!
+              </h3>
+              <p className="text-xs sm:text-sm text-amber-800 mt-2 mb-6 leading-relaxed">
+                Have you tasted our raw harvest or ordered online? Share your experience openly and help fellow honey lovers discover pure nature.
+              </p>
+              <button
+                onClick={() => setIsReviewModalOpen(true)}
+                className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs sm:text-sm rounded-full shadow-md transition-all flex items-center justify-center gap-2 mx-auto"
+              >
+                <span>✍️</span>
+                <span>Share Your Thoughts</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+              {reviews.map((rev) => (
+                <div
+                  key={rev.id}
+                  className="honey-glass honey-glass-hover rounded-3xl p-6 sm:p-7 relative flex flex-col justify-between border border-amber-200/80 shadow-md transition-all hover:shadow-xl"
+                >
+                  <div className="space-y-3.5">
+                    {/* Top Row: Rating and Category */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-0.5 text-amber-500 text-base">
+                        {Array.from({ length: rev.rating || 5 }).map((_, i) => (
+                          <span key={i}>★</span>
+                        ))}
+                      </div>
+                      <span className="text-[10px] uppercase tracking-wider font-extrabold text-amber-800 bg-amber-100/80 px-2.5 py-0.5 rounded-full">
+                        {rev.category === 'delivery'
+                          ? '📦 Delivery'
+                          : rev.category === 'service'
+                          ? '🌐 Service'
+                          : rev.category === 'purity'
+                          ? '🐝 Purity'
+                          : '🍯 Taste'}
+                      </span>
+                    </div>
+
+                    {/* Headline / Title */}
+                    {rev.title && (
+                      <h4 className="text-sm font-extrabold text-amber-950 leading-snug">
+                        "{rev.title}"
+                      </h4>
+                    )}
+
+                    {/* Review Description */}
+                    <p className="text-xs sm:text-sm text-amber-900/90 font-medium leading-relaxed">
+                      {rev.comment}
+                    </p>
+
+                    {/* Review Photo if Uploaded */}
+                    {rev.image_url && (
+                      <div className="pt-2">
+                        <button
+                          type="button"
+                          onClick={() => setActivePhotoModal(rev.image_url)}
+                          className="group relative rounded-2xl overflow-hidden border border-amber-300 shadow-sm block focus:outline-none w-full"
+                        >
+                          <img
+                            src={rev.image_url}
+                            alt="Customer honey jar"
+                            className="w-full h-36 sm:h-40 object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                          />
+                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1">
+                            <span>🔍 Click to Expand</span>
+                          </div>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Card Footer: User & Verification Badge */}
+                  <div className="mt-5 pt-4 border-t border-amber-200/70 flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <h5 className="text-xs font-black text-amber-950 truncate">
+                        {rev.user_name}
+                      </h5>
+                      <p className="text-[11px] text-amber-800/80 truncate">
+                        {rev.location || 'India'}
+                        {rev.created_at && ` • ${formatDate(rev.created_at).split(',')[0]}`}
+                      </p>
+                    </div>
+
+                    {/* Verification Badge */}
+                    <div className="flex-shrink-0">
+                      {rev.is_verified_buyer || rev.badge_type === 'verified_buyer' ? (
+                        <span className="px-2.5 py-1 rounded-full bg-amber-100 border border-amber-300 text-[10px] font-black text-amber-950 flex items-center gap-1 shadow-xs" title="Verified Customer who purchased Aai Ji Honey">
+                          <span>🍯</span>
+                          <span>Verified Buyer ✓</span>
+                        </span>
+                      ) : rev.badge_type === 'community_member' ? (
+                        <span className="px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-[10px] font-bold text-emerald-800 flex items-center gap-1" title="Registered Community Member">
+                          <span>🌿</span>
+                          <span>Member</span>
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-[10px] font-semibold text-amber-800 flex items-center gap-1">
+                          <span>📍</span>
+                          <span>Reviewer</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* Write Review Modal */}
+        <WriteReviewModal
+          isOpen={isReviewModalOpen}
+          onClose={() => setIsReviewModalOpen(false)}
+          onReviewSubmitted={handleReviewSubmitted}
+        />
+
+        {/* Customer Photo Full Preview Modal */}
+        {activePhotoModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]"
+            onClick={() => setActivePhotoModal(null)}
+          >
+            <div className="relative max-w-2xl max-h-[90vh] bg-black rounded-2xl overflow-hidden p-2 border border-amber-400/40">
+              <img
+                src={activePhotoModal}
+                alt="Enlarged review photo"
+                className="max-h-[80vh] w-auto mx-auto object-contain rounded-xl"
+              />
+              <button
+                onClick={() => setActivePhotoModal(null)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/70 hover:bg-black text-white font-black flex items-center justify-center shadow-lg"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ========================================================= */}

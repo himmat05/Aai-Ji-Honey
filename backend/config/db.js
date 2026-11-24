@@ -199,12 +199,34 @@ const connectDB = async () => {
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
 
+      CREATE TABLE IF NOT EXISTS reviews (
+        id VARCHAR(50) PRIMARY KEY,
+        user_id VARCHAR(50),
+        user_name VARCHAR(150) NOT NULL,
+        user_email VARCHAR(150),
+        location VARCHAR(100),
+        rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+        category VARCHAR(50) DEFAULT 'quality',
+        title VARCHAR(200),
+        comment TEXT NOT NULL,
+        image_url TEXT,
+        image_public_id TEXT,
+        badge_type VARCHAR(50) DEFAULT 'guest',
+        is_verified_buyer BOOLEAN DEFAULT FALSE,
+        is_approved BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
       -- Idempotent column migrations for job_applications
       ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS resume_data TEXT;
       ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS resume_mimetype VARCHAR(100) DEFAULT 'application/pdf';
       ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS resume_filename VARCHAR(255);
 
       -- High-Performance Database Indexes (Accelerates WHERE, JOIN, and ORDER BY queries)
+      CREATE INDEX IF NOT EXISTS idx_reviews_created ON reviews(created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_reviews_rating ON reviews(rating);
+      CREATE INDEX IF NOT EXISTS idx_reviews_approved ON reviews(is_approved);
       CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
       CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
       CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
