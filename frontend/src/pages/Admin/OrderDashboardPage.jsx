@@ -57,6 +57,8 @@ const OrderDashboardPage = () => {
   const [replyingId, setReplyingId] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [isSendingReply, setIsSendingReply] = useState(false);
+  const [smtpTesting, setSmtpTesting] = useState(false);
+  const [smtpStatus, setSmtpStatus] = useState(null);
 
   // React to URL query parameter changes
   useEffect(() => {
@@ -137,8 +139,12 @@ const OrderDashboardPage = () => {
 
     try {
       setIsSendingReply(true);
-      await messageApi.replyToMessage(messageId, replyText.trim());
-      toast.success('✉️ Reply saved and emailed to customer!');
+      const res = await messageApi.replyToMessage(messageId, replyText.trim());
+      if (res && res.emailSent === false) {
+        toast.warning(`⚠️ ${res.message}`, { autoClose: 6000 });
+      } else {
+        toast.success('✉️ Reply saved and emailed to customer!');
+      }
       setReplyText('');
       setReplyingId(null);
       fetchMessages();
@@ -185,6 +191,26 @@ const OrderDashboardPage = () => {
     } catch (e) {
       console.error('Error marking all as read:', e);
       toast.error('Failed to mark all as read');
+    }
+  };
+
+  const handleTestSmtp = async () => {
+    try {
+      setSmtpTesting(true);
+      const res = await messageApi.getSmtpStatus();
+      setSmtpStatus(res);
+      if (res && res.connected) {
+        toast.success(`✅ Mail Server Connected! (${res.configuredEmail || 'Ready'})`);
+      } else {
+        toast.error(`❌ Mail Server Error: ${res?.error || 'Authentication / Connection failed'}`);
+      }
+    } catch (err) {
+      console.error('SMTP test error:', err);
+      const errMsg = err.response?.data?.error || err.message || 'SMTP Connection test failed';
+      setSmtpStatus({ connected: false, error: errMsg });
+      toast.error(`❌ ${errMsg}`);
+    } finally {
+      setSmtpTesting(false);
     }
   };
 
@@ -1145,6 +1171,15 @@ const OrderDashboardPage = () => {
                     <span>Mark All Read</span>
                   </button>
                 )}
+
+                <button
+                  onClick={handleTestSmtp}
+                  disabled={smtpTesting}
+                  className="w-full sm:w-auto px-3 py-2 rounded-xl font-bold text-xs bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 transition-all flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50"
+                  title="Test SMTP mail connection on this server"
+                >
+                  <span>{smtpTesting ? '⏳ Testing...' : '⚡ Test SMTP'}</span>
+                </button>
               </div>
 
               {/* Search Bar */}
@@ -1161,6 +1196,39 @@ const OrderDashboardPage = () => {
                 />
               </div>
             </div>
+
+            {/* SMTP Status Diagnostics Banner */}
+            {smtpStatus && (
+              <div
+                className={`p-3.5 rounded-2xl border text-xs flex flex-wrap items-center justify-between gap-3 shadow-sm transition-all ${
+                  smtpStatus.connected
+                    ? 'bg-emerald-50/90 border-emerald-300 text-emerald-950'
+                    : 'bg-red-50/90 border-red-300 text-red-950'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl">{smtpStatus.connected ? '✅' : '❌'}</span>
+                  <div>
+                    <p className="font-bold text-sm">
+                      {smtpStatus.connected
+                        ? 'Mail Server Connected & Ready!'
+                        : 'Mail Server Connection Failed'}
+                    </p>
+                    <p className="text-[11px] opacity-90 mt-0.5">
+                      {smtpStatus.connected
+                        ? `Authenticated as ${smtpStatus.configuredEmail} via IPv4 (${smtpStatus.host}:${smtpStatus.port}). Reply emails will be delivered properly.`
+                        : `Error: ${smtpStatus.error || 'Connection timed out'}. Ensure EMAIL_FROM and EMAIL_PASS (App Password) are set in Render Environment without spaces.`}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSmtpStatus(null)}
+                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-black/5 hover:bg-black/10 transition-all"
+                >
+                  Dismiss ✕
+                </button>
+              </div>
+            )}
 
             {/* Messages Grid */}
             {loadingMessages ? (

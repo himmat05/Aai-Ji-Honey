@@ -146,25 +146,50 @@ const replyToMessage = async (req, res) => {
 
     const updated = result.rows[0];
 
-    // Asynchronously dispatch reply email to customer
-    sendMessageReplyEmail({
+    // Dispatch reply email to customer and await outcome
+    const emailResult = await sendMessageReplyEmail({
       toEmail: updated.email,
       customerName: updated.name,
       subject: updated.subject,
       originalMessage: updated.message,
       replyMessage: cleanReply,
-    }).catch((emailErr) => {
-      console.error('Warning: Reply email dispatch error:', emailErr.message);
     });
 
-    res.json({
-      success: true,
-      message: 'Reply saved and emailed to customer successfully.',
-      updatedMessage: updated,
-    });
+    if (emailResult && emailResult.success) {
+      return res.json({
+        success: true,
+        message: 'Reply saved and emailed to customer successfully.',
+        emailSent: true,
+        updatedMessage: updated,
+      });
+    } else {
+      console.warn('⚠️ Reply saved in DB, but customer email failed:', emailResult?.error);
+      return res.json({
+        success: true,
+        message: `Reply saved in website portal. Note: Email delivery could not reach customer (${emailResult?.error || 'Check EMAIL_FROM and EMAIL_PASS on Render'}).`,
+        emailSent: false,
+        emailError: emailResult?.error,
+        updatedMessage: updated,
+      });
+    }
   } catch (err) {
     console.error('Error replying to message:', err);
     res.status(500).json({ error: 'Failed to save reply' });
+  }
+};
+
+/**
+ * Diagnostic endpoint for Store Admin to check SMTP connection health on deployed server
+ * GET /api/messages/smtp-status (Protected, Admin)
+ */
+const getEmailStatus = async (req, res) => {
+  try {
+    const { verifySmtpConnection } = require('../services/emailService');
+    const status = await verifySmtpConnection();
+    res.status(200).json(status);
+  } catch (err) {
+    console.error('Error verifying SMTP status:', err);
+    res.status(500).json({ connected: false, error: err.message });
   }
 };
 
@@ -343,4 +368,5 @@ module.exports = {
   markAllAsRead,
   getUnreadCounts,
   deleteMessage,
+  getEmailStatus,
 };

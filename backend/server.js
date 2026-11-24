@@ -107,4 +107,9 @@ app.listen(PORT, () => {
   } else {
     console.log('⚠️ Google OAuth: GOOGLE_CLIENT_ID is not configured in .env');
   }
+  if (process.env.EMAIL_FROM && process.env.EMAIL_PASS) {
+    console.log(`📧 Email SMTP Active: Sender account ${process.env.EMAIL_FROM.trim()}`);
+  } else {
+    console.warn('⚠️ Email SMTP: EMAIL_FROM or EMAIL_PASS is missing in environment variables. Outbound emails will fail!');
+  }
 });

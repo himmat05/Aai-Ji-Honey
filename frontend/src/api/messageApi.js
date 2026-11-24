@@ -59,6 +59,14 @@ export const messageApi = {
   },
 
   /**
+   * Diagnostic check for SMTP mail sending capability
+   */
+  getSmtpStatus: async () => {
+    const response = await apiClient.get('/messages/smtp-status');
+    return response.data;
+  },
+
+  /**
    * Fetch unread notification counts for Navbar badges
    * @returns {Promise<{ adminUnread: number, userUnread: number }>}
    */

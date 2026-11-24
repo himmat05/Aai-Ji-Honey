@@ -1,14 +1,73 @@
+const dns = require('dns');
 const nodemailer = require('nodemailer');
 const axios = require('axios');
 
+// Force IPv4 DNS order in Node.js 18+ to avoid IPv6 connection timeouts on cloud hosts (Render, AWS, GCP)
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
+/**
+ * Clean & sanitize email credentials
+ */
+const getCleanCredentials = () => {
+  const user = process.env.EMAIL_FROM ? String(process.env.EMAIL_FROM).trim() : '';
+  const pass = process.env.EMAIL_PASS
+    ? String(process.env.EMAIL_PASS).trim().replace(/["'\s]/g, '')
+    : '';
+  return { user, pass };
+};
+
+/**
+ * Configure Nodemailer transporter with IPv4 preference, SSL port 465, and explicit timeouts
+ */
 const getTransporter = () => {
+  const { user, pass } = getCleanCredentials();
+
+  if (!user || !pass) {
+    console.warn('⚠️ EMAIL WARNING: EMAIL_FROM or EMAIL_PASS is not configured in environment variables.');
+  }
+
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // Use SSL on port 465 for Gmail
+    family: 4, // Explicitly force IPv4 to prevent cloud IPv6 connection drops
     auth: {
-      user: process.env.EMAIL_FROM,
-      pass: process.env.EMAIL_PASS,
+      user,
+      pass,
+    },
+    connectionTimeout: 15000, // 15 seconds
+    greetingTimeout: 15000,
+    socketTimeout: 20000,
+    tls: {
+      rejectUnauthorized: false, // Prevents certificate chain rejections in Linux cloud containers
     },
   });
+};
+
+/**
+ * Test SMTP connection diagnostics
+ */
+const verifySmtpConnection = async () => {
+  const { user, pass } = getCleanCredentials();
+  if (!user || !pass) {
+    return {
+      connected: false,
+      error: 'EMAIL_FROM or EMAIL_PASS environment variable is missing on this server.',
+    };
+  }
+  try {
+    const transporter = getTransporter();
+    await transporter.verify();
+    return { connected: true, user };
+  } catch (err) {
+    return {
+      connected: false,
+      error: err.message || 'SMTP connection verification failed',
+      code: err.code || 'SMTP_ERROR',
+    };
+  }
 };
 
 /**
@@ -142,10 +201,10 @@ const sendMessageReplyEmail = async ({
 
     await transporter.sendMail(mailOptions);
     console.log(`📧 Customer reply email sent successfully to ${toEmail}`);
-    return true;
+    return { success: true };
   } catch (err) {
     console.error('❌ Failed to send reply email:', err.message);
-    return false;
+    return { success: false, error: err.message };
   }
 };
 
@@ -224,6 +283,8 @@ const sendCareerApplicationEmail = async ({ toEmail, applicantName, jobTitle, tr
 };
 
 module.exports = {
+  getTransporter,
+  verifySmtpConnection,
   sendLoginEmail,
   sendMessageReplyEmail,
   sendCareerApplicationEmail,

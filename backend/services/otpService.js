@@ -1,19 +1,6 @@
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
 const db = require('../config/db');
-
-/**
- * Configure Nodemailer transporter using Gmail credentials from .env
- */
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_FROM,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-};
+const { getTransporter } = require('./emailService');
 
 /**
  * Generate a 6-digit cryptographic numeric OTP
@@ -104,7 +91,7 @@ const sendOtpEmail = async (email, otp, purpose) => {
     </html>
   `;
 
-  const transporter = createTransporter();
+  const transporter = getTransporter();
   await transporter.sendMail({
     from: `"Aai Ji Honey" <${process.env.EMAIL_FROM}>`,
     to: email,
