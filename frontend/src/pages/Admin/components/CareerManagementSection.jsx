@@ -3,6 +3,14 @@ import { toast } from 'react-toastify';
 import { careerApi } from '../../../api/careerApi';
 import { formatDate } from '../../../utils/formatters';
 
+const DEFAULT_DEPARTMENTS = [
+  'Apiculture & Field Operations',
+  'Research & Quality Assurance',
+  'Supply Chain & Operations',
+  'Marketing & Outreach',
+  'Finance & Administration',
+];
+
 const CareerManagementSection = ({ onApplicationsUpdated }) => {
   // Sub-tab: 'applications' or 'jobs'
   const [subTab, setSubTab] = useState('applications');
@@ -21,6 +29,8 @@ const CareerManagementSection = ({ onApplicationsUpdated }) => {
   const [jobs, setJobs] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [isCreatingJob, setIsCreatingJob] = useState(false);
+  const [isCustomDepartment, setIsCustomDepartment] = useState(false);
+  const [customDepartment, setCustomDepartment] = useState('');
   const [jobForm, setJobForm] = useState({
     title: '',
     department: 'Apiculture & Field Operations',
@@ -31,6 +41,13 @@ const CareerManagementSection = ({ onApplicationsUpdated }) => {
     description: '',
     requirements: '',
   });
+
+  // Extract any unique custom departments previously created in jobs
+  const customDeptsFromJobs = useMemo(() => {
+    return Array.from(new Set(jobs.map((j) => j.department))).filter(
+      (dept) => dept && !DEFAULT_DEPARTMENTS.includes(dept)
+    );
+  }, [jobs]);
 
   // Editing notes state per application: { [appId]: notes }
   const [activeNotes, setActiveNotes] = useState({});
@@ -175,15 +192,29 @@ const CareerManagementSection = ({ onApplicationsUpdated }) => {
       return;
     }
 
+    const finalDepartment = isCustomDepartment
+      ? customDepartment.trim()
+      : jobForm.department.trim();
+
+    if (!finalDepartment) {
+      toast.error('Please enter a department name');
+      return;
+    }
+
     try {
       setIsCreatingJob(true);
-      const res = await careerApi.createJob(jobForm);
+      const res = await careerApi.createJob({
+        ...jobForm,
+        department: finalDepartment,
+      });
       if (res?.job) {
         toast.success(`🎉 Job opening "${res.job.title}" created successfully!`);
         setJobs((prev) => [res.job, ...prev]);
+        setIsCustomDepartment(false);
+        setCustomDepartment('');
         setJobForm({
           title: '',
-          department: 'Apiculture & Field Operations',
+          department: finalDepartment,
           location: 'Rajasthan, India',
           employmentType: 'Full-Time',
           experienceRequired: '1-2 Years',
@@ -558,20 +589,100 @@ const CareerManagementSection = ({ onApplicationsUpdated }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-amber-950 uppercase tracking-wider mb-1">
-                    Department <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={jobForm.department}
-                    onChange={(e) => setJobForm({ ...jobForm, department: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl border border-amber-300 text-xs text-amber-950 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  >
-                    <option value="Apiculture & Field Operations">Apiculture & Field Operations</option>
-                    <option value="Research & Quality Assurance">Research & Quality Assurance</option>
-                    <option value="Supply Chain & Operations">Supply Chain & Operations</option>
-                    <option value="Marketing & Outreach">Marketing & Outreach</option>
-                    <option value="Finance & Administration">Finance & Administration</option>
-                  </select>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-amber-950 uppercase tracking-wider">
+                      Department <span className="text-red-500">*</span>
+                    </label>
+                    {isCustomDepartment ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCustomDepartment(false);
+                          setCustomDepartment('');
+                          setJobForm({ ...jobForm, department: 'Apiculture & Field Operations' });
+                        }}
+                        className="text-[11px] text-amber-700 hover:text-amber-950 underline font-semibold cursor-pointer"
+                      >
+                        Choose from list
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCustomDepartment(true);
+                          setCustomDepartment('');
+                        }}
+                        className="text-[11px] text-amber-700 hover:text-amber-950 font-bold flex items-center gap-0.5 cursor-pointer"
+                        title="Add custom department name"
+                      >
+                        <span>➕</span>
+                        <span>Type Manually</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {!isCustomDepartment ? (
+                    <select
+                      value={jobForm.department}
+                      onChange={(e) => {
+                        if (e.target.value === '__CUSTOM__') {
+                          setIsCustomDepartment(true);
+                          setCustomDepartment('');
+                        } else {
+                          setJobForm({ ...jobForm, department: e.target.value });
+                        }
+                      }}
+                      className="w-full px-3.5 py-2 rounded-xl border border-amber-300 text-xs text-amber-950 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium cursor-pointer"
+                    >
+                      <optgroup label="Standard Departments">
+                        {DEFAULT_DEPARTMENTS.map((dept) => (
+                          <option key={dept} value={dept}>
+                            {dept}
+                          </option>
+                        ))}
+                      </optgroup>
+                      {customDeptsFromJobs.length > 0 && (
+                        <optgroup label="Existing Custom Departments">
+                          {customDeptsFromJobs.map((dept) => (
+                            <option key={dept} value={dept}>
+                              {dept}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                      <optgroup label="Create New Department">
+                        <option value="__CUSTOM__">➕ + Other / Type Department Manually...</option>
+                      </optgroup>
+                    </select>
+                  ) : (
+                    <div className="space-y-1 animate-[fadeIn_0.2s_ease-out]">
+                      <div className="relative">
+                        <input
+                          type="text"
+                          required
+                          autoFocus
+                          placeholder="Type department name (e.g. IT, Corporate Sales)..."
+                          value={customDepartment}
+                          onChange={(e) => setCustomDepartment(e.target.value)}
+                          className="w-full pl-3 py-2 pr-16 rounded-xl border-2 border-amber-500 text-xs text-amber-950 bg-white focus:outline-none focus:ring-2 focus:ring-amber-600 font-bold shadow-inner"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsCustomDepartment(false);
+                            setCustomDepartment('');
+                            setJobForm({ ...jobForm, department: 'Apiculture & Field Operations' });
+                          }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-amber-800 hover:text-amber-950 font-black px-2 py-0.5 rounded-md bg-amber-100 hover:bg-amber-200 cursor-pointer"
+                        >
+                          ✕ List
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-amber-800/80 font-medium">
+                        ✏️ This new department will be published on the website.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div>
