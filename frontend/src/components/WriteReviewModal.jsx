@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { reviewApi } from '../api/reviewApi';
 import useAuth from '../hooks/useAuth';
+import { compressImage } from '../utils/imageCompressor';
 
 const RATING_LABELS = {
   1: '★ Needs Improvement',
@@ -44,8 +45,8 @@ const WriteReviewModal = ({ isOpen, onClose, onReviewSubmitted }) => {
     }
   }, [user, isOpen]);
 
-  // Handle image selection with preview
-  const handleImageChange = (e) => {
+  // Handle image selection with client-side compression & Cloudinary optimization
+  const handleImageChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -54,17 +55,29 @@ const WriteReviewModal = ({ isOpen, onClose, onReviewSubmitted }) => {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB');
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image size must be less than 10MB');
       return;
     }
 
-    setImageFile(file);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result);
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Compress image client-side to ~150-250KB before uploading to Cloudinary
+      const compressed = await compressImage(file, 1200, 0.82);
+      setImageFile(compressed);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(compressed);
+    } catch (compressErr) {
+      console.warn('Image compression fallback:', compressErr);
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const removeImage = () => {
@@ -259,20 +272,26 @@ const WriteReviewModal = ({ isOpen, onClose, onReviewSubmitted }) => {
                 />
               </label>
             ) : (
-              <div className="relative inline-block mt-1">
-                <img
-                  src={imagePreview}
-                  alt="Review preview"
-                  className="w-24 h-24 object-cover rounded-2xl border-2 border-amber-400 shadow-md"
-                />
-                <button
-                  type="button"
-                  onClick={removeImage}
-                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-600 text-white font-bold text-xs flex items-center justify-center shadow-md hover:bg-red-700"
-                  title="Remove photo"
-                >
-                  ✕
-                </button>
+              <div>
+                <div className="relative inline-block mt-1">
+                  <img
+                    src={imagePreview}
+                    alt="Review preview"
+                    className="w-24 h-24 object-cover rounded-2xl border-2 border-amber-400 shadow-md"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-600 text-white font-bold text-xs flex items-center justify-center shadow-md hover:bg-red-700"
+                    title="Remove photo"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <p className="mt-1.5 text-[11px] text-amber-800/80 font-medium flex items-center gap-1">
+                  <span>☁️</span>
+                  <span>Optimized & securely stored on Cloudinary CDN</span>
+                </p>
               </div>
             )}
           </div>

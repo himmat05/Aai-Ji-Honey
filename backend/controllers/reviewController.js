@@ -166,12 +166,38 @@ const createReview = async (req, res) => {
       }
     }
 
-    // Handle uploaded image
+    // Handle uploaded image via Cloudinary to save PostgreSQL database storage
     let imageUrl = null;
     let imagePublicId = null;
     if (req.file) {
       imageUrl = req.file.path || req.file.secure_url || null;
       imagePublicId = req.file.filename || req.file.public_id || null;
+
+      // Ensure that if file came from local disk or memory buffer, it gets pushed to Cloudinary
+      if (imageUrl && !imageUrl.startsWith('http')) {
+        try {
+          const uploadRes = await cloudinary.uploader.upload(imageUrl, {
+            folder: 'aai-ji-honey/reviews',
+            resource_type: 'image',
+          });
+          imageUrl = uploadRes.secure_url;
+          imagePublicId = uploadRes.public_id;
+        } catch (cErr) {
+          console.warn('⚠️ Cloudinary manual upload fallback warning:', cErr.message);
+        }
+      }
+    } else if (req.body.image && typeof req.body.image === 'string' && req.body.image.startsWith('data:image/')) {
+      // Base64 upload to Cloudinary: NEVER store raw base64 data blobs in PostgreSQL
+      try {
+        const uploadRes = await cloudinary.uploader.upload(req.body.image, {
+          folder: 'aai-ji-honey/reviews',
+          resource_type: 'image',
+        });
+        imageUrl = uploadRes.secure_url;
+        imagePublicId = uploadRes.public_id;
+      } catch (cErr) {
+        console.warn('⚠️ Cloudinary base64 upload error:', cErr.message);
+      }
     }
 
     const reviewId = 'rev_' + crypto.randomBytes(10).toString('hex');

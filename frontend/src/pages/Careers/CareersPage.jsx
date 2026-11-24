@@ -150,11 +150,13 @@ const CareersPage = () => {
   // Autofill if customer is authenticated
   useEffect(() => {
     if (user) {
+      const rawUserMobile = user.mobile || user.phone || '';
+      const cleanUserMobile = rawUserMobile.replace(/\D/g, '').slice(-10);
       setFormData((prev) => ({
         ...prev,
         name: prev.name || user.name || '',
         email: prev.email || user.email || '',
-        mobile: prev.mobile || user.mobile || '',
+        mobile: prev.mobile || cleanUserMobile,
         city: prev.city || user.location || user.city || '',
       }));
     }
@@ -230,8 +232,15 @@ const CareersPage = () => {
   const handleSubmitApplication = async (e) => {
     e.preventDefault();
 
-    if (!formData.name.trim() || !formData.email.trim() || !formData.mobile.trim()) {
+    const cleanMobile = formData.mobile.replace(/\D/g, '');
+
+    if (!formData.name.trim() || !formData.email.trim() || !cleanMobile) {
       toast.error('Please fill in your name, email, and mobile number.');
+      return;
+    }
+
+    if (cleanMobile.length !== 10) {
+      toast.error('Mobile number must be exactly 10 digits (e.g. 9876543210).');
       return;
     }
 
@@ -246,7 +255,7 @@ const CareersPage = () => {
       const postData = new FormData();
       postData.append('name', formData.name.trim());
       postData.append('email', formData.email.trim());
-      postData.append('mobile', formData.mobile.trim());
+      postData.append('mobile', cleanMobile);
       postData.append('city', formData.city.trim());
       postData.append('experience', formData.experience);
       postData.append('linkedinUrl', formData.linkedinUrl.trim());
@@ -663,17 +672,33 @@ const CareersPage = () => {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-amber-950 uppercase tracking-wider mb-1">
-                        Mobile / WhatsApp <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="tel"
-                        required
-                        placeholder="+91 98765 43210"
-                        value={formData.mobile}
-                        onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-amber-300 text-xs text-amber-950 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      />
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-bold text-amber-950 uppercase tracking-wider">
+                          Mobile / WhatsApp <span className="text-red-500">*</span>
+                        </label>
+                        <span className={`text-[11px] font-bold ${formData.mobile.replace(/\D/g, '').length === 10 ? 'text-emerald-700' : 'text-amber-800/70'}`}>
+                          {formData.mobile.replace(/\D/g, '').length}/10 digits
+                        </span>
+                      </div>
+                      <div className="relative">
+                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-amber-800/80 pointer-events-none select-none">
+                          +91
+                        </span>
+                        <input
+                          type="tel"
+                          required
+                          maxLength={10}
+                          inputMode="numeric"
+                          pattern="[0-9]{10}"
+                          placeholder="9876543210"
+                          value={formData.mobile}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                            setFormData({ ...formData, mobile: val });
+                          }}
+                          className="w-full pl-12 pr-3.5 py-2.5 rounded-xl border border-amber-300 text-xs text-amber-950 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        />
+                      </div>
                     </div>
 
                     <div>

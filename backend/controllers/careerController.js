@@ -85,7 +85,15 @@ const applyForJob = async (req, res) => {
 
     const cleanName = stripHtml(name).slice(0, 100);
     const cleanEmail = String(email).trim().toLowerCase().slice(0, 150);
-    const cleanMobile = stripHtml(mobile).slice(0, 25);
+    const rawMobile = stripHtml(mobile || '');
+    const cleanMobile = rawMobile.replace(/\D/g, '').slice(-10);
+
+    if (cleanMobile.length !== 10) {
+      return res.status(400).json({
+        error: 'Please enter a valid 10-digit mobile number (e.g. 9876543210).',
+      });
+    }
+
     const cleanJobTitle = stripHtml(jobTitle).slice(0, 150);
     const cleanCity = city ? stripHtml(city).slice(0, 100) : 'Rajasthan, India';
     const cleanExperience = experience ? stripHtml(experience).slice(0, 50) : 'Not specified';
