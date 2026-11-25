@@ -66,14 +66,14 @@ export const careerApi = {
 
   // Generate verified resume viewing / download URL
   getResumeViewUrl: (appId, rawResumeUrl) => {
-    const isLocalhost =
+    const isLocal =
       typeof window !== 'undefined' &&
       (window.location.hostname === 'localhost' ||
         window.location.hostname === '127.0.0.1');
 
-    const apiBase = isLocalhost
-      ? (import.meta.env.VITE_LOCAL_API_URL || 'http://localhost:5000')
-      : (import.meta.env.VITE_API_URL || 'http://localhost:5000');
+    const apiBase =
+      import.meta.env.VITE_API_URL ||
+      (isLocal ? 'http://localhost:5000' : 'https://aai-ji-honey.onrender.com');
 
     const token = localStorage.getItem('token');
     const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : '';

@@ -1,15 +1,14 @@
 import axios from 'axios';
 
 // Automatically detect if running locally in development
-const isLocalhost =
+const isLocal =
   typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1');
 
-// When developing on localhost, talk to local server on port 5000 where Google OAuth keys & DB are active
-const API_BASE_URL = isLocalhost
-  ? (import.meta.env.VITE_LOCAL_API_URL || 'http://localhost:5000')
-  : (import.meta.env.VITE_API_URL || 'http://localhost:5000');
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  (isLocal ? 'http://localhost:5000' : 'https://aai-ji-honey.onrender.com');
 
 console.log('📡 API Base URL configured to:', API_BASE_URL);
 
