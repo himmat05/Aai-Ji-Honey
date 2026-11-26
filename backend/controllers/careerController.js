@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const db = require('../config/db');
 const { cloudinary } = require('../config/cloudinary');
-const { sendCareerApplicationEmail } = require('../services/emailService');
+const { sendCareerApplicationEmail, notifyAdminNewCareerApplication } = require('../services/emailService');
 
 // Strip HTML tags to prevent stored XSS attacks
 const stripHtml = (str) => (str ? String(str).replace(/<[^>]*>?/gm, '').trim() : '');
@@ -172,6 +172,11 @@ const applyForJob = async (req, res) => {
       jobTitle: cleanJobTitle,
       trackingId: id,
     }).catch((e) => console.warn('Email dispatch warning:', e.message));
+
+    // Notify admin asynchronously about new career application
+    notifyAdminNewCareerApplication({
+      application: result.rows[0],
+    }).catch((e) => console.warn('Admin career alert warning:', e.message));
 
     return res.status(201).json({
       success: true,

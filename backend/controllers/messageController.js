@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
-const { sendMessageReplyEmail } = require('../services/emailService');
+const { sendMessageReplyEmail, notifyAdminNewMessage } = require('../services/emailService');
 
 /**
  * Submit a new message or inquiry from Contact Page, Apiary Section, or User Profile
@@ -64,6 +64,11 @@ const createMessage = async (req, res) => {
 
     const values = [id, userId, cleanName, cleanEmail, cleanMobile, cleanSubject, cleanMessage];
     const result = await db.query(insertQuery, values);
+
+    // Notify admin asynchronously without blocking customer response
+    notifyAdminNewMessage({ inquiry: result.rows[0] }).catch((e) =>
+      console.warn('Admin message alert warning:', e.message)
+    );
 
     res.status(201).json({
       success: true,

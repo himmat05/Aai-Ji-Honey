@@ -498,6 +498,508 @@ const sendCareerApplicationEmail = async ({ toEmail, applicantName, jobTitle, tr
   }
 };
 
+// =========================================================================
+// ADMIN DASHBOARD ACTIVITY NOTIFICATIONS (Sent to sitaramseervi88@gmail.com)
+// =========================================================================
+
+const ADMIN_NOTIFICATION_EMAIL = (process.env.ADMIN_EMAIL || 'sitaramseervi88@gmail.com').trim();
+const STORE_FRONTEND_URL = (process.env.FRONTEND_URL || 'https://aai-ji-honey.vercel.app').replace(/\/+$/, '');
+
+/**
+ * Escape HTML special characters before embedding user-submitted values in email HTML.
+ */
+const escapeHtml = (value) => {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
+/**
+ * Format timestamp in Indian Standard Time (IST) for consistent admin alerts.
+ */
+const formatIstTimestamp = (dateInput = new Date()) => {
+  try {
+    return (
+      new Date(dateInput).toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }) + ' IST'
+    );
+  } catch (e) {
+    return new Date().toISOString();
+  }
+};
+
+/**
+ * Format number as INR display string.
+ */
+const formatInr = (amount) => {
+  const num = Number(amount) || 0;
+  return `₹${num.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+};
+
+/**
+ * Build clickable Call + WhatsApp HTML links when a mobile number is provided.
+ */
+const buildPhoneLinksHtml = (rawMobile) => {
+  if (!rawMobile) return null;
+  const cleanText = escapeHtml(rawMobile);
+  const digits = String(rawMobile).replace(/\D/g, '').slice(-10);
+  if (digits.length !== 10) return cleanText;
+
+  return `${cleanText} &nbsp;(<a href="tel:+91${digits}" style="color: #b45309; font-weight: 700; text-decoration: none;">Call</a> &bull; <a href="https://wa.me/91${digits}" target="_blank" style="color: #059669; font-weight: 700; text-decoration: none;">WhatsApp</a>)`;
+};
+
+/**
+ * Shared HTML + plain-text email builder for all Admin Dashboard activity notifications.
+ */
+const sendAdminAlertEmail = async ({
+  subject,
+  badgeText,
+  badgeBg = '#fef3c7',
+  badgeColor = '#92400e',
+  accentColor = '#d97706',
+  headline,
+  summaryText,
+  timestamp,
+  rows = [],
+  highlightTitle,
+  highlightBodyHtml,
+  highlightImageUrl,
+  ctaLabel = 'Open Admin Dashboard ➔',
+  ctaPath = '/orderDashboard',
+  plainDetails = '',
+}) => {
+  try {
+    const safeSubject = String(subject || 'Admin Activity Alert').replace(/[\r\n]+/g, ' ').trim();
+    const safeTime = formatIstTimestamp(timestamp);
+    const dashboardUrl = `${STORE_FRONTEND_URL}${ctaPath}`;
+    const validRows = rows.filter((r) => r && (r.rawHtml || (r.value !== undefined && r.value !== null && String(r.value).trim() !== '')));
+
+    const rowsHtml = validRows
+      .map(
+        (r) => `
+          <tr>
+            <td style="padding: 10px 14px; border-bottom: 1px solid #f5f5f4; font-size: 12px; font-weight: 700; color: #78716c; text-transform: uppercase; letter-spacing: 0.4px; width: 34%; vertical-align: top;">
+              ${escapeHtml(r.label)}
+            </td>
+            <td style="padding: 10px 14px; border-bottom: 1px solid #f5f5f4; font-size: 14px; font-weight: 600; color: #1c1917; vertical-align: top; word-break: break-word;">
+              ${r.rawHtml ? r.rawHtml : escapeHtml(r.value)}
+            </td>
+          </tr>
+        `
+      )
+      .join('');
+
+    const safeImageUrl =
+      highlightImageUrl && /^https?:\/\//i.test(String(highlightImageUrl).trim())
+        ? escapeHtml(String(highlightImageUrl).trim())
+        : null;
+
+    const highlightSectionHtml =
+      highlightTitle || highlightBodyHtml || safeImageUrl
+        ? `
+          <div style="background-color: #fffbeb; border: 1.5px solid #fde68a; border-left: 5px solid ${accentColor}; border-radius: 12px; padding: 18px 20px; margin: 22px 0;">
+            ${
+              highlightTitle
+                ? `<div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.7px; color: #92400e; margin-bottom: 10px;">${escapeHtml(highlightTitle)}</div>`
+                : ''
+            }
+            ${
+              highlightBodyHtml
+                ? `<div style="font-size: 14px; line-height: 1.65; color: #292524;">${highlightBodyHtml}</div>`
+                : ''
+            }
+            ${
+              safeImageUrl
+                ? `<div style="margin-top: 14px;"><img src="${safeImageUrl}" alt="Customer uploaded attachment" style="max-width: 240px; max-height: 200px; border-radius: 10px; border: 1px solid #fcd34d; display: block;" /></div>`
+                : ''
+            }
+          </div>
+        `
+        : '';
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${escapeHtml(safeSubject)}</title>
+      </head>
+      <body style="margin: 0; padding: 0; background-color: #f8f5ee; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #1c1917;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8f5ee; padding: 24px 12px;">
+          <tr>
+            <td align="center">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #ffffff; border-radius: 18px; overflow: hidden; border: 1px solid #fde68a; box-shadow: 0 6px 24px rgba(120, 53, 15, 0.08);">
+                
+                <!-- Top Brand Banner -->
+                <tr>
+                  <td style="background: linear-gradient(135deg, #78350f 0%, #b45309 55%, #d97706 100%); padding: 24px 26px; text-align: left;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td>
+                          <div style="font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #fde68a;">
+                            🍯 AAI JI HONEY • ADMIN NOTIFICATION
+                          </div>
+                          <h1 style="margin: 6px 0 0; font-size: 20px; font-weight: 800; color: #ffffff; line-height: 1.3;">
+                            ${escapeHtml(headline)}
+                          </h1>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Activity Badge & Summary -->
+                <tr>
+                  <td style="padding: 26px 26px 10px;">
+                    <div style="margin-bottom: 14px;">
+                      <span style="display: inline-block; background-color: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${accentColor}; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.7px; padding: 5px 12px; border-radius: 9999px;">
+                        ${escapeHtml(badgeText)}
+                      </span>
+                      <span style="display: inline-block; margin-left: 8px; font-size: 12px; color: #78716c; font-weight: 600;">
+                        🕒 ${escapeHtml(safeTime)}
+                      </span>
+                    </div>
+
+                    <p style="margin: 0 0 20px; font-size: 14px; line-height: 1.6; color: #44403c;">
+                      ${escapeHtml(summaryText)}
+                    </p>
+
+                    <!-- Structured Details Table -->
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border: 1px solid #e7e5e4; border-radius: 12px; overflow: hidden; background-color: #fafaf9;">
+                      ${rowsHtml}
+                    </table>
+
+                    ${highlightSectionHtml}
+
+                    <!-- Dashboard Action Button -->
+                    <div style="text-align: center; margin: 28px 0 18px;">
+                      <a href="${dashboardUrl}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff !important; text-decoration: none; padding: 13px 28px; font-size: 13px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; border-radius: 9999px; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);">
+                        ${escapeHtml(ctaLabel)}
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                  <td style="background-color: #fafaf9; border-top: 1px solid #f5f5f4; padding: 18px 24px; text-align: center;">
+                    <p style="margin: 0 0 4px; font-size: 12px; font-weight: 700; color: #78350f;">
+                      Aai Ji Honey Automated Store &amp; Admin Monitor
+                    </p>
+                    <p style="margin: 0; font-size: 11px; color: #a8a29e;">
+                      Sent to ${escapeHtml(ADMIN_NOTIFICATION_EMAIL)} • <a href="${STORE_FRONTEND_URL}/orderDashboard" target="_blank" style="color: #b45309; text-decoration: underline;">Go to Admin Portal</a>
+                    </p>
+                  </td>
+                </tr>
+
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+
+    const plainRowsText = validRows.map((r) => `- ${r.label}: ${r.plainValue || r.value}`).join('\n');
+    const textContent =
+      `AAI JI HONEY — ADMIN NOTIFICATION\n` +
+      `${headline}\n` +
+      `Time: ${safeTime}\n\n` +
+      `${summaryText}\n\n` +
+      `${plainRowsText}\n` +
+      (plainDetails ? `\n${plainDetails}\n` : '') +
+      `\nOpen Admin Dashboard: ${dashboardUrl}\n`;
+
+    const result = await sendEmailUnified({
+      to: ADMIN_NOTIFICATION_EMAIL,
+      fromName: 'Aai Ji Honey Admin Alerts',
+      subject: safeSubject,
+      text: textContent,
+      html: htmlContent,
+    });
+
+    if (result.success) {
+      console.log(`📧 Admin notification delivered to ${ADMIN_NOTIFICATION_EMAIL}: ${safeSubject}`);
+    } else {
+      console.warn(`⚠️ Admin notification delivery warning (${safeSubject}): ${result.error}`);
+    }
+    return result;
+  } catch (err) {
+    console.warn('⚠️ Admin notification email failed:', err.message);
+    return { success: false, error: err.message };
+  }
+};
+
+/**
+ * Notify admin when a new customer order is placed (Razorpay or COD).
+ */
+const notifyAdminNewOrder = async ({ order, items = null, coupon = null, couponDiscount = 0 }) => {
+  if (!order) return { success: false, error: 'Missing order payload' };
+
+  const prod = order.product || {};
+  const qty = parseInt(order.quantity, 10) || 1;
+  const totalAmount =
+    prod.totalprice !== undefined && prod.totalprice !== null
+      ? Number(prod.totalprice)
+      : (Number(prod.price) || 0) * qty;
+
+  const isPaidOnline =
+    order.paymentId &&
+    !String(order.paymentId).toLowerCase().includes('cod') &&
+    !String(order.paymentId).toLowerCase().includes('cash');
+
+  const itemList = Array.isArray(items) && items.length > 0 ? items : null;
+  const itemsHtml = itemList
+    ? `<ul style="margin: 0; padding-left: 18px;">${itemList
+        .map((it) => {
+          const linePrice = it.totalprice !== undefined ? Number(it.totalprice) : (Number(it.price) || 0) * (parseInt(it.quantity, 10) || 1);
+          return `<li style="margin-bottom: 6px;"><strong>${escapeHtml(it.name || 'Honey Product')}</strong>${
+            it.flavour ? ` (${escapeHtml(it.flavour)})` : ''
+          } &times; ${escapeHtml(it.quantity || 1)} &mdash; <strong>${formatInr(linePrice)}</strong></li>`;
+        })
+        .join('')}</ul>`
+    : `<p style="margin: 0;"><strong>${escapeHtml(prod.name || 'Aai Ji Honey Order')}</strong>${
+        prod.flavour ? ` (${escapeHtml(prod.flavour)})` : ''
+      } &times; ${escapeHtml(qty)}</p>`;
+
+  const appliedCoupon = coupon || prod.coupon;
+  const discountVal = Number(couponDiscount || prod.couponDiscount || 0);
+  const totalBannerHtml = `<div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed #fcd34d; font-size: 16px; font-weight: 800; color: #065f46;">Total Amount: ${formatInr(totalAmount)}</div>`;
+
+  const plainItems = itemList
+    ? itemList
+        .map((it) => `  * ${it.name || 'Honey'}${it.flavour ? ` (${it.flavour})` : ''} x${it.quantity || 1} - ${formatInr(it.totalprice ?? (Number(it.price) || 0) * (it.quantity || 1))}`)
+        .join('\n')
+    : `  * ${prod.name || 'Honey Product'}${prod.flavour ? ` (${prod.flavour})` : ''} x${qty}`;
+
+  return sendAdminAlertEmail({
+    subject: `🛒 [New Order] ${order.invoiceNumber || 'Order'} (${formatInr(totalAmount)}) — ${order.name}`,
+    badgeText: isPaidOnline ? '💳 Paid Order Received' : '📦 New Order Received',
+    badgeBg: '#ecfdf5',
+    badgeColor: '#065f46',
+    accentColor: '#059669',
+    headline: `New Order ${order.invoiceNumber || ''} Received!`,
+    summaryText: `A customer just placed an order worth ${formatInr(totalAmount)} on Aai Ji Honey.`,
+    timestamp: order.createdAt || new Date(),
+    rows: [
+      { label: 'Invoice No.', value: order.invoiceNumber || order._id },
+      { label: 'Order Status', value: order.status || 'Pending' },
+      { label: 'Customer Name', value: order.name },
+      {
+        label: 'Mobile / Phone',
+        value: order.mobile,
+        plainValue: order.mobile,
+        rawHtml: buildPhoneLinksHtml(order.mobile),
+      },
+      {
+        label: 'Email',
+        value: order.email,
+        rawHtml: order.email
+          ? `<a href="mailto:${escapeHtml(order.email)}" style="color: #b45309; text-decoration: none;">${escapeHtml(order.email)}</a>`
+          : null,
+      },
+      { label: 'Delivery Address', value: order.address },
+      { label: 'Payment ID', value: order.paymentId || 'Cash on Delivery / Standard' },
+      appliedCoupon ? { label: 'Coupon Used', value: `${appliedCoupon} (Saved ${formatInr(discountVal)})` } : null,
+    ],
+    highlightTitle: '🍯 Ordered Items & Billed Amount',
+    highlightBodyHtml: itemsHtml + totalBannerHtml,
+    ctaLabel: 'Process Order in Dashboard ➔',
+    ctaPath: '/orderDashboard?tab=orders',
+    plainDetails: `Ordered Items:\n${plainItems}\nTotal Amount: ${formatInr(totalAmount)}`,
+  });
+};
+
+/**
+ * Notify admin when a customer submits a new inquiry or contact message.
+ */
+const notifyAdminNewMessage = async ({ inquiry }) => {
+  if (!inquiry) return { success: false, error: 'Missing inquiry payload' };
+
+  const subjectLine = inquiry.subject || 'General Inquiry';
+
+  return sendAdminAlertEmail({
+    subject: `💬 [New Inquiry] ${subjectLine} — from ${inquiry.name}`,
+    badgeText: '💬 New Inquiry / Message',
+    badgeBg: '#eff6ff',
+    badgeColor: '#1e40af',
+    accentColor: '#2563eb',
+    headline: `New Inquiry from ${inquiry.name}`,
+    summaryText: 'A visitor submitted a new message/inquiry on the website. You can reply directly from the Admin Dashboard.',
+    timestamp: inquiry.created_at || new Date(),
+    rows: [
+      { label: 'Sender Name', value: inquiry.name },
+      {
+        label: 'Email',
+        value: inquiry.email,
+        rawHtml: inquiry.email
+          ? `<a href="mailto:${escapeHtml(inquiry.email)}" style="color: #b45309; text-decoration: none;">${escapeHtml(inquiry.email)}</a>`
+          : null,
+      },
+      {
+        label: 'Mobile / WhatsApp',
+        value: inquiry.mobile || 'Not provided',
+        plainValue: inquiry.mobile || 'Not provided',
+        rawHtml: inquiry.mobile ? buildPhoneLinksHtml(inquiry.mobile) : 'Not provided',
+      },
+      { label: 'Subject', value: subjectLine },
+    ],
+    highlightTitle: '📩 Customer Message',
+    highlightBodyHtml: escapeHtml(inquiry.message).replace(/\n/g, '<br/>'),
+    ctaLabel: 'Reply to Inquiry in Dashboard ➔',
+    ctaPath: '/orderDashboard?tab=messages',
+    plainDetails: `Message:\n${inquiry.message}`,
+  });
+};
+
+/**
+ * Notify admin when a candidate submits a job application in Careers & Hiring.
+ */
+const notifyAdminNewCareerApplication = async ({ application }) => {
+  if (!application) return { success: false, error: 'Missing application payload' };
+
+  const safeResumeLink =
+    application.resume_url && /^https?:\/\//i.test(String(application.resume_url))
+      ? `<a href="${escapeHtml(application.resume_url)}" target="_blank" style="color: #059669; font-weight: 700; text-decoration: underline;">View / Download (${escapeHtml(application.resume_filename || 'Resume')})</a>`
+      : escapeHtml(application.resume_filename || 'Attached in Admin Dashboard');
+
+  const safeLinkedinHtml =
+    application.linkedin_url && /^https?:\/\//i.test(String(application.linkedin_url))
+      ? `<a href="${escapeHtml(application.linkedin_url)}" target="_blank" style="color: #2563eb; text-decoration: underline;">${escapeHtml(application.linkedin_url)}</a>`
+      : application.linkedin_url
+      ? escapeHtml(application.linkedin_url)
+      : null;
+
+  return sendAdminAlertEmail({
+    subject: `💼 [New Job Application] ${application.job_title} (${application.id}) — ${application.name}`,
+    badgeText: '💼 Careers & Hiring Application',
+    badgeBg: '#f5f3ff',
+    badgeColor: '#5b21b6',
+    accentColor: '#7c3aed',
+    headline: `New Application for ${application.job_title}`,
+    summaryText: `${application.name} applied for the position "${application.job_title}". Their resume is ready for review in the Careers & Hiring tab.`,
+    timestamp: application.created_at || new Date(),
+    rows: [
+      { label: 'Tracking ID', value: application.id },
+      { label: 'Position Applied', value: application.job_title },
+      { label: 'Applicant Name', value: application.name },
+      {
+        label: 'Mobile / WhatsApp',
+        value: application.mobile,
+        plainValue: application.mobile,
+        rawHtml: buildPhoneLinksHtml(application.mobile),
+      },
+      {
+        label: 'Email',
+        value: application.email,
+        rawHtml: `<a href="mailto:${escapeHtml(application.email)}" style="color: #b45309; text-decoration: none;">${escapeHtml(application.email)}</a>`,
+      },
+      { label: 'City / Location', value: application.city || 'Not specified' },
+      { label: 'Experience', value: application.experience || 'Not specified' },
+      safeLinkedinHtml
+        ? { label: 'LinkedIn / Portfolio', value: application.linkedin_url, rawHtml: safeLinkedinHtml }
+        : null,
+      { label: 'Resume / CV', value: application.resume_filename || 'Attached', rawHtml: safeResumeLink },
+    ],
+    highlightTitle: application.cover_note ? '📝 Applicant Cover Note' : null,
+    highlightBodyHtml: application.cover_note ? escapeHtml(application.cover_note).replace(/\n/g, '<br/>') : null,
+    ctaLabel: 'Review Candidate & Resume ➔',
+    ctaPath: '/orderDashboard?tab=careers',
+    plainDetails: application.cover_note ? `Cover Note:\n${application.cover_note}` : '',
+  });
+};
+
+/**
+ * Notify admin when a customer submits a Community Review or Product Star Rating.
+ */
+const notifyAdminNewReview = async ({
+  review,
+  isProductRating = false,
+  productName = null,
+  avgRating = null,
+}) => {
+  if (!review) return { success: false, error: 'Missing review payload' };
+
+  const starsCount = Math.max(1, Math.min(5, parseInt(review.rating, 10) || 5));
+  const starsVisual = `${'★'.repeat(starsCount)}${'☆'.repeat(5 - starsCount)} (${starsCount}/5)`;
+
+  const badgeLabel =
+    review.is_verified_buyer || review.badge_type === 'verified_buyer'
+      ? '🍯 Verified Buyer ✓'
+      : review.badge_type === 'community_member'
+      ? '🌿 Community Member'
+      : isProductRating
+      ? '🍯 Verified Product Buyer ✓'
+      : '📍 Guest Reviewer';
+
+  const reviewerName = review.user_name || review.userName || 'Customer';
+  const reviewComment = review.comment || review.review || '';
+  const reviewTitle = review.title || '';
+
+  const highlightHtmlParts = [];
+  if (reviewTitle) {
+    highlightHtmlParts.push(`<div style="font-size: 15px; font-weight: 800; color: #78350f; margin-bottom: 6px;">"${escapeHtml(reviewTitle)}"</div>`);
+  }
+  if (reviewComment) {
+    highlightHtmlParts.push(`<div>${escapeHtml(reviewComment).replace(/\n/g, '<br/>')}</div>`);
+  } else {
+    highlightHtmlParts.push('<div style="color: #78716c; font-style: italic;">(Star rating submitted without written comment)</div>');
+  }
+
+  return sendAdminAlertEmail({
+    subject: isProductRating
+      ? `⭐ [Product Rating] ${starsVisual} on ${productName} — ${reviewerName}`
+      : `⭐ [New Customer Review] ${starsVisual} — from ${reviewerName}`,
+    badgeText: isProductRating ? '⭐ New Product Rating' : '⭐ New Community Review',
+    badgeBg: '#fffbeb',
+    badgeColor: '#92400e',
+    accentColor: '#f59e0b',
+    headline: isProductRating
+      ? `New Rating on ${productName || 'Product'}`
+      : `New ${starsCount}-Star Customer Review Published`,
+    summaryText: isProductRating
+      ? `${reviewerName} rated "${productName}" ${starsCount}/5 stars.${avgRating ? ` New product average: ${avgRating}★.` : ''}`
+      : `${reviewerName} submitted a new review in the Community Reviews section.`,
+    timestamp: review.created_at || new Date(),
+    rows: [
+      { label: 'Reviewer Name', value: reviewerName },
+      { label: 'Badge / Status', value: badgeLabel },
+      { label: 'Star Rating', value: starsVisual },
+      isProductRating
+        ? { label: 'Product', value: `${productName}${avgRating ? ` (Avg: ${avgRating}★)` : ''}` }
+        : { label: 'Feedback Category', value: review.category || 'quality' },
+      review.location ? { label: 'Location', value: review.location } : null,
+      review.user_email
+        ? {
+            label: 'Email',
+            value: review.user_email,
+            rawHtml: `<a href="mailto:${escapeHtml(review.user_email)}" style="color: #b45309; text-decoration: none;">${escapeHtml(review.user_email)}</a>`,
+          }
+        : null,
+    ],
+    highlightTitle: '💬 Customer Review Content',
+    highlightBodyHtml: highlightHtmlParts.join(''),
+    highlightImageUrl: review.image_url || null,
+    ctaLabel: isProductRating ? 'View Store Products ➔' : 'Moderate Reviews in Dashboard ➔',
+    ctaPath: isProductRating ? '/products' : '/orderDashboard?tab=reviews',
+    plainDetails: `${reviewTitle ? `Title: ${reviewTitle}\n` : ''}Comment: ${reviewComment || '(No written comment)'}${
+      review.image_url ? `\nPhoto URL: ${review.image_url}` : ''
+    }`,
+  });
+};
+
 module.exports = {
   getTransporter,
   sendEmailUnified,
@@ -505,4 +1007,8 @@ module.exports = {
   sendLoginEmail,
   sendMessageReplyEmail,
   sendCareerApplicationEmail,
+  notifyAdminNewOrder,
+  notifyAdminNewMessage,
+  notifyAdminNewCareerApplication,
+  notifyAdminNewReview,
 };

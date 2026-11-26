@@ -1,5 +1,6 @@
 const paymentService = require('../services/paymentService');
 const orderService = require('../services/orderService');
+const { notifyAdminNewOrder } = require('../services/emailService');
 const jwt = require('jsonwebtoken');
 
 /**
@@ -109,6 +110,14 @@ const verifyPayment = async (req, res, next) => {
       };
 
       savedOrder = await orderService.createOrder(cleanOrderData);
+
+      // Notify admin asynchronously about new verified paid order
+      notifyAdminNewOrder({
+        order: savedOrder,
+        items: Array.isArray(orderDetails.items) ? orderDetails.items : null,
+        coupon: orderDetails.coupon || cleanOrderData.product?.coupon || null,
+        couponDiscount: orderDetails.couponDiscount || cleanOrderData.product?.couponDiscount || 0,
+      }).catch((e) => console.warn('Admin payment order alert warning:', e.message));
 
       // 3. Atomically decrement stock in database
       const db = require('../config/db');

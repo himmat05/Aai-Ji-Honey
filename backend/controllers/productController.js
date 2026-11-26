@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const crypto = require('crypto');
+const { notifyAdminNewReview } = require('../services/emailService');
 
 /**
  * Get all products
@@ -393,11 +394,28 @@ const rateProduct = async (req, res, next) => {
       [targetProductId]
     );
 
+    const avgRating = aggResult.rows[0]?.avgRating || parsedRating;
+    const ratingCount = aggResult.rows[0]?.ratingCount || 1;
+
+    // Notify admin asynchronously about new product star rating / review
+    notifyAdminNewReview({
+      review: {
+        id: savedRating.rows[0]?.id,
+        user_name: userName,
+        rating: parsedRating,
+        comment: review || '',
+        created_at: new Date(),
+      },
+      isProductRating: true,
+      productName,
+      avgRating,
+    }).catch((e) => console.warn('Admin product rating alert warning:', e.message));
+
     res.json({
       message: 'Thank you for rating!',
       rating: savedRating.rows[0],
-      avgRating: aggResult.rows[0]?.avgRating || parsedRating,
-      ratingCount: aggResult.rows[0]?.ratingCount || 1,
+      avgRating,
+      ratingCount,
     });
   } catch (err) {
     console.error('Error in rateProduct:', err);

@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 const { cloudinary } = require('../config/cloudinary');
+const { notifyAdminNewReview } = require('../services/emailService');
 
 /**
  * Helper to strip HTML tags for anti-XSS protection
@@ -239,6 +240,11 @@ const createReview = async (req, res) => {
     ]);
 
     const created = result.rows[0];
+
+    // Notify admin asynchronously about new customer review
+    notifyAdminNewReview({ review: created }).catch((e) =>
+      console.warn('Admin review alert warning:', e.message)
+    );
 
     return res.status(201).json({
       success: true,

@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const orderService = require('../services/orderService');
+const { notifyAdminNewOrder } = require('../services/emailService');
 
 /**
  * Place a new customer order
@@ -47,6 +48,15 @@ const createOrder = async (req, res, next) => {
     }
 
     const order = await orderService.createOrder(orderData);
+
+    // Notify admin asynchronously without blocking order placement response
+    notifyAdminNewOrder({
+      order,
+      items: Array.isArray(req.body.items) ? req.body.items : null,
+      coupon: req.body.coupon || orderData.product?.coupon || null,
+      couponDiscount: req.body.couponDiscount || orderData.product?.couponDiscount || 0,
+    }).catch((e) => console.warn('Admin order alert warning:', e.message));
+
     res.status(201).json({ message: 'Order placed successfully', order });
   } catch (err) {
     console.error('Order placement error:', err);
